@@ -3,7 +3,7 @@
 import { useRef } from "react";
 import styles from "./index.module.css";
 
-export const Word: React.FC<{ text: string; phon: string }> = ({
+export const Index: React.FC<{ text: string; phon: string }> = ({
   text,
   phon,
 }) => {

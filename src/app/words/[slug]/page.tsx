@@ -1,6 +1,7 @@
 import { WordsService } from "@/lib/words";
 import { ContextLine } from "@/app/words/[slug]/components/context-line";
-import { Word } from "@/app/words/[slug]/components/word";
+import { Index } from "@/app/words/[slug]/components/word";
+import { NextPage } from "@/app/words/[slug]/components/next-page";
 
 export default async function DailyWordsPage({
   params,
@@ -20,11 +21,12 @@ export default async function DailyWordsPage({
         <div className="markdown-body">
           {dailyWords.map((word) => (
             <div key={word.uuid}>
-              <Word text={word.uuid} phon={word.phon} />
+              <Index text={word.uuid} phon={word.phon} />
               <ContextLine word={word} />
             </div>
           ))}
         </div>
+        <NextPage currSlug={slug} />
       </div>
     </div>
   );

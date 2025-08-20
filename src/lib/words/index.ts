@@ -112,7 +112,14 @@ export const WordsService = (() => {
     return wordsMap.get(date) ?? [];
   };
 
+  const getWordsGroupKeys = async () => {
+    check();
+    const wordsMap = await promise;
+    return Array.from(wordsMap.keys());
+  };
+
   return {
+    getWordsGroupKeys,
     getAllWords,
     getWordsByDate,
   };
