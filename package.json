@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@ai-sdk/openai": "^2.0.13",
@@ -14,6 +15,7 @@
     "@octokit/rest": "^21.1.1",
     "@reactuses/core": "^6.0.6",
     "@types/rss": "^0.0.32",
+    "@upstash/redis": "^1.35.1",
     "@wooorm/starry-night": "^3.8.0",
     "ai": "^5.0.12",
     "date-fns": "^4.1.0",
@@ -25,7 +27,6 @@
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-markdown": "^10.1.0",
-    "redis": "^5.8.1",
     "rehype-starry-night": "^2.2.0",
     "remark": "^15.0.1",
     "remark-gfm": "^4.0.1",
@@ -34,14 +35,14 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
-    "@tailwindcss/postcss": "^4",
+    "@tailwindcss/postcss": "^4.1.18",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.4.4",
     "prettier": "3.6.2",
-    "tailwindcss": "^4",
+    "tailwindcss": "^4.1.18",
     "typescript": "^5",
     "vitest": "^3.2.4"
   }

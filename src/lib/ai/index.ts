@@ -41,11 +41,16 @@ export const ai_generateText = async (options: {
     apiKey: TOKEN,
   });
 
-  const { text } = await generateText({
-    model: openai.chat("gemini-2.5-flash-lite"),
-    system: options.system,
-    prompt: options.prompt,
-  });
+  const { text } = await Promise.race([
+    generateText({
+      model: openai.chat("gemini-2.5-flash-lite"),
+      system: options.system,
+      prompt: options.prompt,
+    }),
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("AI text timeout")), 8000),
+    ),
+  ]);
 
   return text;
 };

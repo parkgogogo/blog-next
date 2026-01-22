@@ -93,6 +93,103 @@ body {
   font-weight: 400;
 }
 
+.story-page {
+  background: #f6f2e9;
+  min-height: 100vh;
+}
+
+.story-shell {
+  background: #fcfaf4;
+  border: 1px solid #e6e1d6;
+  box-shadow: 0 10px 24px rgba(32, 24, 8, 0.08);
+  padding: 20px;
+}
+
+.story-kicker {
+  font-family: "Times New Roman", "Georgia", "Noto Serif", serif;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.28em;
+  color: #8b8170;
+}
+
+.story-headline {
+  font-family: "Times New Roman", "Georgia", "Noto Serif", serif;
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.15;
+  color: #1b1b1b;
+  margin: 0;
+}
+
+.story-rule {
+  height: 1px;
+  width: 100%;
+  background: #e1dbcf;
+}
+
+.story-body {
+  font-family: "Times New Roman", "Georgia", "Noto Serif", serif;
+  font-size: 1.06rem;
+  line-height: 1.85;
+  letter-spacing: 0.01em;
+  color: #1f1f1f;
+  width: 100%;
+  text-indent: 1.25em;
+}
+
+@media (min-width: 768px) {
+  .story-shell {
+    padding: 32px;
+  }
+}
+
+.story-backlink {
+  font-family: "Times New Roman", "Georgia", "Noto Serif", serif;
+  font-size: 0.9rem;
+  color: #7a6e5a;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.story-backlink:hover {
+  color: #4f4639;
+}
+
+.story-card {
+  background: #fffdf7;
+  border: 1px solid #e6e1d6;
+  font-family: "Times New Roman", "Georgia", "Noto Serif", serif;
+}
+
+.story-translation-word {
+  padding: 0 0.15rem;
+  margin: 0 0.05rem;
+  border-bottom: 1px dashed #b9ae9a;
+  color: #5a4e3e;
+}
+
+.story-word {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+  color: #7a6e5a;
+  transition: color 0.2s ease;
+}
+
+.story-word:hover {
+  color: #5b5142;
+}
+
+.story-word--focus {
+  color: #c2410c;
+}
+
+.story-word--focus:hover {
+  color: #9a3412;
+}
+
 /* Custom animations for homepage */
 @keyframes fade-in-up {
   from {

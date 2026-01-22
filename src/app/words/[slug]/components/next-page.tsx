@@ -1,9 +1,7 @@
 import { WordsService } from "@/lib/words";
 import Link from "next/link";
 
-export const NextPage: React.FC<{ currSlug: string }> = async ({
-  currSlug,
-}) => {
+export const NextPage = async ({ currSlug }: { currSlug: string }) => {
   const nextSlug = await (async () => {
     const slugs = (await WordsService.getWordsGroupKeys()).filter(
       (item) => item !== currSlug,

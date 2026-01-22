@@ -1,5 +1,6 @@
-import { createClient } from "redis";
+import { Redis } from "@upstash/redis";
 
-export const redis = await createClient({
-  url: process.env.REDIS_URL,
-}).connect();
+export const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL || "",
+  token: process.env.UPSTASH_REDIS_REST_TOKEN || "",
+});

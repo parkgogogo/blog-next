@@ -1,5 +1,5 @@
 import { Logo } from "@/components/Logo";
-import { Github, Linkedin, Mail, Twitter } from "lucide-react";
+import { Github } from "lucide-react";
 import Link from "next/link";
 
 export default function HomePage() {

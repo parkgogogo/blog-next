@@ -10,7 +10,7 @@ export async function GET(
   const { text } = await params;
 
   // 检查 redis 缓存，防止被滥用
-  const redisString = await redis.get(REDIS_KEYS.ALL_WORDS);
+  const redisString = await redis.get<string>(REDIS_KEYS.ALL_WORDS);
   const wordsList = (() => {
     if (redisString) {
       return redisString.split(",");

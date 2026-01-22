@@ -9,12 +9,26 @@ import { ai_generateText } from "@/lib/ai";
 import { REDIS_KEYS } from "@/constants/redis";
 import { redis } from "@/lib/redis";
 
+const fetchWithTimeout = async (
+  input: RequestInfo | URL,
+  init: RequestInit,
+  timeoutMs = 8000,
+) => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+};
+
 /**
  * 获取生词本总数
  */
 const getWordsLength = async () => {
   try {
-    const response = await fetch(LULU_ENDPOINT_PRE, {
+    const response = await fetchWithTimeout(LULU_ENDPOINT_PRE, {
       headers: {
         ["Cookie"]: process.env.LULU_COOKIE || "",
         ["Content-Type"]: "application/json",
@@ -38,7 +52,7 @@ const getWordsLength = async () => {
 const getLuLuWords = async () => {
   try {
     const totalLength = await getWordsLength();
-    const result = await fetch(`${LULU_ENDPOINT}&length=${totalLength}`, {
+    const result = await fetchWithTimeout(`${LULU_ENDPOINT}&length=${totalLength}`, {
       headers: {
         ["Cookie"]: process.env.LULU_COOKIE || "",
         ["Content-Type"]: "application/json",
