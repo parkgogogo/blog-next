@@ -6,9 +6,11 @@ const TABLE_NAME = "ai_generations";
 export type AIGenerationType =
   | "daily_story"
   | "explanation"
+  | "word_page_explanation"
   | "word_card"
   | "free_word_card"
-  | "story_translation";
+  | "story_translation"
+  | "sentence_translation";
 
 const stableStringify = (value: unknown): string => {
   if (value === null || typeof value !== "object") {
