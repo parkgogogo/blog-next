@@ -13,7 +13,8 @@ Requirements:
 2) Must include every given word exactly as provided (no case changes, no inflections).
 3) Wrap each word with [[word]].
 4) The meaning of each word in the story must match the sense in its example sentence.
-5) Output only the paragraph body—no title, list, explanation, or extra text.
+5) Use simple, common vocabulary (around CET-4 / CEFR B1 level), with short, clear sentences.
+6) Output only the paragraph body—no title, list, explanation, or extra text.
 `;
 
 const ensureStoryContainsAllWords = (story: string, words: string[]) => {

@@ -280,7 +280,7 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
 
   return (
     <div className="space-y-6">
-      <div className="story-body text-lg text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
+      <div className="story-body text-lg whitespace-pre-wrap">
         {parts.map((part, index) => {
           if (typeof part === "string") {
             const innerParts = splitEnglishWords(part);
@@ -304,7 +304,7 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
                       key={`word-inline-${index}-${innerIndex}-${inner.word}`}
                       type="button"
                       onClick={(event) => handleSelect(inner.word, event)}
-                      className="underline decoration-dashed decoration-1 underline-offset-4 text-current decoration-gray-300"
+                      className="underline decoration-dashed decoration-1 underline-offset-4 text-current decoration-[color:var(--border-subtle)]"
                     >
                       {inner.word}
                     </button>
@@ -319,7 +319,7 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
               key={`word-${index}-${word}`}
               type="button"
               onClick={(event) => handleSelect(word, event)}
-              className="story-word story-word--focus underline decoration-2 underline-offset-4 text-orange-600 hover:text-orange-700"
+              className="story-word story-word--focus"
             >
               {word}
             </button>
@@ -333,7 +333,7 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
             type="button"
             onClick={handleTranslate}
             disabled={isTranslating}
-            className="text-xs uppercase tracking-[0.18em] text-gray-500 hover:text-gray-800 disabled:opacity-50"
+            className="text-xs uppercase tracking-[0.18em] text-[color:var(--text-muted)] hover:text-foreground disabled:opacity-50"
           >
             {isTranslating
               ? "TRANSLATING..."
@@ -354,7 +354,7 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
         </div>
 
         {showTranslation && (
-          <div className="border-t border-dashed border-gray-300 pt-4 text-gray-700 whitespace-pre-wrap">
+          <div className="border-t border-dashed border-[color:var(--border-subtle)] pt-4 text-[color:var(--foreground)] whitespace-pre-wrap">
             {translationParts.map((part, index) => {
               if (typeof part === "string") {
                 return <span key={`t-text-${index}`}>{part}</span>;
@@ -397,12 +397,12 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
             <div className="story-card rounded-2xl p-5 shadow-lg">
               <div className="flex justify-between gap-4 items-center">
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-900">
+                  <h3 className="text-xl font-semibold text-foreground">
                     {popover.wordText}
                   </h3>
                   {popover.word?.phon && (
                     <div
-                      className="mt-2 text-sm text-gray-700"
+                      className="mt-2 text-sm text-[color:var(--text-muted)]"
                       dangerouslySetInnerHTML={{ __html: popover.word.phon }}
                     />
                   )}
@@ -411,15 +411,17 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
                   type="button"
                   onClick={handlePlay}
                   disabled={popover.audioLoading || !popover.audioSrc}
-                  className="text-sm font-medium text-orange-600 hover:text-orange-700 disabled:opacity-50"
+                  className="text-sm font-medium text-[color:var(--accent-warm)] hover:opacity-80 disabled:opacity-50"
                 >
                   {popover.audioLoading ? "生成中…" : "播放发音"}
                 </button>
               </div>
 
-              <div className="mt-4 text-gray-800">
+              <div className="mt-4 text-[color:var(--foreground)]">
                 {popover.loading ? (
-                  <span className="text-sm text-gray-500">生成中…</span>
+                  <span className="text-sm text-[color:var(--text-muted)]">
+                    生成中…
+                  </span>
                 ) : (
                   <Markdown>{popover.content || ""}</Markdown>
                 )}

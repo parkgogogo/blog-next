@@ -94,14 +94,12 @@ body {
 }
 
 .story-page {
-  background: #f6f2e9;
+  background: var(--background);
   min-height: 100vh;
 }
 
 .story-shell {
-  background: #fcfaf4;
-  border: 1px solid #e6e1d6;
-  box-shadow: 0 10px 24px rgba(32, 24, 8, 0.08);
+  background: var(--background);
   padding: 20px;
 }
 
@@ -110,7 +108,7 @@ body {
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.28em;
-  color: #8b8170;
+  color: var(--text-muted);
 }
 
 .story-headline {
@@ -119,22 +117,22 @@ body {
   font-weight: 700;
   letter-spacing: 0.02em;
   line-height: 1.15;
-  color: #1b1b1b;
+  color: var(--foreground);
   margin: 0;
 }
 
 .story-rule {
   height: 1px;
   width: 100%;
-  background: #e1dbcf;
+  background: var(--border-subtle);
 }
 
 .story-body {
   font-family: "Times New Roman", "Georgia", "Noto Serif", serif;
-  font-size: 1.06rem;
+  font-size: 1.2rem;
   line-height: 1.85;
   letter-spacing: 0.01em;
-  color: #1f1f1f;
+  color: var(--foreground);
   width: 100%;
   text-indent: 1.25em;
 }
@@ -148,107 +146,46 @@ body {
 .story-backlink {
   font-family: "Times New Roman", "Georgia", "Noto Serif", serif;
   font-size: 0.9rem;
-  color: #7a6e5a;
+  color: var(--accent-warm);
   text-decoration: underline;
   text-underline-offset: 4px;
 }
 
 .story-backlink:hover {
-  color: #4f4639;
+  color: color-mix(in srgb, var(--accent-warm) 82%, #000 18%);
 }
 
 .story-card {
-  background: #fffdf7;
-  border: 1px solid #e6e1d6;
+  background: var(--background);
+  border: 1px solid var(--border-subtle);
   font-family: "Times New Roman", "Georgia", "Noto Serif", serif;
 }
 
 .story-translation-word {
   padding: 0 0.15rem;
   margin: 0 0.05rem;
-  border-bottom: 1px dashed #b9ae9a;
-  color: #5a4e3e;
+  border-bottom: 1px dashed var(--border-subtle);
+  color: var(--text-muted);
 }
 
 .story-word {
   text-decoration: underline;
   text-decoration-thickness: 2px;
   text-underline-offset: 4px;
-  color: #7a6e5a;
+  color: var(--text-muted);
   transition: color 0.2s ease;
 }
 
 .story-word:hover {
-  color: #5b5142;
+  color: var(--foreground);
 }
 
 .story-word--focus {
-  color: #c2410c;
+  color: var(--accent-warm);
 }
 
 .story-word--focus:hover {
-  color: #9a3412;
-}
-
-@media (prefers-color-scheme: dark) {
-  .story-page {
-    background: #15130f;
-  }
-
-  .story-shell {
-    background: #15130f;
-    border: none;
-  }
-
-  .story-kicker {
-    color: #b1a793;
-  }
-
-  .story-headline {
-    color: #f0ede6;
-  }
-
-  .story-rule {
-    background: #3a3122;
-  }
-
-  .story-body {
-    color: #e8e4dc;
-  }
-
-  .story-backlink {
-    color: #c5bba6;
-  }
-
-  .story-backlink:hover {
-    color: #f0e9dd;
-  }
-
-  .story-card {
-    background: #221e17;
-    border-color: #3a3122;
-  }
-
-  .story-translation-word {
-    border-bottom-color: #7a6e5a;
-    color: #d2c9b8;
-  }
-
-  .story-word {
-    color: #c9bda8;
-  }
-
-  .story-word:hover {
-    color: #f0e9dd;
-  }
-
-  .story-word--focus {
-    color: #f1a95a;
-  }
-
-  .story-word--focus:hover {
-    color: #e38b3d;
-  }
+  color: color-mix(in srgb, var(--accent-warm) 72%, #000 28%);
 }
 
 /* Custom animations for homepage */
