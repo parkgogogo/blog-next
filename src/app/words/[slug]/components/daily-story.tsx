@@ -1,7 +1,7 @@
 "use client";
 
 import type { MouseEvent } from "react";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ILuluWord } from "@/lib/words/types";
 import {
   generateSpeech,
@@ -10,6 +10,7 @@ import {
   translateStoryAction,
 } from "@/app/words/[slug]/actions";
 import Markdown from "react-markdown";
+import { MobileSheet } from "@/components/MobileSheet";
 
 interface DailyStoryProps {
   story: string;
@@ -22,6 +23,7 @@ interface PopoverState {
   x: number;
   y: number;
   isMobile: boolean;
+  open: boolean;
   content?: string;
   loading?: boolean;
   audioSrc?: string;
@@ -130,6 +132,7 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
     useState(false);
   const [showTranslation, setShowTranslation] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const wordMap = useMemo(() => {
     return new Map(words.map((word) => [word.uuid, word]));
@@ -155,6 +158,10 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
     wordText: string,
     event: MouseEvent<HTMLButtonElement>,
   ) => {
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
     const word = wordMap.get(wordText);
     const rect = event.currentTarget.getBoundingClientRect();
     const isMobile = window.innerWidth < 640;
@@ -171,6 +178,7 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
       x: clampedLeft,
       y: rect.bottom,
       isMobile,
+      open: true,
       loading: true,
       audioLoading: true,
     });
@@ -207,6 +215,20 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
         };
       });
     }
+  };
+
+  const closePopover = () => {
+    setPopover((current) => {
+      if (!current) return current;
+      return { ...current, open: false };
+    });
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+    }
+    closeTimeoutRef.current = setTimeout(() => {
+      setPopover(null);
+      closeTimeoutRef.current = null;
+    }, 280);
   };
 
   const handleRegenerateCard = async () => {
@@ -277,6 +299,14 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
       setIsRegeneratingTranslation(false);
     }
   };
+
+  useEffect(() => {
+    return () => {
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -374,73 +404,123 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
 
       {popover && (
         <>
-          <button
-            type="button"
-            aria-label="Close popover"
-            onClick={() => setPopover(null)}
-            className="fixed inset-0 z-40 cursor-default bg-transparent"
-          />
-          <div
-            className={`z-50 ${
-              popover.isMobile ? "fixed left-4 right-4 bottom-4" : "fixed"
-            }`}
-            style={
-              popover.isMobile
-                ? undefined
-                : {
-                    top: popover.y + 8,
-                    left: popover.x,
-                    width: 280,
-                  }
-            }
-          >
-            <div className="story-card rounded-2xl p-5 shadow-lg">
-              <div className="flex justify-between gap-4 items-center">
-                <div>
-                  <h3 className="text-xl font-semibold text-foreground">
-                    {popover.wordText}
-                  </h3>
-                  {popover.word?.phon && (
-                    <div
-                      className="mt-2 text-sm text-[color:var(--text-muted)]"
-                      dangerouslySetInnerHTML={{ __html: popover.word.phon }}
-                    />
-                  )}
+          {!popover.isMobile && (
+            <button
+              type="button"
+              aria-label="Close popover"
+              onClick={closePopover}
+              className="fixed inset-0 z-40 cursor-default story-popover-backdrop"
+            />
+          )}
+          {popover.isMobile ? (
+            <MobileSheet
+              open={popover.open}
+              onClose={closePopover}
+              ariaLabel="Close word card"
+              panelClassName="story-card"
+              bodyClassName="px-5 py-4 text-[color:var(--foreground)] scrollbar-hide"
+              header={
+                <div className="flex justify-between gap-4 items-center">
+                  <div>
+                    <h3 className="text-xl font-semibold text-foreground">
+                      {popover.wordText}
+                    </h3>
+                    {popover.word?.phon && (
+                      <div
+                        className="mt-2 text-sm text-[color:var(--text-muted)]"
+                        dangerouslySetInnerHTML={{ __html: popover.word.phon }}
+                      />
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handlePlay}
+                    disabled={popover.audioLoading || !popover.audioSrc}
+                    className="text-sm font-medium text-[color:var(--accent-warm)] hover:opacity-80 disabled:opacity-50"
+                  >
+                    {popover.audioLoading ? "生成中…" : "播放发音"}
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={handlePlay}
-                  disabled={popover.audioLoading || !popover.audioSrc}
-                  className="text-sm font-medium text-[color:var(--accent-warm)] hover:opacity-80 disabled:opacity-50"
-                >
-                  {popover.audioLoading ? "生成中…" : "播放发音"}
-                </button>
-              </div>
-
-              <div className="mt-4 text-[color:var(--foreground)]">
-                {popover.loading ? (
-                  <span className="text-sm text-[color:var(--text-muted)]">
-                    生成中…
-                  </span>
-                ) : (
-                  <Markdown>{popover.content || ""}</Markdown>
-                )}
-              </div>
-              <div className="mt-4 flex items-center justify-between gap-3">
+              }
+              footer={
                 <button
                   type="button"
                   onClick={handleRegenerateCard}
                   disabled={popover.loading}
-                  className="text-xs uppercase tracking-[0.18em] text-gray-500 hover:text-gray-800 disabled:opacity-50"
+                  className="text-xs uppercase tracking-[0.18em] story-muted-action disabled:opacity-50"
                 >
                   {popover.loading ? "GENERATING..." : "REGENERATE"}
                 </button>
-              </div>
+              }
+            >
+              {popover.loading ? (
+                <span className="text-sm text-[color:var(--text-muted)]">
+                  生成中…
+                </span>
+              ) : (
+                <Markdown>{popover.content || ""}</Markdown>
+              )}
               {popover.audioSrc && (
                 <audio ref={audioRef} src={popover.audioSrc} />
               )}
+            </MobileSheet>
+          ) : (
+            <div
+              className="z-50 fixed story-popover-panel"
+              style={{
+                top: popover.y + 8,
+                left: popover.x,
+                width: 280,
+              }}
+            >
+              <div className="story-card rounded-2xl p-5 shadow-lg">
+                <div className="flex justify-between gap-4 items-center">
+                  <div>
+                    <h3 className="text-xl font-semibold text-foreground">
+                      {popover.wordText}
+                    </h3>
+                    {popover.word?.phon && (
+                      <div
+                        className="mt-2 text-sm text-[color:var(--text-muted)]"
+                        dangerouslySetInnerHTML={{ __html: popover.word.phon }}
+                      />
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handlePlay}
+                    disabled={popover.audioLoading || !popover.audioSrc}
+                    className="text-sm font-medium text-[color:var(--accent-warm)] hover:opacity-80 disabled:opacity-50"
+                  >
+                    {popover.audioLoading ? "生成中…" : "播放发音"}
+                  </button>
+                </div>
+
+                <div className="mt-4 text-[color:var(--foreground)]">
+                  {popover.loading ? (
+                    <span className="text-sm text-[color:var(--text-muted)]">
+                      生成中…
+                    </span>
+                  ) : (
+                    <Markdown>{popover.content || ""}</Markdown>
+                  )}
+                </div>
+                <div className="mt-4 flex items-center justify-between gap-3">
+                  <button
+                    type="button"
+                    onClick={handleRegenerateCard}
+                    disabled={popover.loading}
+                    className="text-xs uppercase tracking-[0.18em] story-muted-action disabled:opacity-50"
+                  >
+                    {popover.loading ? "GENERATING..." : "REGENERATE"}
+                  </button>
+                </div>
+                {popover.audioSrc && (
+                  <audio ref={audioRef} src={popover.audioSrc} />
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </>
       )}
     </div>
