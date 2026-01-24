@@ -10,6 +10,7 @@ export const ContextLine: React.FC<{ word: ILuluWord }> = ({ word }) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [exp, setExp] = useState<string>("");
   const [expand, setExpand] = useState<boolean>(false);
+  const [regenerating, setRegenerating] = useState<boolean>(false);
 
   const handleGetExplanation = async () => {
     if (exp) {
@@ -29,6 +30,19 @@ export const ContextLine: React.FC<{ word: ILuluWord }> = ({ word }) => {
     setLoading(false);
   };
 
+  const handleRegenerate = async () => {
+    setRegenerating(true);
+    try {
+      const text = await getExplanationAction(word, { force: true });
+      setExp(text);
+      setExpand(true);
+    } catch {
+      setExp("请求失败");
+    } finally {
+      setRegenerating(false);
+    }
+  };
+
   return (
     <>
       <div onClick={handleGetExplanation}>
@@ -42,8 +56,16 @@ export const ContextLine: React.FC<{ word: ILuluWord }> = ({ word }) => {
       )}
       <div>
         {!loading && exp && expand && (
-          <div className="mt-5 text-gray-500">
+          <div className="mt-5 text-gray-500 space-y-3">
             <Markdown>{exp}</Markdown>
+            <button
+              type="button"
+              onClick={handleRegenerate}
+              disabled={regenerating}
+              className="text-xs uppercase tracking-[0.18em] text-gray-500 hover:text-gray-800 disabled:opacity-50"
+            >
+              {regenerating ? "GENERATING..." : "REGENERATE"}
+            </button>
           </div>
         )}
       </div>
