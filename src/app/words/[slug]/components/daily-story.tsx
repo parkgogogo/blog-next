@@ -126,6 +126,8 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
   const [popover, setPopover] = useState<PopoverState | null>(null);
   const [translation, setTranslation] = useState<string | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
+  const [isRegeneratingTranslation, setIsRegeneratingTranslation] =
+    useState(false);
   const [showTranslation, setShowTranslation] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -138,6 +140,16 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
     () => (translation ? splitStory(translation) : []),
     [translation],
   );
+
+  const requestWordCard = async (
+    wordText: string,
+    word: ILuluWord | undefined,
+    options?: { force?: boolean },
+  ) => {
+    return word
+      ? getWordCardAction(word, story, options)
+      : getFreeWordCardAction(wordText, story, options);
+  };
 
   const handleSelect = async (
     wordText: string,
@@ -164,9 +176,7 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
     });
 
     try {
-      const contentPromise = word
-        ? getWordCardAction(word, story)
-        : getFreeWordCardAction(wordText, story);
+      const contentPromise = requestWordCard(wordText, word);
       const audioPromise = word
         ? Promise.resolve(`/api/speech/${wordText}`)
         : generateSpeech(wordText).then(
@@ -199,6 +209,39 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
     }
   };
 
+  const handleRegenerateCard = async () => {
+    if (!popover) return;
+    const { wordText, word } = popover;
+    setPopover((current) => {
+      if (!current) return current;
+      return {
+        ...current,
+        loading: true,
+      };
+    });
+
+    try {
+      const content = await requestWordCard(wordText, word, { force: true });
+      setPopover((current) => {
+        if (!current || current.wordText !== wordText) return current;
+        return {
+          ...current,
+          content,
+          loading: false,
+        };
+      });
+    } catch {
+      setPopover((current) => {
+        if (!current || current.wordText !== wordText) return current;
+        return {
+          ...current,
+          content: "生成失败，请重试。",
+          loading: false,
+        };
+      });
+    }
+  };
+
   const handlePlay = () => {
     audioRef.current?.play();
   };
@@ -218,6 +261,20 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
       setShowTranslation(true);
     } finally {
       setIsTranslating(false);
+    }
+  };
+
+  const handleRegenerateTranslation = async () => {
+    setIsRegeneratingTranslation(true);
+    try {
+      const result = await translateStoryAction(story, { force: true });
+      setTranslation(result);
+      setShowTranslation(true);
+    } catch {
+      setTranslation("翻译失败，请重试。");
+      setShowTranslation(true);
+    } finally {
+      setIsRegeneratingTranslation(false);
     }
   };
 
@@ -271,18 +328,30 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
       </div>
 
       <div className="space-y-4">
-        <button
-          type="button"
-          onClick={handleTranslate}
-          disabled={isTranslating}
-          className="text-xs uppercase tracking-[0.18em] text-gray-500 hover:text-gray-800 disabled:opacity-50"
-        >
-          {isTranslating
-            ? "TRANSLATING..."
-            : showTranslation
-              ? "HIDE TRANSLATION"
-              : "TRANSLATE"}
-        </button>
+        <div className="flex flex-wrap items-center gap-4">
+          <button
+            type="button"
+            onClick={handleTranslate}
+            disabled={isTranslating}
+            className="text-xs uppercase tracking-[0.18em] text-gray-500 hover:text-gray-800 disabled:opacity-50"
+          >
+            {isTranslating
+              ? "TRANSLATING..."
+              : showTranslation
+                ? "HIDE TRANSLATION"
+                : "TRANSLATE"}
+          </button>
+          {translation && (
+            <button
+              type="button"
+              onClick={handleRegenerateTranslation}
+              disabled={isRegeneratingTranslation}
+              className="text-xs uppercase tracking-[0.18em] text-gray-500 hover:text-gray-800 disabled:opacity-50"
+            >
+              {isRegeneratingTranslation ? "GENERATING..." : "REGENERATE"}
+            </button>
+          )}
+        </div>
 
         {showTranslation && (
           <div className="border-t border-dashed border-gray-300 pt-4 text-gray-700 whitespace-pre-wrap">
@@ -326,7 +395,7 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
             }
           >
             <div className="story-card rounded-2xl p-5 shadow-lg">
-              <div className="flex items-start justify-between gap-4 items-center">
+              <div className="flex justify-between gap-4 items-center">
                 <div>
                   <h3 className="text-xl font-semibold text-gray-900">
                     {popover.wordText}
@@ -354,6 +423,16 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
                 ) : (
                   <Markdown>{popover.content || ""}</Markdown>
                 )}
+              </div>
+              <div className="mt-4 flex items-center justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={handleRegenerateCard}
+                  disabled={popover.loading}
+                  className="text-xs uppercase tracking-[0.18em] text-gray-500 hover:text-gray-800 disabled:opacity-50"
+                >
+                  {popover.loading ? "GENERATING..." : "REGENERATE"}
+                </button>
               </div>
               {popover.audioSrc && (
                 <audio ref={audioRef} src={popover.audioSrc} />

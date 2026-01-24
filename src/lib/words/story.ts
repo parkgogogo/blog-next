@@ -1,8 +1,10 @@
-import { ai_generateText } from "@/lib/ai";
-import { redis } from "@/lib/redis";
+import { ai_generateText, AI_TEXT_MODEL } from "@/lib/ai";
+import {
+  createInputHash,
+  getCachedGeneration,
+  saveGeneration,
+} from "@/lib/ai-cache";
 import type { ILuluWord } from "@/lib/words/types";
-
-const STORY_CACHE_PREFIX = "STORY_";
 
 const STORY_SYSTEM_PROMPT = `
 You are a creative writing assistant. Write a short, fun English paragraph using the given word list.
@@ -26,12 +28,6 @@ export const getDailyStory = async (
   dateSlug: string,
   options?: { force?: boolean },
 ) => {
-  const cacheKey = `${STORY_CACHE_PREFIX}${dateSlug}`;
-  if (!options?.force) {
-    const cached = await redis.get<string>(cacheKey);
-    if (cached) return cached;
-  }
-
   const wordList = words.map((word) => word.uuid).filter(Boolean);
   if (wordList.length === 0) return "";
 
@@ -39,6 +35,19 @@ export const getDailyStory = async (
     .map((word) => `- ${word.uuid}: ${word.context.line || ""}`)
     .join("\n");
   const basePrompt = `Word list: ${wordList.join(", ")}\n\nExample sentences:\n${contextLines}`;
+  const inputHash = createInputHash({
+    version: 1,
+    type: "daily_story",
+    system: STORY_SYSTEM_PROMPT,
+    prompt: basePrompt,
+    model: AI_TEXT_MODEL,
+  });
+  const cacheKey = `STORY_${dateSlug}`;
+
+  if (!options?.force) {
+    const cached = await getCachedGeneration("daily_story", inputHash);
+    if (cached) return cached;
+  }
 
   try {
     const generateStory = async (extraInstruction?: string) => {
@@ -62,13 +71,34 @@ export const getDailyStory = async (
       ? await generateStory(`Must include these missing words: ${missing.join(", ")}`)
       : story;
     const finalStory = ensureStoryContainsAllWords(secondTry, wordList);
-    await redis.set(cacheKey, finalStory);
+    await saveGeneration({
+      type: "daily_story",
+      key: cacheKey,
+      inputHash,
+      content: finalStory,
+      meta: {
+        dateSlug,
+        wordList,
+        model: AI_TEXT_MODEL,
+      },
+    });
     return finalStory;
   } catch {
     const fallback = `今天的单词是：${wordList
       .map((word) => `[[${word}]]`)
       .join(" ")}。`;
-    await redis.set(cacheKey, fallback);
+    await saveGeneration({
+      type: "daily_story",
+      key: cacheKey,
+      inputHash,
+      content: fallback,
+      meta: {
+        dateSlug,
+        wordList,
+        model: AI_TEXT_MODEL,
+        fallback: true,
+      },
+    });
     return fallback;
   }
 };

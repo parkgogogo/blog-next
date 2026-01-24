@@ -6,8 +6,6 @@ import {
 import type { ILuluWord, IResponse } from "./types";
 import { format } from "date-fns";
 import { ai_generateText } from "@/lib/ai";
-import { REDIS_KEYS } from "@/constants/redis";
-import { redis } from "@/lib/redis";
 
 const fetchWithTimeout = async (
   input: RequestInfo | URL,
@@ -63,11 +61,6 @@ const getLuLuWords = async () => {
     const parsedResult: IResponse = await result.json();
 
     if (Array.isArray(parsedResult.data)) {
-      // sync to redis;
-      redis.set(
-        REDIS_KEYS.ALL_WORDS,
-        parsedResult.data.map((word) => word.uuid).join(","),
-      );
       return parsedResult.data;
     }
     return [];
@@ -132,9 +125,22 @@ export const WordsService = (() => {
     return Array.from(wordsMap.keys());
   };
 
+  const getAllWordUuids = async () => {
+    check();
+    const wordsMap = await promise;
+    const uuidSet = new Set<string>();
+    for (const wordsOfDay of wordsMap.values()) {
+      for (const word of wordsOfDay) {
+        if (word.uuid) uuidSet.add(word.uuid);
+      }
+    }
+    return Array.from(uuidSet);
+  };
+
   return {
     getWordsGroupKeys,
     getAllWords,
     getWordsByDate,
+    getAllWordUuids,
   };
 })();

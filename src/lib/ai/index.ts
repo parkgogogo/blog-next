@@ -2,6 +2,11 @@ import { generateText } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
 import OpenAI from "openai";
 
+export const AI_TEXT_MODEL = "gemini-2.5-flash-lite";
+export const AI_SPEECH_MODEL = "gpt-4o-mini-tts";
+export const AI_SPEECH_VOICE = "shimmer";
+export const AI_SPEECH_FORMAT = "wav";
+
 export const ai_generateSpeech = async (text: string) => {
   const BASE_URL = process.env.AI_BASE_URL;
   const TOKEN = process.env.AI_TOKEN;
@@ -16,10 +21,10 @@ export const ai_generateSpeech = async (text: string) => {
   });
 
   const mp3 = await openai.audio.speech.create({
-    model: "gpt-4o-mini-tts",
-    voice: "shimmer",
+    model: AI_SPEECH_MODEL,
+    voice: AI_SPEECH_VOICE,
     input: text,
-    response_format: "wav",
+    response_format: AI_SPEECH_FORMAT,
   });
 
   return await mp3.arrayBuffer();
@@ -43,7 +48,7 @@ export const ai_generateText = async (options: {
 
   const { text } = await Promise.race([
     generateText({
-      model: openai.chat("gemini-2.5-flash-lite"),
+      model: openai.chat(AI_TEXT_MODEL),
       system: options.system,
       prompt: options.prompt,
     }),

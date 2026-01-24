@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ai_generateSpeech } from "@/lib/ai";
-import { redis } from "@/lib/redis";
-import { REDIS_KEYS } from "@/constants/redis";
+import { WordsService } from "@/lib/words";
 
 export async function GET(
   request: NextRequest,
@@ -9,15 +8,7 @@ export async function GET(
 ) {
   const { text } = await params;
 
-  // 检查 redis 缓存，防止被滥用
-  const redisString = await redis.get<string>(REDIS_KEYS.ALL_WORDS);
-  const wordsList = (() => {
-    if (redisString) {
-      return redisString.split(",");
-    }
-    return [];
-  })();
-  // 没有命中 redis 缓存，直接返回
+  const wordsList = await WordsService.getAllWordUuids();
   if (!wordsList.includes(text)) {
     return NextResponse.error();
   }
