@@ -34,7 +34,7 @@ function processHashtagsInText(child: ReactNode): ReactNode {
           data-hashtag={match[1]}
         >
           🏷 {match[0]}
-        </span>
+        </span>,
       );
 
       lastIndex = match.index + match[0].length;
@@ -57,56 +57,55 @@ function processChildren(children: ReactNode): ReactNode {
     : processHashtagsInText(children);
 }
 
-export default async function MarkdownRenderer({
+export default function MarkdownRenderer({
   content,
   date,
 }: MarkdownRendererProps) {
   // Convert attachment URLs to API URLs
   const processedContent = convertAttachmentUrls(content);
 
-  const rendered = await MarkdownAsync({
-    remarkPlugins: [remarkGfm],
-    rehypePlugins: [
-      (options) => rehypeStarryNight({ ...options, grammars: all }),
-    ],
-    components: {
-      header: ({ children }) => (
-        <div>
-          <h1 className="text-3xl font-medium font-display text-foreground mb-4 leading-tight tracking-tight mt-0">
-            {processChildren(children)}
-          </h1>
-          {date && (
-            <div className="flex flex-row items-center gap-2 text-gray-500 dark:text-gray-400">
-              <time>{format(new Date(date), "d MMM, yyyy")}</time>
-            </div>
-          )}
-        </div>
-      ),
-      p: ({ children }) => <p>{processChildren(children)}</p>,
-      li: ({ children }) => <li>{processChildren(children)}</li>,
-      img: ({ src, alt }) => {
-        return (
-          <div className="flex flex-col items-center my-4">
-            <Image
-              className="rounded-xl"
-              loading="lazy"
-              src={src as string}
-              alt={alt || "blog's image"}
-              width={650}
-              height={350}
-              quality={80}
-            />
-            <div className="italic text-sm mt-2 font-serif">{alt}</div>
-          </div>
-        );
-      },
-    },
-    children: processedContent,
-  });
-
   return (
     <div className="markdown-body">
-      {rendered}
+      <MarkdownAsync
+        remarkPlugins={[remarkGfm]}
+        rehypePlugins={[
+          (options) => rehypeStarryNight({ ...options, grammars: all }),
+        ]}
+        components={{
+          header: ({ children }) => (
+            <div>
+              <h1 className="text-3xl font-medium font-display text-foreground mb-4 leading-tight tracking-tight mt-0">
+                {processChildren(children)}
+              </h1>
+              {date && (
+                <div className="flex flex-row items-center gap-2 text-gray-500 dark:text-gray-400">
+                  <time>{format(new Date(date), "d MMM, yyyy")}</time>
+                </div>
+              )}
+            </div>
+          ),
+          p: ({ children }) => <p>{processChildren(children)}</p>,
+          li: ({ children }) => <li>{processChildren(children)}</li>,
+          img: ({ src, alt }) => {
+            return (
+              <div className="flex flex-col items-center my-4">
+                <Image
+                  className="rounded-xl"
+                  loading="lazy"
+                  src={src as string}
+                  alt={alt || "blog's image"}
+                  width={650}
+                  height={350}
+                  quality={80}
+                />
+                <div className="italic text-sm mt-2 font-serif">{alt}</div>
+              </div>
+            );
+          },
+        }}
+      >
+        {processedContent}
+      </MarkdownAsync>
     </div>
   );
 }
