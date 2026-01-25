@@ -30,15 +30,15 @@ export const ContextLine: React.FC<{ word: ILuluWord }> = ({ word }) => {
   };
 
   const requestBundle = async (options?: { force?: boolean }) => {
-    const storyContext = stripHtml(word.context.line) || word.word;
+    const sourceText = stripHtml(word.context.line) || word.word;
     setBriefLoading(true);
     setDetailLoading(true);
     setContextLoading(true);
     try {
-      const result = await getWordCardBundleAction(word.uuid, storyContext, {
+      const result = await getWordCardBundleAction(word.uuid, sourceText, {
         force: options?.force,
       });
-      setContextLine(result.context || storyContext);
+      setContextLine(result.context || sourceText);
       setBrief(result.brief);
       setDetail(result.detail);
       setExpand(true);

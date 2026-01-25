@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import type { StoryContextSnippetRequest } from "@/lib/words/api-types";
+import type { ContextSnippetRequest } from "@/lib/words/api-types";
 import { enforceRateLimit, requireApiKey } from "@/lib/middleware/security";
-import { getStoryContextSnippet } from "@/lib/words/ai-service";
+import { getContextSnippet } from "@/lib/words/ai-service";
 
 export async function POST(request: NextRequest) {
   const auth = requireApiKey(request);
@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     return rateLimit.response;
   }
 
-  let payload: Partial<StoryContextSnippetRequest>;
+  let payload: Partial<ContextSnippetRequest>;
   try {
     payload = (await request.json()) as typeof payload;
   } catch {
@@ -21,18 +21,19 @@ export async function POST(request: NextRequest) {
   }
 
   const word = typeof payload.word === "string" ? payload.word.trim() : "";
-  const story = typeof payload.story === "string" ? payload.story.trim() : "";
+  const sourceText =
+    typeof payload.sourceText === "string" ? payload.sourceText.trim() : "";
   const maxChars =
     typeof payload.maxChars === "number" ? payload.maxChars : undefined;
 
-  if (!word || !story) {
+  if (!word || !sourceText) {
     return NextResponse.json(
-      { error: "word and story are required" },
+      { error: "word and sourceText are required" },
       { status: 400 },
     );
   }
 
-  const content = await getStoryContextSnippet(word, story, {
+  const content = await getContextSnippet(word, sourceText, {
     force: payload.force,
     maxChars,
   });

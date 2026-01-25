@@ -12,7 +12,7 @@ export type AIGenerationType =
   | "free_word_card"
   | "context_snippet"
   | "word_card_bundle"
-  | "story_translation"
+  | "passage_translation"
   | "sentence_translation";
 
 const stableStringify = (value: unknown): string => {

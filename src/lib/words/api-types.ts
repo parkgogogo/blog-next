@@ -33,16 +33,16 @@ export interface TranslationResponse {
   content: string;
 }
 
-export interface StoryContextSnippetRequest {
+export interface ContextSnippetRequest {
   word: string;
-  story: string;
+  sourceText: string;
   maxChars?: number;
   force?: boolean;
 }
 
 export interface WordCardBundleRequest {
   word: string;
-  story?: string;
+  sourceText?: string;
   contextLine?: string;
   maxChars?: number;
   force?: boolean;

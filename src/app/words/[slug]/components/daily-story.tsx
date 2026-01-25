@@ -6,7 +6,7 @@ import type { ILuluWord } from "@/lib/words/types";
 import {
   generateSpeech,
   getWordCardBundleAction,
-  translateStoryAction,
+  translatePassageAction,
 } from "@/app/words/[slug]/actions";
 import Markdown from "react-markdown";
 import {
@@ -312,7 +312,7 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
     }
     setIsTranslating(true);
     try {
-      const result = await translateStoryAction(story);
+      const result = await translatePassageAction(story);
       setTranslation(result);
       setShowTranslation(true);
     } catch {
@@ -326,7 +326,7 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
   const handleRegenerateTranslation = async () => {
     setIsRegeneratingTranslation(true);
     try {
-      const result = await translateStoryAction(story, { force: true });
+      const result = await translatePassageAction(story, { force: true });
       setTranslation(result);
       setShowTranslation(true);
     } catch {
