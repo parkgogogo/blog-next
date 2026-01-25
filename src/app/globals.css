@@ -180,7 +180,6 @@ body {
   color: var(--foreground);
   border-top-left-radius: 1.5rem;
   border-top-right-radius: 1.5rem;
-  border: 1px solid var(--border-subtle);
   box-shadow:
     0 -20px 35px rgba(0, 0, 0, 0.12),
     0 -8px 18px rgba(0, 0, 0, 0.08);
