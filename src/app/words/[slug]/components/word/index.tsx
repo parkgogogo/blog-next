@@ -14,14 +14,10 @@ export const Index: React.FC<{ text: string; phon: string }> = ({
   };
 
   return (
-    <div className="space-y-1">
-      <button
-        type="button"
-        className="text-base font-semibold text-foreground"
-        onClick={handlePlay}
-      >
+    <div className="mb-4">
+      <h3 className="mb-2" onClick={handlePlay}>
         <span>{text}</span>
-      </button>
+      </h3>
       <div
         className={`flex gap-2 text-sm ${styles.phon}`}
         dangerouslySetInnerHTML={{ __html: phon }}

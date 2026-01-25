@@ -72,6 +72,9 @@ const splitEnglishWords = (text: string) => {
   return parts;
 };
 
+const stripHtml = (text: string) =>
+  text.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
+
 const STOP_WORDS = new Set([
   "a",
   "an",
@@ -418,30 +421,7 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
               onClose={closePopover}
               ariaLabel="Close word card"
               panelClassName="story-card"
-              bodyClassName="px-5 py-4 text-[color:var(--foreground)] scrollbar-hide"
-              header={
-                <div className="flex justify-between gap-4 items-center">
-                  <div>
-                    <h3 className="text-xl font-semibold text-foreground">
-                      {popover.wordText}
-                    </h3>
-                    {popover.word?.phon && (
-                      <div
-                        className="mt-2 text-sm text-[color:var(--text-muted)]"
-                        dangerouslySetInnerHTML={{ __html: popover.word.phon }}
-                      />
-                    )}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handlePlay}
-                    disabled={popover.audioLoading || !popover.audioSrc}
-                    className="text-sm font-medium text-[color:var(--accent-warm)] hover:opacity-80 disabled:opacity-50"
-                  >
-                    {popover.audioLoading ? "生成中…" : "播放发音"}
-                  </button>
-                </div>
-              }
+              bodyClassName="px-5 py-4 space-y-4 text-[color:var(--foreground)] scrollbar-hide"
               footer={
                 <button
                   type="button"
@@ -453,6 +433,27 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
                 </button>
               }
             >
+              {popover.word?.context.line && (
+                <div className="border-b border-dashed border-[color:var(--border-subtle)] pb-3 text-sm text-[color:var(--text-muted)]">
+                  <Markdown>{`> ${stripHtml(popover.word.context.line)}`}</Markdown>
+                </div>
+              )}
+              <div className="flex items-center justify-between gap-3">
+                {popover.word?.phon && (
+                  <div
+                    className="text-sm text-[color:var(--text-muted)]"
+                    dangerouslySetInnerHTML={{ __html: popover.word.phon }}
+                  />
+                )}
+                <button
+                  type="button"
+                  onClick={handlePlay}
+                  disabled={popover.audioLoading || !popover.audioSrc}
+                  className="text-sm font-medium text-[color:var(--accent-warm)] hover:opacity-80 disabled:opacity-50"
+                >
+                  {popover.audioLoading ? "生成中…" : "播放发音"}
+                </button>
+              </div>
               {popover.loading ? (
                 <span className="text-sm text-[color:var(--text-muted)]">
                   生成中…

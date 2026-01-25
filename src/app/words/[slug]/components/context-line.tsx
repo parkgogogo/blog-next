@@ -7,15 +7,7 @@ import { getExplanationAction } from "@/app/words/[slug]/actions";
 import Markdown from "react-markdown";
 import { MobileSheet } from "@/components/MobileSheet";
 
-type ContextLineProps = {
-  word: ILuluWord;
-  lineClassName?: string;
-};
-
-export const ContextLine: React.FC<ContextLineProps> = ({
-  word,
-  lineClassName,
-}) => {
+export const ContextLine: React.FC<{ word: ILuluWord }> = ({ word }) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [exp, setExp] = useState<string>("");
   const [expand, setExpand] = useState<boolean>(false);
@@ -58,8 +50,11 @@ export const ContextLine: React.FC<ContextLineProps> = ({
 
   return (
     <>
-      <div onClick={handleGetExplanation} className={lineClassName}>
-        <div dangerouslySetInnerHTML={{ __html: word.context.line }} />
+      <div onClick={handleGetExplanation}>
+        <div
+          className="inline-block"
+          dangerouslySetInnerHTML={{ __html: word.context.line }}
+        />
       </div>
       {loading && (
         <Loader className="animate-spin mt-2 text-blue-500" size={16}></Loader>
