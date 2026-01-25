@@ -1,12 +1,9 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { ILuluWord } from "@/lib/words/types";
 import { Loader } from "lucide-react";
-import {
-  getExplanationAction,
-  getWordCardAction,
-} from "@/app/words/[slug]/actions";
+import { getWordCardBundleAction } from "@/app/words/[slug]/actions";
 import {
   WordCardPanel,
   type WordCardMode,
@@ -25,43 +22,35 @@ export const ContextLine: React.FC<{ word: ILuluWord }> = ({ word }) => {
   const [activeMode, setActiveMode] = useState<WordCardMode>("detail");
   const [briefLoading, setBriefLoading] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [contextLine, setContextLine] = useState<string>("");
+  const [contextLoading, setContextLoading] = useState(false);
 
   const handleClose = () => {
     setExpand(false);
   };
 
-  const requestDetail = useCallback(
-    async (options?: { force?: boolean }) => {
-      setDetailLoading(true);
-      try {
-        const text = await getExplanationAction(word, options);
-        setDetail(text);
-        setExpand(true);
-      } catch {
-        setDetail("请求失败");
-      } finally {
-        setDetailLoading(false);
-      }
-    },
-    [word],
-  );
-
-  const requestBrief = useCallback(
-    async (options?: { force?: boolean }) => {
-      setBriefLoading(true);
-      try {
-        const storyContext = stripHtml(word.context.line) || word.word;
-        const text = await getWordCardAction(word, storyContext, options);
-        setBrief(text);
-        setExpand(true);
-      } catch {
-        setBrief("请求失败");
-      } finally {
-        setBriefLoading(false);
-      }
-    },
-    [word],
-  );
+  const requestBundle = async (options?: { force?: boolean }) => {
+    const storyContext = stripHtml(word.context.line) || word.word;
+    setBriefLoading(true);
+    setDetailLoading(true);
+    setContextLoading(true);
+    try {
+      const result = await getWordCardBundleAction(word.uuid, storyContext, {
+        force: options?.force,
+      });
+      setContextLine(result.context || storyContext);
+      setBrief(result.brief);
+      setDetail(result.detail);
+      setExpand(true);
+    } catch {
+      setBrief("请求失败");
+      setDetail("请求失败");
+    } finally {
+      setBriefLoading(false);
+      setDetailLoading(false);
+      setContextLoading(false);
+    }
+  };
 
   const handleGetExplanation = async () => {
     if (detail || brief) {
@@ -71,7 +60,7 @@ export const ContextLine: React.FC<{ word: ILuluWord }> = ({ word }) => {
     setLoading(true);
     setActiveMode("detail");
     try {
-      await requestDetail();
+      await requestBundle();
     } finally {
       setLoading(false);
     }
@@ -80,11 +69,7 @@ export const ContextLine: React.FC<{ word: ILuluWord }> = ({ word }) => {
   const handleRegenerate = async () => {
     setRegenerating(true);
     try {
-      if (activeMode === "brief") {
-        await requestBrief({ force: true });
-      } else {
-        await requestDetail({ force: true });
-      }
+      await requestBundle({ force: true });
     } finally {
       setRegenerating(false);
     }
@@ -92,12 +77,6 @@ export const ContextLine: React.FC<{ word: ILuluWord }> = ({ word }) => {
 
   const handleModeChange = async (mode: WordCardMode) => {
     setActiveMode(mode);
-    if (mode === "brief" && !brief && !briefLoading) {
-      await requestBrief();
-    }
-    if (mode === "detail" && !detail && !detailLoading) {
-      await requestDetail();
-    }
   };
 
   return (
@@ -117,8 +96,8 @@ export const ContextLine: React.FC<{ word: ILuluWord }> = ({ word }) => {
             <div className="hidden md:block mt-5 text-gray-500 space-y-3">
               <WordCardPanel
                 wordText={word.uuid}
-                phon={word.phon}
-                contextLine={stripHtml(word.context.line)}
+                contextLine={contextLine}
+                contextLoading={contextLoading}
                 activeMode={activeMode}
                 onModeChange={handleModeChange}
                 brief={{
@@ -137,6 +116,7 @@ export const ContextLine: React.FC<{ word: ILuluWord }> = ({ word }) => {
                     (activeMode === "detail" && (loading || regenerating)),
                   onRegenerate: handleRegenerate,
                 }}
+                showTitle={false}
                 className="text-[color:var(--foreground)]"
               />
             </div>
@@ -146,7 +126,8 @@ export const ContextLine: React.FC<{ word: ILuluWord }> = ({ word }) => {
                 onClose={handleClose}
                 wordText={word.uuid}
                 phon={word.phon}
-                contextLine={stripHtml(word.context.line)}
+                contextLine={contextLine}
+                contextLoading={contextLoading}
                 activeMode={activeMode}
                 onModeChange={handleModeChange}
                 brief={{
@@ -162,6 +143,10 @@ export const ContextLine: React.FC<{ word: ILuluWord }> = ({ word }) => {
                   loading:
                     detailLoading || (activeMode === "detail" && regenerating),
                   onRegenerate: handleRegenerate,
+                }}
+                audio={{
+                  src: `/api/speech/${word.uuid}`,
+                  onPlay: () => undefined,
                 }}
               />
             </div>

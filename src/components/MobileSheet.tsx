@@ -26,7 +26,7 @@ export const MobileSheet = ({
   footer,
   panelClassName = "",
   bodyClassName = "",
-  heightClassName = "h-[75vh]",
+  heightClassName = "h-[85vh]",
 }: MobileSheetProps) => {
   const [mounted, setMounted] = useState(open);
   const [active, setActive] = useState(open);
@@ -76,7 +76,7 @@ export const MobileSheet = ({
         } ${panelClassName}`}
         onClick={(event) => event.stopPropagation()}
       >
-        {header && <div className="p-5 pb-0">{header}</div>}
+        {header && <div className="p-5 pb-1">{header}</div>}
         <div className={`flex-1 overflow-y-auto ${bodyClassName}`}>
           {children}
         </div>

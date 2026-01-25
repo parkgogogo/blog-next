@@ -6,9 +6,12 @@ const TABLE_NAME = "ai_generations";
 export type AIGenerationType =
   | "daily_story"
   | "explanation"
+  | "free_explanation"
   | "word_page_explanation"
   | "word_card"
   | "free_word_card"
+  | "context_snippet"
+  | "word_card_bundle"
   | "story_translation"
   | "sentence_translation";
 

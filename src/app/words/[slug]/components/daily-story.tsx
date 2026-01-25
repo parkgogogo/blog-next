@@ -5,9 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { ILuluWord } from "@/lib/words/types";
 import {
   generateSpeech,
-  getExplanationAction,
-  getFreeWordCardAction,
-  getWordCardAction,
+  getWordCardBundleAction,
   translateStoryAction,
 } from "@/app/words/[slug]/actions";
 import Markdown from "react-markdown";
@@ -25,6 +23,8 @@ interface DailyStoryProps {
 interface PopoverState {
   wordText: string;
   word?: ILuluWord;
+  contextLine?: string;
+  contextLoading?: boolean;
   x: number;
   y: number;
   isMobile: boolean;
@@ -135,6 +135,8 @@ const STOP_WORDS = new Set([
   "your",
 ]);
 
+const MAX_CONTEXT_LENGTH = 160;
+
 export const DailyStory = ({ story, words }: DailyStoryProps) => {
   const [popover, setPopover] = useState<PopoverState | null>(null);
   const [translation, setTranslation] = useState<string | null>(null);
@@ -142,7 +144,6 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
   const [isRegeneratingTranslation, setIsRegeneratingTranslation] =
     useState(false);
   const [showTranslation, setShowTranslation] = useState(false);
-  const audioRef = useRef<HTMLAudioElement>(null);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const wordMap = useMemo(() => {
@@ -155,21 +156,14 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
     [translation],
   );
 
-  const requestBriefCard = async (
+  const requestBundle = async (
     wordText: string,
-    word: ILuluWord | undefined,
     options?: { force?: boolean },
   ) => {
-    return word
-      ? getWordCardAction(word, story, options)
-      : getFreeWordCardAction(wordText, story, options);
-  };
-
-  const requestDetailCard = async (
-    word: ILuluWord,
-    options?: { force?: boolean },
-  ) => {
-    return getExplanationAction(word, options);
+    return getWordCardBundleAction(wordText, story, {
+      force: options?.force,
+      maxChars: MAX_CONTEXT_LENGTH,
+    });
   };
 
   const handleSelect = async (
@@ -199,18 +193,20 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
       open: true,
       mode: "brief",
       briefLoading: true,
-      detailLoading: false,
+      detailLoading: true,
       audioLoading: true,
+      contextLine: "",
+      contextLoading: true,
     });
 
     try {
-      const contentPromise = requestBriefCard(wordText, word);
+      const contentPromise = requestBundle(wordText);
       const audioPromise = word
         ? Promise.resolve(`/api/speech/${wordText}`)
         : generateSpeech(wordText).then(
             (base64) => `data:audio/wav;base64,${base64}`,
           );
-      const [content, audioSrc] = await Promise.all([
+      const [bundle, audioSrc] = await Promise.all([
         contentPromise,
         audioPromise,
       ]);
@@ -218,8 +214,12 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
         if (!current || current.wordText !== wordText) return current;
         return {
           ...current,
-          briefContent: content,
+          contextLine: bundle.context,
+          contextLoading: false,
+          briefContent: bundle.brief,
+          detailContent: bundle.detail,
           briefLoading: false,
+          detailLoading: false,
           audioSrc,
           audioLoading: false,
         };
@@ -228,9 +228,12 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
       setPopover((current) => {
         if (!current || current.wordText !== wordText) return current;
         return {
+          contextLoading: false,
           ...current,
           briefContent: "生成失败，请重试。",
+          detailContent: "生成失败，请重试。",
           briefLoading: false,
+          detailLoading: false,
           audioLoading: false,
         };
       });
@@ -253,48 +256,39 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
 
   const handleRegenerateCard = async () => {
     if (!popover) return;
-    const { wordText, word, mode } = popover;
-    if (mode === "detail" && !word) return;
+    const { wordText } = popover;
     setPopover((current) => {
       if (!current) return current;
       return {
         ...current,
-        briefLoading: mode === "brief" ? true : current.briefLoading,
-        detailLoading: mode === "detail" ? true : current.detailLoading,
+        briefLoading: true,
+        detailLoading: true,
+        contextLoading: true,
       };
     });
 
     try {
-      if (mode === "detail") {
-        if (!word) return;
-        const content = await requestDetailCard(word, { force: true });
-        setPopover((current) => {
-          if (!current || current.wordText !== wordText) return current;
-          return {
-            ...current,
-            detailContent: content,
-            detailLoading: false,
-          };
-        });
-        return;
-      }
-      const content = await requestBriefCard(wordText, word, { force: true });
+      const bundle = await requestBundle(wordText, { force: true });
       setPopover((current) => {
         if (!current || current.wordText !== wordText) return current;
         return {
           ...current,
-          briefContent: content,
+          contextLine: bundle.context,
+          contextLoading: false,
+          briefContent: bundle.brief,
+          detailContent: bundle.detail,
           briefLoading: false,
+          detailLoading: false,
         };
       });
     } catch {
       setPopover((current) => {
         if (!current || current.wordText !== wordText) return current;
         return {
+          contextLoading: false,
           ...current,
-          briefContent: mode === "brief" ? "生成失败，请重试。" : current.briefContent,
-          detailContent:
-            mode === "detail" ? "生成失败，请重试。" : current.detailContent,
+          briefContent: "生成失败，请重试。",
+          detailContent: "生成失败，请重试。",
           briefLoading: false,
           detailLoading: false,
         };
@@ -309,54 +303,6 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
       if (!current) return current;
       return { ...current, mode };
     });
-    if (mode === "detail" && popover.word && !popover.detailContent) {
-      setPopover((current) => {
-        if (!current) return current;
-        return { ...current, detailLoading: true };
-      });
-      try {
-        const content = await requestDetailCard(popover.word);
-        setPopover((current) => {
-          if (!current) return current;
-          return { ...current, detailContent: content, detailLoading: false };
-        });
-      } catch {
-        setPopover((current) => {
-          if (!current) return current;
-          return {
-            ...current,
-            detailContent: "生成失败，请重试。",
-            detailLoading: false,
-          };
-        });
-      }
-    }
-    if (mode === "brief" && !popover.briefContent) {
-      setPopover((current) => {
-        if (!current) return current;
-        return { ...current, briefLoading: true };
-      });
-      try {
-        const content = await requestBriefCard(popover.wordText, popover.word);
-        setPopover((current) => {
-          if (!current) return current;
-          return { ...current, briefContent: content, briefLoading: false };
-        });
-      } catch {
-        setPopover((current) => {
-          if (!current) return current;
-          return {
-            ...current,
-            briefContent: "生成失败，请重试。",
-            briefLoading: false,
-          };
-        });
-      }
-    }
-  };
-
-  const handlePlay = () => {
-    audioRef.current?.play();
   };
 
   const handleTranslate = async () => {
@@ -511,10 +457,11 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
                 wordText={popover.wordText}
                 phon={popover.word?.phon}
                 contextLine={
-                  popover.word?.context.line
-                    ? stripHtml(popover.word.context.line)
+                  popover.contextLine
+                    ? stripHtml(popover.contextLine)
                     : undefined
                 }
+                contextLoading={popover.contextLoading}
                 activeMode={popover.mode}
                 onModeChange={handleModeChange}
                 brief={{
@@ -527,18 +474,14 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
                   label: "详解",
                   content: popover.detailContent,
                   loading: popover.detailLoading,
-                  available: Boolean(popover.word),
+                  available: Boolean(popover.contextLine),
                   onRegenerate: handleRegenerateCard,
                 }}
                 audio={{
                   src: popover.audioSrc,
                   loading: popover.audioLoading,
-                  onPlay: handlePlay,
                 }}
               />
-              {popover.audioSrc && (
-                <audio ref={audioRef} src={popover.audioSrc} />
-              )}
             </>
           ) : (
             <div
@@ -554,10 +497,11 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
                   wordText={popover.wordText}
                   phon={popover.word?.phon}
                   contextLine={
-                    popover.word?.context.line
-                      ? stripHtml(popover.word.context.line)
+                    popover.contextLine
+                      ? stripHtml(popover.contextLine)
                       : undefined
                   }
+                  contextLoading={popover.contextLoading}
                   activeMode={popover.mode}
                   onModeChange={handleModeChange}
                   brief={{
@@ -570,18 +514,14 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
                     label: "详解",
                     content: popover.detailContent,
                     loading: popover.detailLoading,
-                    available: Boolean(popover.word),
+                    available: Boolean(popover.contextLine),
                     onRegenerate: handleRegenerateCard,
                   }}
                   audio={{
                     src: popover.audioSrc,
                     loading: popover.audioLoading,
-                    onPlay: handlePlay,
                   }}
                 />
-                {popover.audioSrc && (
-                  <audio ref={audioRef} src={popover.audioSrc} />
-                )}
               </div>
             </div>
           )}
