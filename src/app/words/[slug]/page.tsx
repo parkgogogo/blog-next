@@ -36,15 +36,9 @@ export default async function DailyWordsPage({
         </div>
         <div className="markdown-body">
           {dailyWords.map((word) => (
-            <div
-              key={word.uuid}
-              className="mb-6 rounded-lg border border-black/5 bg-white/60 p-4 shadow-sm dark:border-white/10 dark:bg-white/5"
-            >
-              <ContextLine
-                word={word}
-                lineClassName="mb-4 cursor-pointer rounded-md border-l-4 border-orange-400/70 bg-orange-50/70 px-4 py-2 text-sm italic text-foreground/80 dark:bg-orange-950/40"
-              />
+            <div key={word.uuid}>
               <Index text={word.uuid} phon={word.phon} />
+              <ContextLine word={word} />
             </div>
           ))}
         </div>
