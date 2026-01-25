@@ -5,12 +5,17 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { ILuluWord } from "@/lib/words/types";
 import {
   generateSpeech,
+  getExplanationAction,
   getFreeWordCardAction,
   getWordCardAction,
   translateStoryAction,
 } from "@/app/words/[slug]/actions";
 import Markdown from "react-markdown";
-import { MobileSheet } from "@/components/MobileSheet";
+import {
+  WordCardPanel,
+  type WordCardMode,
+} from "@/app/words/[slug]/components/word-card-panel";
+import { WordCardSheet } from "@/app/words/[slug]/components/word-card-sheet";
 
 interface DailyStoryProps {
   story: string;
@@ -24,8 +29,11 @@ interface PopoverState {
   y: number;
   isMobile: boolean;
   open: boolean;
-  content?: string;
-  loading?: boolean;
+  mode: WordCardMode;
+  briefContent?: string;
+  detailContent?: string;
+  briefLoading?: boolean;
+  detailLoading?: boolean;
   audioSrc?: string;
   audioLoading?: boolean;
 }
@@ -147,7 +155,7 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
     [translation],
   );
 
-  const requestWordCard = async (
+  const requestBriefCard = async (
     wordText: string,
     word: ILuluWord | undefined,
     options?: { force?: boolean },
@@ -155,6 +163,13 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
     return word
       ? getWordCardAction(word, story, options)
       : getFreeWordCardAction(wordText, story, options);
+  };
+
+  const requestDetailCard = async (
+    word: ILuluWord,
+    options?: { force?: boolean },
+  ) => {
+    return getExplanationAction(word, options);
   };
 
   const handleSelect = async (
@@ -182,12 +197,14 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
       y: rect.bottom,
       isMobile,
       open: true,
-      loading: true,
+      mode: "brief",
+      briefLoading: true,
+      detailLoading: false,
       audioLoading: true,
     });
 
     try {
-      const contentPromise = requestWordCard(wordText, word);
+      const contentPromise = requestBriefCard(wordText, word);
       const audioPromise = word
         ? Promise.resolve(`/api/speech/${wordText}`)
         : generateSpeech(wordText).then(
@@ -201,8 +218,8 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
         if (!current || current.wordText !== wordText) return current;
         return {
           ...current,
-          content,
-          loading: false,
+          briefContent: content,
+          briefLoading: false,
           audioSrc,
           audioLoading: false,
         };
@@ -212,8 +229,8 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
         if (!current || current.wordText !== wordText) return current;
         return {
           ...current,
-          content: "生成失败，请重试。",
-          loading: false,
+          briefContent: "生成失败，请重试。",
+          briefLoading: false,
           audioLoading: false,
         };
       });
@@ -236,23 +253,38 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
 
   const handleRegenerateCard = async () => {
     if (!popover) return;
-    const { wordText, word } = popover;
+    const { wordText, word, mode } = popover;
+    if (mode === "detail" && !word) return;
     setPopover((current) => {
       if (!current) return current;
       return {
         ...current,
-        loading: true,
+        briefLoading: mode === "brief" ? true : current.briefLoading,
+        detailLoading: mode === "detail" ? true : current.detailLoading,
       };
     });
 
     try {
-      const content = await requestWordCard(wordText, word, { force: true });
+      if (mode === "detail") {
+        if (!word) return;
+        const content = await requestDetailCard(word, { force: true });
+        setPopover((current) => {
+          if (!current || current.wordText !== wordText) return current;
+          return {
+            ...current,
+            detailContent: content,
+            detailLoading: false,
+          };
+        });
+        return;
+      }
+      const content = await requestBriefCard(wordText, word, { force: true });
       setPopover((current) => {
         if (!current || current.wordText !== wordText) return current;
         return {
           ...current,
-          content,
-          loading: false,
+          briefContent: content,
+          briefLoading: false,
         };
       });
     } catch {
@@ -260,10 +292,66 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
         if (!current || current.wordText !== wordText) return current;
         return {
           ...current,
-          content: "生成失败，请重试。",
-          loading: false,
+          briefContent: mode === "brief" ? "生成失败，请重试。" : current.briefContent,
+          detailContent:
+            mode === "detail" ? "生成失败，请重试。" : current.detailContent,
+          briefLoading: false,
+          detailLoading: false,
         };
       });
+    }
+  };
+
+  const handleModeChange = async (mode: WordCardMode) => {
+    if (!popover) return;
+    if (mode === popover.mode) return;
+    setPopover((current) => {
+      if (!current) return current;
+      return { ...current, mode };
+    });
+    if (mode === "detail" && popover.word && !popover.detailContent) {
+      setPopover((current) => {
+        if (!current) return current;
+        return { ...current, detailLoading: true };
+      });
+      try {
+        const content = await requestDetailCard(popover.word);
+        setPopover((current) => {
+          if (!current) return current;
+          return { ...current, detailContent: content, detailLoading: false };
+        });
+      } catch {
+        setPopover((current) => {
+          if (!current) return current;
+          return {
+            ...current,
+            detailContent: "生成失败，请重试。",
+            detailLoading: false,
+          };
+        });
+      }
+    }
+    if (mode === "brief" && !popover.briefContent) {
+      setPopover((current) => {
+        if (!current) return current;
+        return { ...current, briefLoading: true };
+      });
+      try {
+        const content = await requestBriefCard(popover.wordText, popover.word);
+        setPopover((current) => {
+          if (!current) return current;
+          return { ...current, briefContent: content, briefLoading: false };
+        });
+      } catch {
+        setPopover((current) => {
+          if (!current) return current;
+          return {
+            ...current,
+            briefContent: "生成失败，请重试。",
+            briefLoading: false,
+          };
+        });
+      }
     }
   };
 
@@ -416,106 +504,81 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
             />
           )}
           {popover.isMobile ? (
-            <MobileSheet
-              open={popover.open}
-              onClose={closePopover}
-              ariaLabel="Close word card"
-              panelClassName="story-card"
-              bodyClassName="px-5 py-4 space-y-4 text-[color:var(--foreground)] scrollbar-hide"
-              footer={
-                <button
-                  type="button"
-                  onClick={handleRegenerateCard}
-                  disabled={popover.loading}
-                  className="text-xs uppercase tracking-[0.18em] story-muted-action disabled:opacity-50"
-                >
-                  {popover.loading ? "GENERATING..." : "REGENERATE"}
-                </button>
-              }
-            >
-              {popover.word?.context.line && (
-                <div className="border-b border-dashed border-[color:var(--border-subtle)] pb-3 text-sm text-[color:var(--text-muted)]">
-                  <Markdown>{`> ${stripHtml(popover.word.context.line)}`}</Markdown>
-                </div>
-              )}
-              <div className="flex items-center justify-between gap-3">
-                {popover.word?.phon && (
-                  <div
-                    className="text-sm text-[color:var(--text-muted)]"
-                    dangerouslySetInnerHTML={{ __html: popover.word.phon }}
-                  />
-                )}
-                <button
-                  type="button"
-                  onClick={handlePlay}
-                  disabled={popover.audioLoading || !popover.audioSrc}
-                  className="text-sm font-medium text-[color:var(--accent-warm)] hover:opacity-80 disabled:opacity-50"
-                >
-                  {popover.audioLoading ? "生成中…" : "播放发音"}
-                </button>
-              </div>
-              {popover.loading ? (
-                <span className="text-sm text-[color:var(--text-muted)]">
-                  生成中…
-                </span>
-              ) : (
-                <Markdown>{popover.content || ""}</Markdown>
-              )}
+            <>
+              <WordCardSheet
+                open={popover.open}
+                onClose={closePopover}
+                wordText={popover.wordText}
+                phon={popover.word?.phon}
+                contextLine={
+                  popover.word?.context.line
+                    ? stripHtml(popover.word.context.line)
+                    : undefined
+                }
+                activeMode={popover.mode}
+                onModeChange={handleModeChange}
+                brief={{
+                  label: "简解",
+                  content: popover.briefContent,
+                  loading: popover.briefLoading,
+                  onRegenerate: handleRegenerateCard,
+                }}
+                detail={{
+                  label: "详解",
+                  content: popover.detailContent,
+                  loading: popover.detailLoading,
+                  available: Boolean(popover.word),
+                  onRegenerate: handleRegenerateCard,
+                }}
+                audio={{
+                  src: popover.audioSrc,
+                  loading: popover.audioLoading,
+                  onPlay: handlePlay,
+                }}
+              />
               {popover.audioSrc && (
                 <audio ref={audioRef} src={popover.audioSrc} />
               )}
-            </MobileSheet>
+            </>
           ) : (
             <div
               className="z-50 fixed story-popover-panel"
               style={{
                 top: popover.y + 8,
                 left: popover.x,
-                width: 280,
+                width: 300,
               }}
             >
               <div className="story-card rounded-2xl p-5 shadow-lg">
-                <div className="flex justify-between gap-4 items-center">
-                  <div>
-                    <h3 className="text-xl font-semibold text-foreground">
-                      {popover.wordText}
-                    </h3>
-                    {popover.word?.phon && (
-                      <div
-                        className="mt-2 text-sm text-[color:var(--text-muted)]"
-                        dangerouslySetInnerHTML={{ __html: popover.word.phon }}
-                      />
-                    )}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handlePlay}
-                    disabled={popover.audioLoading || !popover.audioSrc}
-                    className="text-sm font-medium text-[color:var(--accent-warm)] hover:opacity-80 disabled:opacity-50"
-                  >
-                    {popover.audioLoading ? "生成中…" : "播放发音"}
-                  </button>
-                </div>
-
-                <div className="mt-4 text-[color:var(--foreground)]">
-                  {popover.loading ? (
-                    <span className="text-sm text-[color:var(--text-muted)]">
-                      生成中…
-                    </span>
-                  ) : (
-                    <Markdown>{popover.content || ""}</Markdown>
-                  )}
-                </div>
-                <div className="mt-4 flex items-center justify-between gap-3">
-                  <button
-                    type="button"
-                    onClick={handleRegenerateCard}
-                    disabled={popover.loading}
-                    className="text-xs uppercase tracking-[0.18em] story-muted-action disabled:opacity-50"
-                  >
-                    {popover.loading ? "GENERATING..." : "REGENERATE"}
-                  </button>
-                </div>
+                <WordCardPanel
+                  wordText={popover.wordText}
+                  phon={popover.word?.phon}
+                  contextLine={
+                    popover.word?.context.line
+                      ? stripHtml(popover.word.context.line)
+                      : undefined
+                  }
+                  activeMode={popover.mode}
+                  onModeChange={handleModeChange}
+                  brief={{
+                    label: "简解",
+                    content: popover.briefContent,
+                    loading: popover.briefLoading,
+                    onRegenerate: handleRegenerateCard,
+                  }}
+                  detail={{
+                    label: "详解",
+                    content: popover.detailContent,
+                    loading: popover.detailLoading,
+                    available: Boolean(popover.word),
+                    onRegenerate: handleRegenerateCard,
+                  }}
+                  audio={{
+                    src: popover.audioSrc,
+                    loading: popover.audioLoading,
+                    onPlay: handlePlay,
+                  }}
+                />
                 {popover.audioSrc && (
                   <audio ref={audioRef} src={popover.audioSrc} />
                 )}
