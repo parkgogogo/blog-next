@@ -68,7 +68,7 @@ export const WordCardPanel = ({
 
   const handlePlay = () => {
     if (!canPlayAudio) return;
-    audio.onPlay?.();
+    audio?.onPlay?.();
     if (resolvedAudioSrc && audioRef.current) {
       audioRef.current.src = resolvedAudioSrc;
       audioRef.current.play();
