@@ -7,9 +7,9 @@ import {
   getStoryWordCard,
   getFreeExplanation,
   getFreeWordCard,
-  getStoryContextSnippet,
+  getContextSnippet,
   getWordCardBundle,
-  translateStory,
+  translatePassage,
 } from "@/lib/words/ai-service";
 
 /**
@@ -47,11 +47,11 @@ export const getFreeExplanationAction = async (
   return await getFreeExplanation(word, contextLine, options);
 };
 
-export const translateStoryAction = async (
-  story: string,
+export const translatePassageAction = async (
+  passage: string,
   options?: { force?: boolean },
 ) => {
-  return await translateStory(story, options);
+  return await translatePassage(passage, options);
 };
 
 export const generateSpeech = async (text: string) => {
@@ -60,18 +60,18 @@ export const generateSpeech = async (text: string) => {
   return b.toString("base64");
 };
 
-export const getStoryContextSnippetAction = async (
+export const getContextSnippetAction = async (
   word: string,
-  story: string,
+  sourceText: string,
   options?: { force?: boolean; maxChars?: number },
 ) => {
-  return await getStoryContextSnippet(word, story, options);
+  return await getContextSnippet(word, sourceText, options);
 };
 
 export const getWordCardBundleAction = async (
   word: string,
-  story: string,
+  sourceText: string,
   options?: { force?: boolean; maxChars?: number },
 ) => {
-  return await getWordCardBundle(word, story, options);
+  return await getWordCardBundle(word, sourceText, options);
 };

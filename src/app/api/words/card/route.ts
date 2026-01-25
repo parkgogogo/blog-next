@@ -21,17 +21,17 @@ export async function POST(request: NextRequest) {
   }
 
   const word = typeof payload.word === "string" ? payload.word.trim() : "";
-  const story =
-    typeof payload.story === "string" ? payload.story.trim() : "";
+  const sourceText =
+    typeof payload.sourceText === "string" ? payload.sourceText.trim() : "";
   const contextLine =
     typeof payload.contextLine === "string" ? payload.contextLine.trim() : "";
-  const source = story || contextLine;
+  const source = sourceText || contextLine;
   const maxChars =
     typeof payload.maxChars === "number" ? payload.maxChars : undefined;
 
   if (!word || !source) {
     return NextResponse.json(
-      { error: "word and story/contextLine are required" },
+      { error: "word and sourceText/contextLine are required" },
       { status: 400 },
     );
   }

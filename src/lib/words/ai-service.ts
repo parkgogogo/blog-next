@@ -6,7 +6,7 @@ import {
   WORD_CARD_PROMPT,
   FREE_WORD_CARD_PROMPT,
   WORD_CARD_BUNDLE_PROMPT,
-  STORY_TRANSLATE_PROMPT,
+  PASSAGE_TRANSLATE_PROMPT,
   SENTENCE_TRANSLATE_PROMPT,
   CONTEXT_SNIPPET_PROMPT,
 } from "@/lib/words/constants";
@@ -244,11 +244,11 @@ const parseBundleContent = (raw: string) => {
 
 export const getWordCardBundle = async (
   word: string,
-  story: string,
+  sourceText: string,
   options?: { force?: boolean; maxChars?: number },
 ) => {
   const maxChars = Math.max(80, Math.min(options?.maxChars ?? 160, 320));
-  const prompt = `word: ${word}\nstory: ${story}\nmax_chars: ${maxChars}`;
+  const prompt = `word: ${word}\nsource_text: ${sourceText}\nmax_chars: ${maxChars}`;
   const inputHash = createInputHash({
     version: 1,
     type: "word_card_bundle",
@@ -286,31 +286,31 @@ export const getWordCardBundle = async (
   return parseBundleContent(result);
 };
 
-export const translateStory = async (
-  story: string,
+export const translatePassage = async (
+  passage: string,
   options?: { force?: boolean },
 ) => {
-  const prompt = `story: ${story}`;
+  const prompt = `passage: ${passage}`;
   const inputHash = createInputHash({
     version: 1,
-    type: "story_translation",
-    system: STORY_TRANSLATE_PROMPT,
+    type: "passage_translation",
+    system: PASSAGE_TRANSLATE_PROMPT,
     prompt,
     model: AI_TEXT_MODEL,
   });
-  const key = `STORY_TRANSLATION_${inputHash.slice(0, 12)}`;
+  const key = `PASSAGE_TRANSLATION_${inputHash.slice(0, 12)}`;
 
   if (!options?.force) {
-    const cached = await getCachedGeneration("story_translation", inputHash);
+    const cached = await getCachedGeneration("passage_translation", inputHash);
     if (cached) return cached;
   }
 
   const result = await ai_generateText({
-    system: STORY_TRANSLATE_PROMPT,
+    system: PASSAGE_TRANSLATE_PROMPT,
     prompt,
   });
   await saveGeneration({
-    type: "story_translation",
+    type: "passage_translation",
     key,
     inputHash,
     content: result,
@@ -356,13 +356,13 @@ export const translateSentence = async (
   return result;
 };
 
-export const getStoryContextSnippet = async (
+export const getContextSnippet = async (
   word: string,
-  story: string,
+  sourceText: string,
   options?: { force?: boolean; maxChars?: number },
 ) => {
   const maxChars = Math.max(80, Math.min(options?.maxChars ?? 160, 320));
-  const prompt = `word: ${word}\nstory: ${story}\nmax_chars: ${maxChars}`;
+  const prompt = `word: ${word}\nsource_text: ${sourceText}\nmax_chars: ${maxChars}`;
   const inputHash = createInputHash({
     version: 1,
     type: "context_snippet",
