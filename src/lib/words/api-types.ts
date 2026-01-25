@@ -32,3 +32,18 @@ export interface TranslationResponse {
   type: string;
   content: string;
 }
+
+export interface StoryContextSnippetRequest {
+  word: string;
+  story: string;
+  maxChars?: number;
+  force?: boolean;
+}
+
+export interface WordCardBundleRequest {
+  word: string;
+  story?: string;
+  contextLine?: string;
+  maxChars?: number;
+  force?: boolean;
+}

@@ -81,6 +81,22 @@ export const FREE_WORD_CARD_PROMPT = `
 4) 只输出上述三段，不要额外内容。
 `;
 
+export const WORD_CARD_BUNDLE_PROMPT = `
+你是一名词义解释与语法分析助手。请根据目标单词与短文内容输出一个 JSON，包含智能上下文、简解与详解。
+要求：
+1) 必须输出 JSON，且只输出 JSON，不要多余解释。
+2) JSON 结构固定：{"context":"...","brief":"...","detail":"..."}
+3) context 必须是英文，来自短文中包含该单词的最相关句子或短语，必须包含该单词（大小写可不同），长度不超过 max_chars。
+4) brief 使用 Markdown，格式严格为三段：
+   释义：...
+
+   例句：...
+
+   例句翻译：...
+5) detail 使用 Markdown，给出单词在语境中的解释、句子翻译、语法结构分析。
+6) 如果短文包含 [[word]] 标记，输出 context 与例句时去掉 [[ ]]。
+`;
+
 export const STORY_TRANSLATE_PROMPT = `
 你是一名翻译助手，请将英文短文翻译成自然流畅的中文。
 要求：
@@ -95,4 +111,12 @@ export const SENTENCE_TRANSLATE_PROMPT = `
 1) 语气自然，符合中文表达习惯。
 2) 保留原意，不要添加额外解释。
 3) 只输出中文译文，不要额外内容。
+`;
+
+export const CONTEXT_SNIPPET_PROMPT = `
+你是一名语境截取助手。根据目标单词与短文内容，找出包含该单词的最相关句子或短语，输出一条简洁的英文上下文。
+要求：
+1) 输出必须包含目标单词，大小写允许变化，但必须是原单词。
+2) 只输出英文上下文，不要加引号、标点说明或额外解释。
+3) 控制在指定长度以内，优先保留语义完整的句子片段。
 `;
