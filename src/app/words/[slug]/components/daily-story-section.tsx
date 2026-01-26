@@ -27,12 +27,11 @@ export const DailyStorySection = ({
 }: DailyStorySectionProps) => {
   return (
     <div className={buildClassName("story-page", className)}>
-      <div className="story-shell max-w-[980px] mx-auto space-y-6">
+      <div className="story-shell max-w-[900px] mx-auto space-y-6">
         <div className="space-y-3">
           <div className="story-kicker">Daily Words Dispatch</div>
           <h1 className="story-headline">{slug} Daily Story</h1>
           {showActions && <StoryActions slug={slug} />}
-          <div className="story-rule" />
         </div>
 
         {story ? (
@@ -43,10 +42,7 @@ export const DailyStorySection = ({
 
         {showBackLink && (
           <div className="pt-6">
-            <Link
-              className="story-backlink"
-              href={`/words/${slug}`}
-            >
+            <Link className="story-backlink" href={`/words/${slug}`}>
               返回单词页
             </Link>
           </div>
