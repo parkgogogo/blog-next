@@ -47,3 +47,10 @@ export interface WordCardBundleRequest {
   maxChars?: number;
   force?: boolean;
 }
+
+export interface AddWordEntryRequest {
+  word: string;
+  contextLine: string;
+  language?: string;
+  provider?: string;
+}

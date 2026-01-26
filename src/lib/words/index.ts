@@ -1,140 +1,54 @@
+import type { ILuluWord } from "./types";
 import {
-  LULU_ENDPOINT,
-  LULU_ENDPOINT_PRE,
-  SYSTEM_PROMPT,
-} from "@/lib/words/constants";
-import type { ILuluWord, IResponse } from "./types";
-import { format } from "date-fns";
-import { ai_generateText } from "@/lib/ai";
+  listWordEntriesByDate,
+  listWordEntryDates,
+  listWordTexts,
+  type WordEntryRecord,
+} from "@/lib/words/storage";
 
-const fetchWithTimeout = async (
-  input: RequestInfo | URL,
-  init: RequestInit,
-  timeoutMs = 8000,
-) => {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    return await fetch(input, { ...init, signal: controller.signal });
-  } finally {
-    clearTimeout(timeoutId);
-  }
+const toHTML = (wordText: string, contextLine: string) => {
+  return `<p><strong>${wordText}</strong><br/>${contextLine}</p>`;
 };
 
-/**
- * 获取生词本总数
- */
-const getWordsLength = async () => {
-  try {
-    const response = await fetchWithTimeout(LULU_ENDPOINT_PRE, {
-      headers: {
-        ["Cookie"]: process.env.LULU_COOKIE || "",
-        ["Content-Type"]: "application/json",
-      },
-      next: {
-        revalidate: 60 * 5,
-      },
-    });
-    const result = await response.json();
-    if (typeof result.recordsTotal === "number") {
-      return result.recordsTotal;
-    }
-  } catch {
-    return 0;
-  }
-};
+const toWord = (entry: WordEntryRecord): ILuluWord => {
+  const wordText = entry.wordText || "";
+  const contextLine =
+    entry.contextLine || entry.sourceText || entry.context || "";
 
-/**
- * 获取单词列表，前 25 个
- */
-const getLuLuWords = async () => {
-  try {
-    const totalLength = await getWordsLength();
-    const result = await fetchWithTimeout(`${LULU_ENDPOINT}&length=${totalLength}`, {
-      headers: {
-        ["Cookie"]: process.env.LULU_COOKIE || "",
-        ["Content-Type"]: "application/json",
-      },
-      next: { revalidate: 60 * 5 },
-    });
-
-    const parsedResult: IResponse = await result.json();
-
-    if (Array.isArray(parsedResult.data)) {
-      return parsedResult.data;
-    }
-    return [];
-  } catch {
-    return [];
-  }
-};
-
-export const getExplanation = async (word: ILuluWord) => {
-  return await ai_generateText({
-    system: SYSTEM_PROMPT,
-    prompt: `word: ${word.uuid}, context: ${word.context.line || ""}`,
-  });
-};
-
-const toHTML = (word: ILuluWord) => {
-  return `<p><strong>${word.word}</strong><br/>${word.context.line}</p>`;
-};
-
-const groupWordsByDate = async (words: ILuluWord[]) => {
-  const wordsMap = new Map<string, ILuluWord[]>();
-
-  for (const word of words) {
-    const day = format(new Date(word.addtime), "yyyy-MM-dd");
-    const wordsOfDay = wordsMap.get(day);
-    const parsedWords = { ...word, html: toHTML(word) };
-    if (wordsOfDay) {
-      wordsOfDay.push(parsedWords);
-    } else {
-      wordsMap.set(day, [parsedWords]);
-    }
-  }
-
-  return wordsMap;
+  return {
+    id: entry.id,
+    uuid: wordText,
+    word: wordText,
+    exp: "",
+    addtime: entry.createdAt,
+    context: { line: contextLine },
+    phon: "",
+    html: toHTML(wordText, contextLine),
+  };
 };
 
 export const WordsService = (() => {
-  let promise: Promise<Map<string, ILuluWord[]>>;
-
-  const check = () => {
-    if (!promise) {
-      promise = (async () => {
-        return groupWordsByDate(await getLuLuWords());
-      })();
-    }
-  };
-
-  const getAllWords = async () => {
-    check();
-    return await promise;
-  };
-
   const getWordsByDate = async (date: string) => {
-    check();
-    const wordsMap = await promise;
-    return wordsMap.get(date) ?? [];
+    const entries = await listWordEntriesByDate(date);
+    return entries.map(toWord);
   };
 
   const getWordsGroupKeys = async () => {
-    check();
-    const wordsMap = await promise;
-    return Array.from(wordsMap.keys());
+    return await listWordEntryDates();
   };
 
   const getAllWordUuids = async () => {
-    check();
-    const wordsMap = await promise;
-    const uuidSet = new Set<string>();
-    for (const wordsOfDay of wordsMap.values()) {
-      for (const word of wordsOfDay) {
-        if (word.uuid) uuidSet.add(word.uuid);
-      }
+    return await listWordTexts();
+  };
+
+  const getAllWords = async () => {
+    const dates = await listWordEntryDates();
+    const wordsMap = new Map<string, ILuluWord[]>();
+    for (const date of dates) {
+      const words = await getWordsByDate(date);
+      wordsMap.set(date, words);
     }
-    return Array.from(uuidSet);
+    return wordsMap;
   };
 
   return {

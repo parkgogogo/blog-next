@@ -121,12 +121,6 @@ body {
   margin: 0;
 }
 
-.story-rule {
-  height: 1px;
-  width: 100%;
-  background: var(--border-subtle);
-}
-
 .story-body {
   font-family: "Times New Roman", "Georgia", "Noto Serif", serif;
   font-size: 1.2rem;
