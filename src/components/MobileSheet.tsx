@@ -26,7 +26,7 @@ export const MobileSheet = ({
   footer,
   panelClassName = "",
   bodyClassName = "",
-  heightClassName = "h-[85vh]",
+  heightClassName = "h-[65vh]",
 }: MobileSheetProps) => {
   const [mounted, setMounted] = useState(open);
   const [active, setActive] = useState(open);
@@ -48,13 +48,30 @@ export const MobileSheet = ({
   useEffect(() => {
     if (!open) return undefined;
     const { body, documentElement } = document;
+    const scrollY = window.scrollY;
     const previousBodyOverflow = body.style.overflow;
+    const previousBodyPosition = body.style.position;
+    const previousBodyTop = body.style.top;
+    const previousBodyWidth = body.style.width;
+    const previousBodyOverscroll = body.style.overscrollBehavior;
     const previousHtmlOverflow = documentElement.style.overflow;
+    const previousHtmlOverscroll = documentElement.style.overscrollBehavior;
     body.style.overflow = "hidden";
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.width = "100%";
+    body.style.overscrollBehavior = "none";
     documentElement.style.overflow = "hidden";
+    documentElement.style.overscrollBehavior = "none";
     return () => {
       body.style.overflow = previousBodyOverflow;
+      body.style.position = previousBodyPosition;
+      body.style.top = previousBodyTop;
+      body.style.width = previousBodyWidth;
+      body.style.overscrollBehavior = previousBodyOverscroll;
       documentElement.style.overflow = previousHtmlOverflow;
+      documentElement.style.overscrollBehavior = previousHtmlOverscroll;
+      window.scrollTo(0, scrollY);
     };
   }, [open]);
 
