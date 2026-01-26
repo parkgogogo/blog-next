@@ -242,6 +242,70 @@ body {
   }
 }
 
+.feeds-page {
+  min-height: 100vh;
+  background: var(--background);
+}
+
+.feed-track {
+  height: 100vh;
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+.feed-slice {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.feed-item {
+  min-height: 100vh;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  display: flex;
+  align-items: stretch;
+}
+
+.feed-panel {
+  width: 100%;
+  padding: 24px 16px;
+}
+
+.feed-panel--story .story-shell {
+  padding: 0;
+}
+
+.feed-item--story .story-page {
+  min-height: 100%;
+}
+
+.feed-empty {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 1rem;
+}
+
+.feed-sentinel {
+  min-height: 40vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  scroll-snap-align: end;
+}
+
+@media (min-width: 768px) {
+  .feed-panel {
+    padding: 32px;
+  }
+}
+
 /* Custom animations for homepage */
 @keyframes fade-in-up {
   from {

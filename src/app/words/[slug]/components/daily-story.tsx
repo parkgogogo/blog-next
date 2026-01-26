@@ -8,7 +8,6 @@ import {
   getWordCardBundleAction,
   translatePassageAction,
 } from "@/app/words/[slug]/actions";
-import Markdown from "react-markdown";
 import {
   WordCardPanel,
   type WordCardMode,
