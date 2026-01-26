@@ -20,15 +20,25 @@ export const FeedsClient = ({ initialItems }: FeedsClientProps) => {
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const nextCursorRef = useRef<string | null>(null);
 
-  const shownSlugs = useMemo(() => items.map((item) => item.slug), [items]);
+  const lastSlug = useMemo(() => {
+    return items.length > 0 ? items[items.length - 1]?.slug ?? null : null;
+  }, [items]);
+
+  useEffect(() => {
+    nextCursorRef.current = lastSlug;
+  }, [lastSlug]);
 
   const loadMore = useCallback(async () => {
     if (loading || !hasMore) return;
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      params.set("exclude", shownSlugs.slice(-3).join(","));
+      if (nextCursorRef.current) {
+        params.set("before", nextCursorRef.current);
+      }
+      params.set("limit", "5");
       const response = await fetch(`/api/words/feed?${params.toString()}`, {
         cache: "no-store",
       });
@@ -36,18 +46,27 @@ export const FeedsClient = ({ initialItems }: FeedsClientProps) => {
         setHasMore(false);
         return;
       }
-      const data = (await response.json()) as FeedItem | null;
-      if (!data) {
+      const data = (await response.json()) as {
+        items: FeedItem[];
+        nextCursor: string | null;
+      };
+      if (!data.items.length) {
         setHasMore(false);
         return;
       }
-      setItems((prev) => [...prev, data]);
+      setItems((prev) => [...prev, ...data.items]);
+      nextCursorRef.current = data.nextCursor;
+      if (!data.nextCursor) {
+        setHasMore(false);
+      }
     } catch {
       setHasMore(false);
     } finally {
       setLoading(false);
     }
-  }, [hasMore, loading, shownSlugs]);
+  }, [hasMore, loading]);
+
+  const triggerIndex = Math.max(1, items.length - 4);
 
   useEffect(() => {
     const target = sentinelRef.current;
@@ -62,41 +81,43 @@ export const FeedsClient = ({ initialItems }: FeedsClientProps) => {
     );
     observer.observe(target);
     return () => observer.disconnect();
-  }, [loadMore]);
+  }, [loadMore, triggerIndex]);
 
   return (
     <div className="feeds-page">
       <div className="feed-track">
-        {items.length === 0 && (
-          <div className="feed-empty">暂无可用单词。</div>
-        )}
-        {items.map(({ slug, words, story }, index) => (
-          <div className="feed-slice" key={`${slug}-${index}`}>
-            <section className="feed-item feed-item--words">
-              <DailyWordsSection
-                slug={slug}
-                words={words}
-                showStoryLink={false}
-                className="feed-panel"
-              />
-            </section>
-            <section className="feed-item feed-item--story">
-              <DailyStorySection
-                slug={slug}
-                story={story}
-                words={words}
-                showBackLink={false}
-                showActions={false}
-                className="feed-panel feed-panel--story"
-              />
-            </section>
-          </div>
-        ))}
-        {hasMore && (
-          <div className="feed-sentinel" ref={sentinelRef}>
-            {loading ? "加载中..." : "继续滑动加载下一天"}
-          </div>
-        )}
+        {items.length === 0 && <div className="feed-empty">暂无可用单词。</div>}
+        {items.map(({ slug, words, story }, index) => {
+          const withSentinel = index === triggerIndex;
+          return (
+            <div className="feed-slice" key={`${slug}-${index}`}>
+              <section className="feed-item feed-item--words">
+                <DailyWordsSection
+                  slug={slug}
+                  words={words}
+                  showStoryLink={false}
+                  className="feed-panel"
+                />
+              </section>
+              <section className="feed-item feed-item--story">
+                <DailyStorySection
+                  slug={slug}
+                  story={story}
+                  words={words}
+                  showBackLink={false}
+                  showActions={false}
+                  className="feed-panel feed-panel--story"
+                />
+              </section>
+              {withSentinel && hasMore && (
+                <div className="feed-sentinel" ref={sentinelRef}>
+                  {loading ? "加载中..." : "继续滑动加载下一天"}
+                </div>
+              )}
+            </div>
+          );
+        })}
+        {!hasMore && <div className="feed-sentinel">暂无更多内容</div>}
       </div>
     </div>
   );

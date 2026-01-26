@@ -81,7 +81,7 @@ export const insertWordEntry = async (payload: {
 export const listWordEntriesByDate = async (
   dateSlug: string,
 ): Promise<WordEntryRecord[]> => {
-  const start = new Date(`${dateSlug}T00:00:00.000Z`);
+  const start = new Date(`${dateSlug}T00:00:00`);
   if (Number.isNaN(start.getTime())) {
     throw new Error("Invalid date slug");
   }
