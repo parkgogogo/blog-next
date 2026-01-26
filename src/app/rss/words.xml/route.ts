@@ -1,7 +1,7 @@
 import RSS from "rss";
 import { WordsService } from "@/lib/words";
 
-export const dynamic = "auto";
+export const dynamic = "force-dynamic";
 
 /**
  * GET /rss/blog

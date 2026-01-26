@@ -4,19 +4,9 @@ import { FeedsClient } from "@/app/words/feeds/feeds-client";
 
 const FEED_DAYS = 5;
 
-const shuffleSlugs = (slugs: string[]) => {
-  const result = [...slugs];
-  for (let i = result.length - 1; i > 0; i -= 1) {
-    const rand = crypto.getRandomValues(new Uint32Array(1))[0] / 2 ** 32;
-    const j = Math.floor(rand * (i + 1));
-    [result[i], result[j]] = [result[j], result[i]];
-  }
-  return result;
-};
-
 export default async function WordsFeedsPage() {
   const slugs = await WordsService.getWordsGroupKeys();
-  const feedSlugs = shuffleSlugs(slugs).slice(0, FEED_DAYS);
+  const feedSlugs = slugs.slice(0, FEED_DAYS);
 
   const feedItems = await Promise.all(
     feedSlugs.map(async (slug) => {
