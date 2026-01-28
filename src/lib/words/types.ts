@@ -7,6 +7,7 @@ export interface ILuluWord {
   context: { line: string };
   html?: string;
   phon: string;
+  sourceLink?: string | null;
 }
 
 export interface IResponse {

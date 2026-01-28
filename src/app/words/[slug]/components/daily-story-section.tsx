@@ -29,8 +29,9 @@ export const DailyStorySection = ({
     <div className={buildClassName("story-page", className)}>
       <div className="story-shell max-w-[900px] mx-auto space-y-6">
         <div className="space-y-3">
-          <div className="story-kicker">Daily Words Dispatch</div>
-          <h1 className="story-headline">{slug} Daily Story</h1>
+          <h1 className="text-3xl font-medium font-display text-foreground leading-tight tracking-tight mt-0">
+            {slug} Daily Story
+          </h1>
           {showActions && <StoryActions slug={slug} />}
         </div>
 
