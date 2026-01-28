@@ -9,6 +9,7 @@ export interface WordEntryRecord {
   wordText: string;
   language: string;
   sourceText: string | null;
+  sourceLink: string | null;
   contextLine: string | null;
   context: string;
   createdAt: string;
@@ -42,6 +43,7 @@ export const insertWordEntry = async (payload: {
   brief: string;
   detail: string;
   sourceText?: string | null;
+  sourceLink?: string | null;
   contextLine?: string | null;
   maxChars?: number | null;
   provider?: string;
@@ -58,6 +60,7 @@ export const insertWordEntry = async (payload: {
       brief: payload.brief,
       detail: payload.detail,
       source_text: payload.sourceText ?? null,
+      source_link: payload.sourceLink ?? null,
       context_line: payload.contextLine ?? null,
       max_chars: payload.maxChars ?? null,
       provider: payload.provider ?? "manual",
@@ -90,7 +93,7 @@ export const listWordEntriesByDate = async (
   const { data, error } = await supabase
     .from(ENTRIES_TABLE)
     .select(
-      "id, created_at, source_text, context_line, context, words ( text, language )",
+      "id, created_at, source_text, source_link, context_line, context, words ( text, language )",
     )
     .gte("created_at", start.toISOString())
     .lt("created_at", end.toISOString())
@@ -107,6 +110,7 @@ export const listWordEntriesByDate = async (
       wordText: wordRow?.text ?? "",
       language: wordRow?.language ?? "en",
       sourceText: (entry.source_text as string | null) ?? null,
+      sourceLink: (entry.source_link as string | null) ?? null,
       contextLine: (entry.context_line as string | null) ?? null,
       context: (entry.context as string) ?? "",
       createdAt: entry.created_at as string,

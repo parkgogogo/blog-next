@@ -51,6 +51,7 @@ export interface WordCardBundleRequest {
 export interface AddWordEntryRequest {
   word: string;
   contextLine: string;
+  sourceLink?: string;
   language?: string;
   provider?: string;
 }
