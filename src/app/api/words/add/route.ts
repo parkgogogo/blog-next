@@ -23,6 +23,8 @@ export async function POST(request: NextRequest) {
   const word = typeof payload.word === "string" ? payload.word.trim() : "";
   const contextLine =
     typeof payload.contextLine === "string" ? payload.contextLine.trim() : "";
+  const sourceLink =
+    typeof payload.sourceLink === "string" ? payload.sourceLink.trim() : "";
   const language =
     typeof payload.language === "string" ? payload.language.trim() : "en";
   const provider =
@@ -42,6 +44,7 @@ export async function POST(request: NextRequest) {
     brief: "",
     detail: "",
     contextLine,
+    sourceLink: sourceLink || null,
     provider,
     providerPayload: null,
   });
