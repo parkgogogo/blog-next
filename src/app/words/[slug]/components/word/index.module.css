@@ -15,3 +15,24 @@
 
 
 }
+
+.sourceLink {
+    display: inline-flex;
+    align-items: center;
+    color: #9ca3af;
+    transition: color 0.2s ease;
+}
+
+.sourceLink:hover {
+    color: #6b7280;
+}
+
+@media (prefers-color-scheme: dark) {
+    .sourceLink {
+        color: #6b7280;
+    }
+
+    .sourceLink:hover {
+        color: #9ca3af;
+    }
+}

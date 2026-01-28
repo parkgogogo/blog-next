@@ -346,7 +346,7 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
 
   return (
     <div className="space-y-6">
-      <div className="story-body text-lg whitespace-pre-wrap">
+      <div className="story-body text-base whitespace-pre-wrap">
         {parts.map((part, index) => {
           if (typeof part === "string") {
             const innerParts = splitEnglishWords(part);

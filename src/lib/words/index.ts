@@ -24,6 +24,7 @@ const toWord = (entry: WordEntryRecord): ILuluWord => {
     context: { line: contextLine },
     phon: "",
     html: toHTML(wordText, contextLine),
+    sourceLink: entry.sourceLink,
   };
 };
 

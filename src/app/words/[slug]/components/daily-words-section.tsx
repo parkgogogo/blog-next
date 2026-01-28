@@ -46,7 +46,11 @@ export const DailyWordsSection = ({
         <div className="markdown-body">
           {words.map((word) => (
             <div key={word.uuid}>
-              <Index text={word.uuid} phon={word.phon} />
+              <Index
+                text={word.uuid}
+                phon={word.phon}
+                sourceLink={word.sourceLink}
+              />
               <ContextLine word={word} />
             </div>
           ))}
