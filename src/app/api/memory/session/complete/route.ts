@@ -1,0 +1,77 @@
+import { NextRequest, NextResponse } from "next/server";
+import { enforceRateLimit, requireApiKey } from "@/lib/middleware/security";
+import { applyMemoryEvent } from "@/lib/memory";
+import { getSupabaseClient } from "@/lib/supabase";
+
+type CompleteSessionPayload = {
+  sessionId?: string;
+};
+
+export async function POST(request: NextRequest) {
+  const auth = requireApiKey(request);
+  if (!auth.ok) {
+    return auth.response;
+  }
+  const rateLimit = enforceRateLimit(request, auth.token);
+  if (!rateLimit.ok) {
+    return rateLimit.response;
+  }
+
+  let payload: CompleteSessionPayload = {};
+  try {
+    payload = (await request.json()) as CompleteSessionPayload;
+  } catch {
+    payload = {};
+  }
+
+  const sessionId =
+    typeof payload.sessionId === "string" ? payload.sessionId.trim() : "";
+  if (!sessionId) {
+    return NextResponse.json({ error: "sessionId required" }, { status: 400 });
+  }
+
+  try {
+    const supabase = getSupabaseClient();
+    const { data: items, error: itemsError } = await supabase
+      .from("word_memory_session_items")
+      .select("word_id, opened_card")
+      .eq("session_id", sessionId);
+
+    if (itemsError) {
+      throw new Error(itemsError.message);
+    }
+
+    await supabase
+      .from("word_memory_sessions")
+      .update({ status: "completed", completed_at: new Date().toISOString() })
+      .eq("id", sessionId);
+
+    await supabase
+      .from("word_memory_session_items")
+      .update({ completed: true, completed_at: new Date().toISOString() })
+      .eq("session_id", sessionId);
+
+    const toReward = (items ?? []).filter((item) => !item.opened_card);
+    await Promise.all(
+      toReward.map((item) =>
+        applyMemoryEvent({
+          wordId: item.word_id as string,
+          sessionId,
+          eventType: "mark_known",
+          payload: { source: "session_complete" },
+        }),
+      ),
+    );
+
+    return NextResponse.json({
+      sessionId,
+      rewarded: toReward.length,
+      total: items?.length ?? 0,
+    });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 },
+    );
+  }
+}
