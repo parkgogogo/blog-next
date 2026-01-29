@@ -13,7 +13,9 @@ export type AIGenerationType =
   | "context_snippet"
   | "word_card_bundle"
   | "passage_translation"
-  | "sentence_translation";
+  | "sentence_translation"
+  | "memory_sentence"
+  | "memory_grouping";
 
 const stableStringify = (value: unknown): string => {
   if (value === null || typeof value !== "object") {
