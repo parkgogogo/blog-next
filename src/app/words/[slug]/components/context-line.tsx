@@ -19,7 +19,7 @@ export const ContextLine: React.FC<{ word: ILuluWord }> = ({ word }) => {
   const [detail, setDetail] = useState<string>("");
   const [expand, setExpand] = useState<boolean>(false);
   const [regenerating, setRegenerating] = useState<boolean>(false);
-  const [activeMode, setActiveMode] = useState<WordCardMode>("detail");
+  const [activeMode, setActiveMode] = useState<WordCardMode>("brief");
   const [briefLoading, setBriefLoading] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
   const [contextLine, setContextLine] = useState<string>("");
@@ -67,7 +67,7 @@ export const ContextLine: React.FC<{ word: ILuluWord }> = ({ word }) => {
       return;
     }
     setLoading(true);
-    setActiveMode("detail");
+    setActiveMode("brief");
     try {
       await requestBundle();
     } finally {
