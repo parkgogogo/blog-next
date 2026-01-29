@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ILuluWord } from "@/lib/words/types";
 import { Loader } from "lucide-react";
 import { getWordCardBundleAction } from "@/app/words/[slug]/actions";
@@ -24,6 +24,15 @@ export const ContextLine: React.FC<{ word: ILuluWord }> = ({ word }) => {
   const [detailLoading, setDetailLoading] = useState(false);
   const [contextLine, setContextLine] = useState<string>("");
   const [contextLoading, setContextLoading] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 767px)");
+    const handleChange = () => setIsMobile(mediaQuery.matches);
+    handleChange();
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
+  }, []);
 
   const handleClose = () => {
     setExpand(false);
@@ -93,34 +102,36 @@ export const ContextLine: React.FC<{ word: ILuluWord }> = ({ word }) => {
       <div>
         {!loading && (detail || brief) && expand && (
           <>
-            <div className="hidden md:block mt-5 text-gray-500 space-y-3">
-              <WordCardPanel
-                wordText={word.uuid}
-                contextLine={contextLine}
-                contextLoading={contextLoading}
-                activeMode={activeMode}
-                onModeChange={handleModeChange}
-                brief={{
-                  label: "简解",
-                  content: brief,
-                  loading:
-                    briefLoading ||
-                    (activeMode === "brief" && (loading || regenerating)),
-                  onRegenerate: handleRegenerate,
-                }}
-                detail={{
-                  label: "详解",
-                  content: detail,
-                  loading:
-                    detailLoading ||
-                    (activeMode === "detail" && (loading || regenerating)),
-                  onRegenerate: handleRegenerate,
-                }}
-                showTitle={false}
-                className="text-[color:var(--foreground)]"
-              />
-            </div>
-            <div className="md:hidden">
+            {!isMobile && (
+              <div className="mt-5 text-gray-500 space-y-3">
+                <WordCardPanel
+                  wordText={word.uuid}
+                  contextLine={contextLine}
+                  contextLoading={contextLoading}
+                  activeMode={activeMode}
+                  onModeChange={handleModeChange}
+                  brief={{
+                    label: "简解",
+                    content: brief,
+                    loading:
+                      briefLoading ||
+                      (activeMode === "brief" && (loading || regenerating)),
+                    onRegenerate: handleRegenerate,
+                  }}
+                  detail={{
+                    label: "详解",
+                    content: detail,
+                    loading:
+                      detailLoading ||
+                      (activeMode === "detail" && (loading || regenerating)),
+                    onRegenerate: handleRegenerate,
+                  }}
+                  showTitle={false}
+                  className="text-[color:var(--foreground)]"
+                />
+              </div>
+            )}
+            {isMobile && (
               <WordCardSheet
                 open={expand}
                 onClose={handleClose}
@@ -149,7 +160,7 @@ export const ContextLine: React.FC<{ word: ILuluWord }> = ({ word }) => {
                   onPlay: () => undefined,
                 }}
               />
-            </div>
+            )}
           </>
         )}
       </div>
