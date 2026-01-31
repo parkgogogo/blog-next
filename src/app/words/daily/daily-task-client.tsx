@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { WordCardSheet } from "@/app/words/[slug]/components/word-card-sheet";
 import {
   completeDailyTaskAction,
@@ -52,7 +52,10 @@ const splitSentence = (sentence: string, wordMap: Map<string, string>) => {
 
   while ((match = regex.exec(sentence)) !== null) {
     if (match.index > lastIndex) {
-      parts.push({ type: "text", value: sentence.slice(lastIndex, match.index) });
+      parts.push({
+        type: "text",
+        value: sentence.slice(lastIndex, match.index),
+      });
     }
     const raw = match[0];
     const normalized = raw.toLowerCase();
@@ -86,10 +89,16 @@ export const DailyTaskClient = ({
   cards,
   wordContexts,
 }: DailyTaskClientProps) => {
+  const storageKey = `daily-task-state:${date}`;
   const [index, setIndex] = useState(0);
+  const [phase, setPhase] = useState<"initial" | "review">("initial");
+  const [reviewQueue, setReviewQueue] = useState<string[]>([]);
+  const [reviewCursor, setReviewCursor] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [confettiActive, setConfettiActive] = useState(false);
+  const [loopCount, setLoopCount] = useState(0);
+  const [loopNotice, setLoopNotice] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sheetWordId, setSheetWordId] = useState<string | null>(null);
   const [sheetWordText, setSheetWordText] = useState("");
@@ -100,11 +109,21 @@ export const DailyTaskClient = ({
   const [sheetBriefLoading, setSheetBriefLoading] = useState(false);
   const [sheetDetailLoading, setSheetDetailLoading] = useState(false);
   const bundleCacheRef = useRef<BundleCache>({});
-  const openedByCardRef = useRef<Map<number, Set<string>>>(new Map());
-  const processedCardsRef = useRef<Set<number>>(new Set());
+  const pendingReviewRef = useRef<Set<string>>(new Set());
+  const masteredCardsRef = useRef<Set<string>>(new Set());
+  const currentVisitOpenedRef = useRef(false);
+  const [pendingVersion, setPendingVersion] = useState(0);
+  const [masteredVersion, setMasteredVersion] = useState(0);
   const confettiPieces = useMemo(() => buildConfetti(), []);
 
-  const card = cards[index];
+  const cardIndexById = useMemo(() => {
+    return new Map(cards.map((entry, idx) => [entry.id, idx]));
+  }, [cards]);
+  const currentCardIndex =
+    phase === "initial"
+      ? index
+      : (cardIndexById.get(reviewQueue[reviewCursor] ?? "") ?? 0);
+  const card = cards[currentCardIndex];
   const totalCards = cards.length;
   const isLast = index === totalCards - 1;
   const wordMap = useMemo(() => {
@@ -123,18 +142,108 @@ export const DailyTaskClient = ({
     return splitSentence(card.sentence, wordMap);
   }, [card, wordMap]);
 
-  const markWordOpened = (cardIndex: number, wordId: string) => {
-    const opened = openedByCardRef.current.get(cardIndex) ?? new Set();
-    opened.add(wordId);
-    openedByCardRef.current.set(cardIndex, opened);
+  useEffect(() => {
+    currentVisitOpenedRef.current = false;
+  }, [currentCardIndex, phase]);
+
+  useEffect(() => {
+    const { body, documentElement } = document;
+    const previousBodyOverflow = body.style.overflow;
+    const previousHtmlOverflow = documentElement.style.overflow;
+    body.style.overflow = "hidden";
+    documentElement.style.overflow = "hidden";
+    return () => {
+      body.style.overflow = previousBodyOverflow;
+      documentElement.style.overflow = previousHtmlOverflow;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (totalCards === 0) return;
+    const raw = localStorage.getItem(storageKey);
+    if (!raw) return;
+    try {
+      const parsed = JSON.parse(raw) as {
+        index?: number;
+        phase?: "initial" | "review";
+        reviewQueue?: string[];
+        reviewCursor?: number;
+        pendingReview?: string[];
+        masteredCards?: string[];
+        loopCount?: number;
+      };
+      const validCardIds = new Set(cards.map((entry) => entry.id));
+      const storedIndex = typeof parsed.index === "number" ? parsed.index : 0;
+      const nextIndex = Math.min(Math.max(0, storedIndex), totalCards - 1);
+      const nextPhase = parsed.phase === "review" ? "review" : "initial";
+      const nextQueue = (parsed.reviewQueue ?? []).filter((cardId) =>
+        validCardIds.has(cardId),
+      );
+      const nextCursor =
+        typeof parsed.reviewCursor === "number"
+          ? Math.min(Math.max(0, parsed.reviewCursor), nextQueue.length - 1)
+          : 0;
+      const pendingReview = (parsed.pendingReview ?? []).filter((cardId) =>
+        validCardIds.has(cardId),
+      );
+      const masteredCards = (parsed.masteredCards ?? []).filter((cardId) =>
+        validCardIds.has(cardId),
+      );
+
+      setIndex(nextIndex);
+      setPhase(nextPhase);
+      setReviewQueue(nextQueue);
+      setReviewCursor(nextCursor);
+      pendingReviewRef.current = new Set(pendingReview);
+      setPendingVersion((value) => value + 1);
+      masteredCardsRef.current = new Set(masteredCards);
+      setMasteredVersion((value) => value + 1);
+      if (typeof parsed.loopCount === "number") {
+        setLoopCount(Math.max(0, parsed.loopCount));
+      }
+    } catch {
+      // Ignore corrupted storage.
+    }
+  }, [cards, storageKey, totalCards]);
+
+  useEffect(() => {
+    if (totalCards === 0) return;
+    const payload = {
+      index,
+      phase,
+      reviewQueue,
+      reviewCursor,
+      pendingReview: Array.from(pendingReviewRef.current),
+      masteredCards: Array.from(masteredCardsRef.current),
+      loopCount,
+    };
+    localStorage.setItem(storageKey, JSON.stringify(payload));
+  }, [
+    index,
+    phase,
+    reviewQueue,
+    reviewCursor,
+    loopCount,
+    pendingVersion,
+    masteredVersion,
+    storageKey,
+    totalCards,
+  ]);
+
+  const markWordOpened = (cardIndex: number) => {
+    const cardId = cards[cardIndex]?.id;
+    if (cardId) {
+      if (phase === "initial") {
+        pendingReviewRef.current.add(cardId);
+        setPendingVersion((value) => value + 1);
+      }
+    }
+    currentVisitOpenedRef.current = true;
   };
 
-  const processCard = async (cardIndex: number) => {
-    if (processedCardsRef.current.has(cardIndex)) return;
+  const processCard = async (cardIndex: number, openedThisVisit: boolean) => {
     const target = cards[cardIndex];
     if (!target) return;
-    processedCardsRef.current.add(cardIndex);
-    const opened = openedByCardRef.current.get(cardIndex) ?? new Set();
 
     await Promise.all(
       target.word_ids.map((wordId) =>
@@ -146,10 +255,14 @@ export const DailyTaskClient = ({
       ),
     );
 
-    const knownIds = target.word_ids.filter((wordId) => !opened.has(wordId));
-    if (knownIds.length > 0) {
+    if (!openedThisVisit) {
+      const cardId = target.id;
+      if (cardId) {
+        masteredCardsRef.current.add(cardId);
+        setMasteredVersion((value) => value + 1);
+      }
       await Promise.all(
-        knownIds.map((wordId) =>
+        target.word_ids.map((wordId) =>
           recordMemoryEventAction({
             wordId,
             eventType: "mark_known",
@@ -161,17 +274,49 @@ export const DailyTaskClient = ({
   };
 
   const handlePrev = () => {
-    if (index === 0 || isProcessing) return;
+    if (phase === "review" || index === 0 || isProcessing) return;
     setIndex((current) => Math.max(0, current - 1));
   };
 
   const handleNext = async () => {
-    if (!card || isProcessing || isLast) return;
+    if (!card || isProcessing) return;
     setIsProcessing(true);
     try {
-      await processCard(index);
-      setIndex((current) => Math.min(totalCards - 1, current + 1));
+      const openedThisVisit = currentVisitOpenedRef.current;
+      if (phase === "initial") {
+        if (isLast) return;
+        await processCard(currentCardIndex, openedThisVisit);
+        setIndex((current) => Math.min(totalCards - 1, current + 1));
+        setLoopNotice(null);
+      } else {
+        await processCard(currentCardIndex, openedThisVisit);
+        const currentId = reviewQueue[reviewCursor];
+        let updatedQueue = reviewQueue;
+        if (openedThisVisit && currentId) {
+          updatedQueue = [
+            ...reviewQueue.filter(
+              (id, idx) => idx !== reviewCursor && id !== currentId,
+            ),
+            currentId,
+          ];
+        } else {
+          updatedQueue = reviewQueue.filter((_, idx) => idx !== reviewCursor);
+        }
+        if (updatedQueue.length === 0) {
+          await completeDailyTaskAction(date);
+          setCompleted(true);
+          setConfettiActive(true);
+          setLoopNotice(null);
+          localStorage.removeItem(storageKey);
+          setTimeout(() => setConfettiActive(false), 2200);
+          return;
+        }
+        const nextCursor = Math.min(reviewCursor, updatedQueue.length - 1);
+        setReviewQueue(updatedQueue);
+        setReviewCursor(nextCursor);
+      }
     } finally {
+      currentVisitOpenedRef.current = false;
       setIsProcessing(false);
     }
   };
@@ -180,19 +325,38 @@ export const DailyTaskClient = ({
     if (!card || isProcessing) return;
     setIsProcessing(true);
     try {
-      await processCard(index);
-      await completeDailyTaskAction(date);
-      setCompleted(true);
-      setConfettiActive(true);
-      setTimeout(() => setConfettiActive(false), 2200);
+      const openedThisVisit = currentVisitOpenedRef.current;
+      if (phase === "initial") {
+        await processCard(currentCardIndex, openedThisVisit);
+        if (pendingReviewRef.current.size > 0) {
+          const reviewList = cards
+            .map((entry) => entry.id)
+            .filter((cardId) => pendingReviewRef.current.has(cardId));
+          pendingReviewRef.current.clear();
+          setPendingVersion((value) => value + 1);
+          setLoopCount((count) => count + 1);
+          setPhase("review");
+          setReviewQueue(reviewList);
+          setReviewCursor(0);
+          setLoopNotice("还有没掌握的词，再来一轮");
+          return;
+        }
+        await completeDailyTaskAction(date);
+        setCompleted(true);
+        setConfettiActive(true);
+        setLoopNotice(null);
+        localStorage.removeItem(storageKey);
+        setTimeout(() => setConfettiActive(false), 2200);
+      }
     } finally {
+      currentVisitOpenedRef.current = false;
       setIsProcessing(false);
     }
   };
 
   const handleOpenSheet = async (wordId: string, wordText: string) => {
     if (isProcessing) return;
-    markWordOpened(index, wordId);
+    markWordOpened(currentCardIndex);
     setSheetOpen(true);
     setSheetWordId(wordId);
     setSheetWordText(wordText);
@@ -253,6 +417,20 @@ export const DailyTaskClient = ({
 
   return (
     <div className="daily-page">
+      <div className="daily-progress">
+        <div
+          className="daily-progress-bar"
+          style={{
+            width:
+              totalCards > 0
+                ? `${Math.min(
+                    100,
+                    (masteredCardsRef.current.size / totalCards) * 100,
+                  )}%`
+                : "0%",
+          }}
+        />
+      </div>
       {confettiActive && (
         <div className="daily-confetti" aria-hidden>
           {confettiPieces.map((piece) => (
@@ -302,12 +480,12 @@ export const DailyTaskClient = ({
             <button
               type="button"
               onClick={handlePrev}
-              disabled={index === 0 || isProcessing}
+              disabled={phase === "review" || index === 0 || isProcessing}
               className="daily-button"
             >
               上一张
             </button>
-            {!isLast && (
+            {phase === "initial" && !isLast && (
               <button
                 type="button"
                 onClick={handleNext}
@@ -317,31 +495,31 @@ export const DailyTaskClient = ({
                 下一张
               </button>
             )}
-            {isLast && (
+            {phase === "initial" && isLast && (
               <button
                 type="button"
                 onClick={handleComplete}
                 disabled={isProcessing || completed}
                 className="daily-button daily-button--primary"
               >
-                {completed ? "已完成" : "完成今日任务"}
+                {completed ? "已完成" : "下一张"}
+              </button>
+            )}
+            {phase === "review" && (
+              <button
+                type="button"
+                onClick={handleNext}
+                disabled={isProcessing}
+                className="daily-button daily-button--primary"
+              >
+                下一张
               </button>
             )}
           </div>
+          {loopNotice && <div className="daily-loop-notice">{loopNotice}</div>}
           {completed && (
             <div className="daily-complete">Nice! 今日任务完成。</div>
           )}
-        </div>
-        <div className="daily-dots" aria-hidden>
-          {Array.from({ length: totalCards }).map((_, dotIndex) => (
-            <span
-              key={`dot-${dotIndex}`}
-              className={buildClassName(
-                "daily-dot",
-                dotIndex === index ? "daily-dot--active" : "",
-              )}
-            />
-          ))}
         </div>
       </div>
 

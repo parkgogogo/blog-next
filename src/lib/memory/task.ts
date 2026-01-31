@@ -2,6 +2,7 @@ import { addDays, format } from "date-fns";
 import { ensureMemorySentence, groupMemoryWords } from "@/lib/memory/ai-service";
 import { getMemoryFeed, getMemorySettings } from "@/lib/memory";
 import { getSupabaseClient } from "@/lib/supabase";
+import { dailyTaskOptionsSchema } from "@/lib/schemas/memory";
 
 type MemoryFeedItemLite = {
   word_id: string;
@@ -11,6 +12,8 @@ type MemoryFeedItemLite = {
   success_count: number | string;
   fail_count: number | string;
 };
+
+type WordContextMap = Record<string, string>;
 
 const isValidDateSlug = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value);
 
@@ -27,6 +30,7 @@ const resolveTodayDate = (input?: string) => {
 const buildCardPlan = async (
   items: MemoryFeedItemLite[],
   taskDate: string,
+  contextMap: WordContextMap,
   force: boolean | undefined,
 ) => {
   if (items.length === 0) return [];
@@ -35,6 +39,7 @@ const buildCardPlan = async (
   const groups = await groupMemoryWords({
     words,
     taskDate,
+    contexts: contextMap,
     force,
   });
 
@@ -84,24 +89,15 @@ export const generateDailyTask = async (options?: {
   maxChars?: number;
   maxSentences?: number;
 }) => {
-  const taskDate = resolveTaskDate(options?.date);
+  const parsedOptions = dailyTaskOptionsSchema.safeParse(options ?? {});
+  const resolvedOptions = parsedOptions.success ? parsedOptions.data : {};
+  const taskDate = resolveTaskDate(resolvedOptions.date);
   const settings = await getMemorySettings();
-  const targetWords =
-    typeof options?.targetWords === "number" && options.targetWords > 0
-      ? Math.floor(options.targetWords)
-      : settings.daily_target;
-  const maxExtraWords =
-    typeof options?.maxExtraWords === "number" && options.maxExtraWords >= 0
-      ? Math.min(3, Math.floor(options.maxExtraWords))
-      : 3;
-  const maxChars =
-    typeof options?.maxChars === "number" && options.maxChars > 0
-      ? Math.floor(options.maxChars)
-      : 160;
-  const maxSentences =
-    typeof options?.maxSentences === "number" && options.maxSentences > 0
-      ? Math.floor(options.maxSentences)
-      : 2;
+  const force = resolvedOptions.force;
+  const targetWords = resolvedOptions.targetWords ?? settings.daily_target;
+  const maxExtraWords = Math.min(3, resolvedOptions.maxExtraWords ?? 3);
+  const maxChars = resolvedOptions.maxChars ?? 160;
+  const maxSentences = resolvedOptions.maxSentences ?? 2;
 
   const supabase = getSupabaseClient();
   const { data: existingTask, error: taskError } = await supabase
@@ -114,7 +110,7 @@ export const generateDailyTask = async (options?: {
     throw new Error(taskError.message);
   }
 
-  if (existingTask && !options?.force) {
+  if (existingTask && !force) {
     const { data: cards, error: cardsError } = await supabase
       .from("word_memory_cards")
       .select("*")
@@ -167,7 +163,7 @@ export const generateDailyTask = async (options?: {
   }
 
   let taskId = existingTask?.id as string | undefined;
-  if (existingTask && options?.force) {
+  if (existingTask && force) {
     await supabase
       .from("word_memory_cards")
       .delete()
@@ -201,7 +197,35 @@ export const generateDailyTask = async (options?: {
     throw new Error("no_memory_words");
   }
 
-  const plan = await buildCardPlan(feedItems, taskDate, options?.force);
+  const wordIds = feedItems.map((item) => item.word_id);
+  const { data: entries, error: entriesError } = await supabase
+    .from("word_entries")
+    .select("word_id, context_line, source_text, context, created_at")
+    .in("word_id", wordIds)
+    .order("created_at", { ascending: false });
+
+  if (entriesError) {
+    throw new Error(entriesError.message);
+  }
+
+  const contextById = new Map<string, string>();
+  for (const entry of entries ?? []) {
+    const wordId = entry.word_id as string;
+    if (contextById.has(wordId)) continue;
+    const contextLine =
+      (entry.context_line as string | null) ||
+      (entry.source_text as string | null) ||
+      (entry.context as string | null) ||
+      "";
+    contextById.set(wordId, contextLine.trim());
+  }
+
+  const contextMap: WordContextMap = {};
+  for (const item of feedItems) {
+    contextMap[item.word_text] = contextById.get(item.word_id) ?? "";
+  }
+
+  const plan = await buildCardPlan(feedItems, taskDate, contextMap, force);
   const cards: DailyTaskResult["cards"] = [];
 
   for (const entry of plan) {
@@ -214,7 +238,10 @@ export const generateDailyTask = async (options?: {
       maxChars,
       maxSentences,
       taskDate,
-      force: options?.force,
+      contexts: Object.fromEntries(
+        words.map((word) => [word, contextMap[word] ?? ""]),
+      ),
+      force,
     });
     const charCount = sentence.length;
     const wordIds = [entry.primary.word_id, ...extras.map((extra) => extra.word_id)];

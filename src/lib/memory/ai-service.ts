@@ -22,9 +22,13 @@ export const generateMemorySentence = async (options: {
   maxChars: number;
   maxSentences: number;
   taskDate: string;
+  contexts: Record<string, string>;
   force?: boolean;
 }) => {
-  const prompt = `words: ${options.words.join(", ")}\nmax_chars: ${options.maxChars}\nmax_sentences: ${options.maxSentences}`;
+  const contextLines = options.words
+    .map((word) => `- ${word}: ${options.contexts[word] || ""}`)
+    .join("\n");
+  const prompt = `words: ${options.words.join(", ")}\nmax_chars: ${options.maxChars}\nmax_sentences: ${options.maxSentences}\ncontexts:\n${contextLines}`;
   const inputHash = createInputHash({
     version: 1,
     type: "memory_sentence",
@@ -52,6 +56,7 @@ export const generateMemorySentence = async (options: {
     content: normalized,
     meta: {
       words: options.words,
+      contexts: options.contexts,
       model: AI_TEXT_MODEL,
       taskDate: options.taskDate,
     },
@@ -77,6 +82,7 @@ export const ensureMemorySentence = async (options: {
   maxChars: number;
   maxSentences: number;
   taskDate: string;
+  contexts: Record<string, string>;
   force?: boolean;
 }) => {
   try {
@@ -166,9 +172,13 @@ const normalizeGroups = (groups: string[][], words: string[]) => {
 export const groupMemoryWords = async (options: {
   words: string[];
   taskDate: string;
+  contexts: Record<string, string>;
   force?: boolean;
 }) => {
-  const prompt = `words: ${options.words.join(", ")}`;
+  const contextLines = options.words
+    .map((word) => `- ${word}: ${options.contexts[word] || ""}`)
+    .join("\n");
+  const prompt = `words: ${options.words.join(", ")}\ncontexts:\n${contextLines}`;
   const inputHash = createInputHash({
     version: 1,
     type: "memory_grouping",
@@ -199,12 +209,13 @@ export const groupMemoryWords = async (options: {
       type: "memory_grouping",
       key,
       inputHash,
-      content: result,
-      meta: {
-        words: options.words,
-        model: AI_TEXT_MODEL,
-        taskDate: options.taskDate,
-      },
+    content: result,
+    meta: {
+      words: options.words,
+      contexts: options.contexts,
+      model: AI_TEXT_MODEL,
+      taskDate: options.taskDate,
+    },
     });
 
     const parsed = parseGrouping(result, options.words);
