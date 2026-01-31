@@ -163,9 +163,10 @@
 
 ### apply_memory_event(p_word_id, p_session_id, p_event_type, p_delta_score, p_payload)
 - 作用：写入事件 + 更新记忆状态。
+- 备注（2026-01-31）：对会影响分数的事件（open_card/mark_known/mark_unknown），同一 word + event_type 在同一天只会对 memory_score 生效一次。事件日志仍会写入，但状态更新仅当日首次生效。
+- 备注（2026-01-31）：若同一单词当天发生 open_card，则当天的 mark_known 记分将被忽略（事件仍会记录）。
 
 ### set_updated_at() 触发器
 - 自动更新 updated_at：
   - word_memory_states
   - word_memory_settings
-

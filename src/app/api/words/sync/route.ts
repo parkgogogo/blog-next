@@ -3,18 +3,16 @@ import { enforceRateLimit, requireApiKey } from "@/lib/middleware/security";
 import { getLuluWords } from "@/lib/words/lulu";
 import { insertWordEntry } from "@/lib/words/storage";
 import { getSupabaseClient } from "@/lib/supabase";
-
-type SyncPayload = {
-  provider?: string;
-  limit?: number;
-};
+import { syncPayloadSchema } from "@/lib/schemas/words";
+import { optionalTrimmedStringSchema } from "@/lib/schemas/common";
 
 const stripHtml = (value: string) =>
   value.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
 
 const normalizeWord = (value: unknown) => {
-  if (typeof value !== "string") return "";
-  return stripHtml(value);
+  const parsed = optionalTrimmedStringSchema.safeParse(value);
+  if (!parsed.success || !parsed.data) return "";
+  return stripHtml(parsed.data);
 };
 
 export async function POST(request: NextRequest) {
@@ -27,15 +25,16 @@ export async function POST(request: NextRequest) {
     return rateLimit.response;
   }
 
-  let payload: SyncPayload = {};
+  let payload: unknown = {};
   try {
-    payload = (await request.json()) as SyncPayload;
+    payload = await request.json();
   } catch {
     payload = {};
   }
 
-  const provider =
-    typeof payload.provider === "string" ? payload.provider.trim() : "lulu";
+  const parsedPayload = syncPayloadSchema.safeParse(payload);
+  const data = parsedPayload.success ? parsedPayload.data : {};
+  const provider = data.provider ?? "lulu";
   if (provider !== "lulu") {
     return NextResponse.json({ error: "Unsupported provider" }, { status: 400 });
   }
@@ -59,10 +58,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const allWords = await getLuluWords();
-    const limit =
-      typeof payload.limit === "number" && payload.limit > 0
-        ? payload.limit
-        : undefined;
+    const limit = data.limit;
     const words = limit ? allWords.slice(0, limit) : allWords;
 
     const { data: existing, error: existingError } = await supabase

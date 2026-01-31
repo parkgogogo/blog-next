@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import type { AddWordEntryRequest } from "@/lib/words/api-types";
 import { enforceRateLimit, requireApiKey } from "@/lib/middleware/security";
 import { insertWordEntry } from "@/lib/words/storage";
+import { addWordEntryRequestSchema } from "@/lib/schemas/words";
 
 export async function POST(request: NextRequest) {
   const auth = requireApiKey(request);
@@ -13,39 +13,35 @@ export async function POST(request: NextRequest) {
     return rateLimit.response;
   }
 
-  let payload: Partial<AddWordEntryRequest>;
+  let payload: unknown = {};
   try {
-    payload = (await request.json()) as typeof payload;
+    payload = await request.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const word = typeof payload.word === "string" ? payload.word.trim() : "";
-  const contextLine =
-    typeof payload.contextLine === "string" ? payload.contextLine.trim() : "";
-  const sourceLink =
-    typeof payload.sourceLink === "string" ? payload.sourceLink.trim() : "";
-  const language =
-    typeof payload.language === "string" ? payload.language.trim() : "en";
-  const provider =
-    typeof payload.provider === "string" ? payload.provider.trim() : "manual";
-
-  if (!word || !contextLine) {
+  const parsedPayload = addWordEntryRequestSchema.safeParse(payload);
+  if (!parsedPayload.success) {
     return NextResponse.json(
       { error: "word and contextLine are required" },
       { status: 400 },
     );
   }
 
+  const { word, contextLine, sourceLink, language, provider } =
+    parsedPayload.data;
+  const resolvedLanguage = language ?? "en";
+  const resolvedProvider = provider ?? "manual";
+
   const entry = await insertWordEntry({
     word,
-    language,
+    language: resolvedLanguage,
     context: contextLine,
     brief: "",
     detail: "",
     contextLine,
     sourceLink: sourceLink || null,
-    provider,
+    provider: resolvedProvider,
     providerPayload: null,
   });
 

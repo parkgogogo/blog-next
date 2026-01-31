@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import type { ContextSnippetRequest } from "@/lib/words/api-types";
 import { enforceRateLimit, requireApiKey } from "@/lib/middleware/security";
 import { getContextSnippet } from "@/lib/words/ai-service";
+import { contextSnippetRequestSchema } from "@/lib/schemas/words";
 
 export async function POST(request: NextRequest) {
   const auth = requireApiKey(request);
@@ -13,28 +13,24 @@ export async function POST(request: NextRequest) {
     return rateLimit.response;
   }
 
-  let payload: Partial<ContextSnippetRequest>;
+  let payload: unknown = {};
   try {
-    payload = (await request.json()) as typeof payload;
+    payload = await request.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const word = typeof payload.word === "string" ? payload.word.trim() : "";
-  const sourceText =
-    typeof payload.sourceText === "string" ? payload.sourceText.trim() : "";
-  const maxChars =
-    typeof payload.maxChars === "number" ? payload.maxChars : undefined;
-
-  if (!word || !sourceText) {
+  const parsedPayload = contextSnippetRequestSchema.safeParse(payload);
+  if (!parsedPayload.success) {
     return NextResponse.json(
       { error: "word and sourceText are required" },
       { status: 400 },
     );
   }
 
+  const { word, sourceText, maxChars, force } = parsedPayload.data;
   const content = await getContextSnippet(word, sourceText, {
-    force: payload.force,
+    force,
     maxChars,
   });
 

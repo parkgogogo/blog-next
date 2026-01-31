@@ -15,6 +15,7 @@ import {
   getCachedGeneration,
   saveGeneration,
 } from "@/lib/ai-cache";
+import { wordCardBundleContentSchema } from "@/lib/schemas/words";
 
 export const getStoryExplanation = async (
   word: ILuluWord,
@@ -209,16 +210,11 @@ export const getFreeExplanation = async (
 
 const parseBundleContent = (raw: string) => {
   const attemptParse = (value: string) => {
-    const parsed = JSON.parse(value) as {
-      context?: string;
-      brief?: string;
-      detail?: string;
-    };
-    return {
-      context: typeof parsed.context === "string" ? parsed.context.trim() : "",
-      brief: typeof parsed.brief === "string" ? parsed.brief.trim() : "",
-      detail: typeof parsed.detail === "string" ? parsed.detail.trim() : "",
-    };
+    const parsed = wordCardBundleContentSchema.safeParse(JSON.parse(value));
+    if (!parsed.success) {
+      throw new Error("invalid_bundle_content");
+    }
+    return parsed.data;
   };
 
   try {

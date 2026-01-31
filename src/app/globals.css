@@ -227,10 +227,28 @@ body {
 
 .daily-shell {
   min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   padding: 24px 20px 36px;
   display: flex;
   flex-direction: column;
   gap: 24px;
+}
+
+.daily-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: color-mix(in srgb, var(--accent-warm) 12%, transparent);
+  z-index: 60;
+}
+
+.daily-progress-bar {
+  height: 100%;
+  background: var(--accent-warm);
+  transition: width 420ms ease;
 }
 
 .daily-core {
@@ -263,12 +281,12 @@ body {
   text-decoration: underline;
   text-decoration-thickness: 2px;
   text-underline-offset: 4px;
-  color: var(--text-muted);
+  color: var(--accent-warm);
   transition: color 0.2s ease;
 }
 
 .daily-word:hover {
-  color: var(--foreground);
+  color: color-mix(in srgb, var(--accent-warm) 72%, #000 28%);
 }
 
 .daily-word--active {
@@ -282,23 +300,6 @@ body {
   gap: 12px;
 }
 
-.daily-dots {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
-}
-
-.daily-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--text-muted) 50%, transparent);
-}
-
-.daily-dot--active {
-  background: var(--text-muted);
-}
 
 .daily-button {
   border: 1px solid var(--border-subtle);
@@ -341,6 +342,13 @@ body {
   color: var(--accent-warm);
   font-size: 0.9rem;
   letter-spacing: 0.08em;
+}
+
+.daily-loop-notice {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
 }
 
 .daily-confetti {

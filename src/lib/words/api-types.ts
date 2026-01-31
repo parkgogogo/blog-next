@@ -1,57 +1,20 @@
-export interface WordContextInput {
-  line: string;
-}
+import { z } from "zod";
+import {
+  addWordEntryRequestSchema,
+  contextSnippetRequestSchema,
+  sentenceTranslationRequestSchema,
+  storyWordCardRequestSchema,
+  wordCardBundleRequestSchema,
+  wordContextSchema,
+  wordExplanationRequestSchema,
+  wordInputSchema,
+} from "@/lib/schemas/words";
 
-export interface WordInput {
-  uuid: string;
-  word?: string;
-  context: WordContextInput;
-  id?: string;
-  exp?: string;
-  addtime?: string;
-  phon?: string;
-}
-
-export interface StoryWordCardRequest {
-  word: WordInput;
-  story: string;
-  force?: boolean;
-}
-
-export interface WordExplanationRequest {
-  word: WordInput;
-  force?: boolean;
-}
-
-export interface SentenceTranslationRequest {
-  text: string;
-  force?: boolean;
-}
-
-export interface TranslationResponse {
-  type: string;
-  content: string;
-}
-
-export interface ContextSnippetRequest {
-  word: string;
-  sourceText: string;
-  maxChars?: number;
-  force?: boolean;
-}
-
-export interface WordCardBundleRequest {
-  word: string;
-  sourceText?: string;
-  contextLine?: string;
-  maxChars?: number;
-  force?: boolean;
-}
-
-export interface AddWordEntryRequest {
-  word: string;
-  contextLine: string;
-  sourceLink?: string;
-  language?: string;
-  provider?: string;
-}
+export type WordContextInput = z.infer<typeof wordContextSchema>;
+export type WordInput = z.infer<typeof wordInputSchema>;
+export type StoryWordCardRequest = z.infer<typeof storyWordCardRequestSchema>;
+export type WordExplanationRequest = z.infer<typeof wordExplanationRequestSchema>;
+export type SentenceTranslationRequest = z.infer<typeof sentenceTranslationRequestSchema>;
+export type ContextSnippetRequest = z.infer<typeof contextSnippetRequestSchema>;
+export type WordCardBundleRequest = z.infer<typeof wordCardBundleRequestSchema>;
+export type AddWordEntryRequest = z.infer<typeof addWordEntryRequestSchema>;

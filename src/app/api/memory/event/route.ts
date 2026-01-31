@@ -1,12 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { enforceRateLimit, requireApiKey } from "@/lib/middleware/security";
-import { applyMemoryEvent, type MemoryEventPayload } from "@/lib/memory";
+import { applyMemoryEvent } from "@/lib/memory";
 import { getSupabaseClient } from "@/lib/supabase";
-
-type EventRequest = MemoryEventPayload;
-
-const isEventType = (value: string): value is EventRequest["eventType"] =>
-  ["exposure", "open_card", "mark_known", "mark_unknown"].includes(value);
+import { memoryEventRequestSchema } from "@/lib/schemas/memory";
 
 export async function POST(request: NextRequest) {
   const auth = requireApiKey(request);
@@ -18,30 +14,29 @@ export async function POST(request: NextRequest) {
     return rateLimit.response;
   }
 
-  let payload: EventRequest;
+  let payload: unknown;
   try {
-    payload = (await request.json()) as EventRequest;
+    payload = await request.json();
   } catch {
     return NextResponse.json({ error: "invalid_payload" }, { status: 400 });
   }
 
-  const wordId = typeof payload.wordId === "string" ? payload.wordId.trim() : "";
-  const sessionId =
-    typeof payload.sessionId === "string" ? payload.sessionId.trim() : null;
-  const eventType =
-    typeof payload.eventType === "string" ? payload.eventType.trim() : "";
-
-  if (!wordId || !eventType || !isEventType(eventType)) {
+  const parsedPayload = memoryEventRequestSchema.safeParse(payload);
+  if (!parsedPayload.success) {
     return NextResponse.json({ error: "wordId and valid eventType required" }, { status: 400 });
   }
+
+  const wordId = parsedPayload.data.wordId;
+  const sessionId = parsedPayload.data.sessionId ?? null;
+  const eventType = parsedPayload.data.eventType;
 
   try {
     const updated = await applyMemoryEvent({
       wordId,
       sessionId,
       eventType,
-      deltaScore: payload.deltaScore,
-      payload: payload.payload,
+      deltaScore: parsedPayload.data.deltaScore,
+      payload: parsedPayload.data.payload,
     });
 
     if (eventType === "open_card" && sessionId) {

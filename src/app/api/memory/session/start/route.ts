@@ -2,18 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { enforceRateLimit, requireApiKey } from "@/lib/middleware/security";
 import { applyMemoryEvent, getMemoryFeed } from "@/lib/memory";
 import { getSupabaseClient } from "@/lib/supabase";
-
-type StartSessionPayload = {
-  limit?: number;
-  groupSize?: number;
-  params?: Record<string, unknown>;
-};
-
-const parseNumber = (value: unknown) => {
-  if (typeof value !== "number") return undefined;
-  if (!Number.isFinite(value) || value <= 0) return undefined;
-  return Math.floor(value);
-};
+import { startSessionPayloadSchema } from "@/lib/schemas/memory";
 
 export async function POST(request: NextRequest) {
   const auth = requireApiKey(request);
@@ -25,15 +14,17 @@ export async function POST(request: NextRequest) {
     return rateLimit.response;
   }
 
-  let payload: StartSessionPayload = {};
+  let payload: unknown = {};
   try {
-    payload = (await request.json()) as StartSessionPayload;
+    payload = await request.json();
   } catch {
     payload = {};
   }
 
-  const limit = parseNumber(payload.limit);
-  const groupSize = parseNumber(payload.groupSize);
+  const parsedPayload = startSessionPayloadSchema.safeParse(payload);
+  const data = parsedPayload.success ? parsedPayload.data : {};
+  const limit = data.limit;
+  const groupSize = data.groupSize;
   const target = groupSize ?? limit;
 
   try {
@@ -48,7 +39,7 @@ export async function POST(request: NextRequest) {
       .insert({
         status: "active",
         group_size: feedItems.length,
-        params: payload.params ?? null,
+        params: data.params ?? null,
       })
       .select("id, status, group_size, started_at")
       .single();

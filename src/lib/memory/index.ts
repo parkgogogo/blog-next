@@ -1,4 +1,5 @@
 import { getSupabaseClient } from "@/lib/supabase";
+import { optionalFiniteNumberSchema } from "@/lib/schemas/common";
 
 export type MemoryFeedItem = {
   word_id: string;
@@ -55,9 +56,11 @@ export const getMemorySettings = async () => {
 };
 
 export const getMemoryFeed = async (limit?: number) => {
+  const parsedLimit = optionalFiniteNumberSchema.safeParse(limit);
+  const limitValue = parsedLimit.success ? parsedLimit.data : undefined;
   const supabase = getSupabaseClient();
   const { data, error } = await supabase.rpc("get_memory_feed", {
-    p_limit: typeof limit === "number" ? limit : null,
+    p_limit: limitValue ?? null,
   });
 
   if (error) {
