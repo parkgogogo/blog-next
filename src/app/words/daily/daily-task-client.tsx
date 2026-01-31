@@ -7,6 +7,11 @@ import {
   getDailyWordBundleAction,
   recordMemoryEventAction,
 } from "@/app/words/daily/actions";
+import {
+  enqueuePendingMemoryEvent,
+  flushPendingMemoryEvents,
+  type DailyMemoryEventPayload,
+} from "@/lib/memory/pending-events";
 
 type DailyTaskCard = {
   id: string;
@@ -161,6 +166,10 @@ export const DailyTaskClient = ({
   }, []);
 
   useEffect(() => {
+    flushPendingEvents();
+  }, []);
+
+  useEffect(() => {
     const prefix = "daily-task-state:";
     for (let i = 0; i < localStorage.length; i += 1) {
       const key = localStorage.key(i);
@@ -258,13 +267,25 @@ export const DailyTaskClient = ({
     currentVisitOpenedRef.current = true;
   };
 
+  const reportMemoryEvent = async (payload: DailyMemoryEventPayload) => {
+    try {
+      await recordMemoryEventAction(payload);
+    } catch {
+      enqueuePendingMemoryEvent(payload);
+    }
+  };
+
+  const flushPendingEvents = () => {
+    void flushPendingMemoryEvents(recordMemoryEventAction);
+  };
+
   const processCard = async (cardIndex: number, openedThisVisit: boolean) => {
     const target = cards[cardIndex];
     if (!target) return;
 
     await Promise.all(
       target.word_ids.map((wordId) =>
-        recordMemoryEventAction({
+        reportMemoryEvent({
           wordId,
           eventType: "exposure",
           meta: { source: "daily_task", date },
@@ -280,7 +301,7 @@ export const DailyTaskClient = ({
       }
       await Promise.all(
         target.word_ids.map((wordId) =>
-          recordMemoryEventAction({
+          reportMemoryEvent({
             wordId,
             eventType: "mark_known",
             meta: { source: "daily_task", date },
@@ -291,6 +312,7 @@ export const DailyTaskClient = ({
   };
 
   const reportCard = (cardIndex: number, openedThisVisit: boolean) => {
+    flushPendingEvents();
     void processCard(cardIndex, openedThisVisit).catch(() => undefined);
   };
 
@@ -391,6 +413,7 @@ export const DailyTaskClient = ({
 
   const handleOpenSheet = async (wordId: string, wordText: string) => {
     if (isProcessing) return;
+    flushPendingEvents();
     markWordOpened(currentCardIndex);
     setSheetOpen(true);
     setSheetWordId(wordId);
@@ -401,7 +424,7 @@ export const DailyTaskClient = ({
     setSheetBriefLoading(true);
     setSheetDetailLoading(true);
 
-    await recordMemoryEventAction({
+    await reportMemoryEvent({
       wordId,
       eventType: "open_card",
       meta: { source: "daily_task", date },
