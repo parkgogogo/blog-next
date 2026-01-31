@@ -96,6 +96,7 @@ export const DailyTaskClient = ({
   const [reviewCursor, setReviewCursor] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
   const [completed, setCompleted] = useState(false);
+  const [reviewing, setReviewing] = useState(false);
   const [confettiActive, setConfettiActive] = useState(false);
   const [loopCount, setLoopCount] = useState(0);
   const [loopNotice, setLoopNotice] = useState<string | null>(null);
@@ -159,6 +160,15 @@ export const DailyTaskClient = ({
   }, []);
 
   useEffect(() => {
+    const prefix = "daily-task-state:";
+    for (let i = 0; i < localStorage.length; i += 1) {
+      const key = localStorage.key(i);
+      if (!key || key === storageKey || !key.startsWith(prefix)) continue;
+      localStorage.removeItem(key);
+    }
+  }, [storageKey]);
+
+  useEffect(() => {
     if (totalCards === 0) return;
     const raw = localStorage.getItem(storageKey);
     if (!raw) return;
@@ -171,6 +181,7 @@ export const DailyTaskClient = ({
         pendingReview?: string[];
         masteredCards?: string[];
         loopCount?: number;
+        completed?: boolean;
       };
       const validCardIds = new Set(cards.map((entry) => entry.id));
       const storedIndex = typeof parsed.index === "number" ? parsed.index : 0;
@@ -201,6 +212,9 @@ export const DailyTaskClient = ({
       if (typeof parsed.loopCount === "number") {
         setLoopCount(Math.max(0, parsed.loopCount));
       }
+      if (parsed.completed) {
+        setCompleted(true);
+      }
     } catch {
       // Ignore corrupted storage.
     }
@@ -216,6 +230,7 @@ export const DailyTaskClient = ({
       pendingReview: Array.from(pendingReviewRef.current),
       masteredCards: Array.from(masteredCardsRef.current),
       loopCount,
+      completed,
     };
     localStorage.setItem(storageKey, JSON.stringify(payload));
   }, [
@@ -226,6 +241,7 @@ export const DailyTaskClient = ({
     loopCount,
     pendingVersion,
     masteredVersion,
+    completed,
     storageKey,
     totalCards,
   ]);
@@ -305,9 +321,9 @@ export const DailyTaskClient = ({
         if (updatedQueue.length === 0) {
           await completeDailyTaskAction(date);
           setCompleted(true);
+          setReviewing(false);
           setConfettiActive(true);
           setLoopNotice(null);
-          localStorage.removeItem(storageKey);
           setTimeout(() => setConfettiActive(false), 2200);
           return;
         }
@@ -343,15 +359,23 @@ export const DailyTaskClient = ({
         }
         await completeDailyTaskAction(date);
         setCompleted(true);
+        setReviewing(false);
         setConfettiActive(true);
         setLoopNotice(null);
-        localStorage.removeItem(storageKey);
         setTimeout(() => setConfettiActive(false), 2200);
       }
     } finally {
       currentVisitOpenedRef.current = false;
       setIsProcessing(false);
     }
+  };
+
+  const handleStartReview = () => {
+    if (cards.length === 0) return;
+    setReviewing(true);
+    setPhase("initial");
+    setIndex(0);
+    setLoopNotice(null);
   };
 
   const handleOpenSheet = async (wordId: string, wordText: string) => {
@@ -425,12 +449,17 @@ export const DailyTaskClient = ({
               totalCards > 0
                 ? `${Math.min(
                     100,
-                    (masteredCardsRef.current.size / totalCards) * 100,
+                    (completed
+                      ? totalCards
+                      : masteredCardsRef.current.size) /
+                      totalCards *
+                      100,
                   )}%`
                 : "0%",
           }}
         />
       </div>
+      <div className="daily-date">{date}</div>
       {confettiActive && (
         <div className="daily-confetti" aria-hidden>
           {confettiPieces.map((piece) => (
@@ -480,7 +509,12 @@ export const DailyTaskClient = ({
             <button
               type="button"
               onClick={handlePrev}
-              disabled={phase === "review" || index === 0 || isProcessing}
+              disabled={
+                (!reviewing && completed) ||
+                phase === "review" ||
+                index === 0 ||
+                isProcessing
+              }
               className="daily-button"
             >
               上一张
@@ -489,7 +523,7 @@ export const DailyTaskClient = ({
               <button
                 type="button"
                 onClick={handleNext}
-                disabled={isProcessing}
+                disabled={(!reviewing && completed) || isProcessing}
                 className="daily-button daily-button--primary"
               >
                 下一张
@@ -499,17 +533,17 @@ export const DailyTaskClient = ({
               <button
                 type="button"
                 onClick={handleComplete}
-                disabled={isProcessing || completed}
+                disabled={isProcessing || (!reviewing && completed)}
                 className="daily-button daily-button--primary"
               >
-                {completed ? "已完成" : "下一张"}
+                {completed && !reviewing ? "已完成" : "下一张"}
               </button>
             )}
             {phase === "review" && (
               <button
                 type="button"
                 onClick={handleNext}
-                disabled={isProcessing}
+                disabled={(!reviewing && completed) || isProcessing}
                 className="daily-button daily-button--primary"
               >
                 下一张
@@ -519,6 +553,17 @@ export const DailyTaskClient = ({
           {loopNotice && <div className="daily-loop-notice">{loopNotice}</div>}
           {completed && (
             <div className="daily-complete">Nice! 今日任务完成。</div>
+          )}
+          {completed && !reviewing && (
+            <div className="daily-actions">
+              <button
+                type="button"
+                onClick={handleStartReview}
+                className="daily-button daily-button--primary"
+              >
+                复习今日任务
+              </button>
+            </div>
           )}
         </div>
       </div>

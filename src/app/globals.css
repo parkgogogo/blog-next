@@ -245,6 +245,18 @@ body {
   z-index: 60;
 }
 
+.daily-date {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  z-index: 55;
+}
+
 .daily-progress-bar {
   height: 100%;
   background: var(--accent-warm);
@@ -300,7 +312,6 @@ body {
   gap: 12px;
 }
 
-
 .daily-button {
   border: 1px solid var(--border-subtle);
   padding: 10px 20px;
@@ -319,7 +330,11 @@ body {
 
 .daily-button:hover:not(:disabled) {
   transform: translateY(-1px);
-  border-color: color-mix(in srgb, var(--accent-warm) 50%, var(--border-subtle));
+  border-color: color-mix(
+    in srgb,
+    var(--accent-warm) 50%,
+    var(--border-subtle)
+  );
 }
 
 .daily-button:disabled {
