@@ -220,6 +220,173 @@ body {
   }
 }
 
+.daily-page {
+  background: var(--background);
+  min-height: 100vh;
+}
+
+.daily-shell {
+  min-height: 100vh;
+  padding: 24px 20px 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.daily-core {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 24px;
+}
+
+.daily-sentence-wrap {
+  display: flex;
+  justify-content: center;
+}
+
+.daily-sentence {
+  font-size: 1.1rem;
+  line-height: 1.85;
+  letter-spacing: 0.01em;
+  max-width: 70ch;
+  text-wrap: pretty;
+  text-align: center;
+}
+
+.daily-sentence-anim {
+  animation: daily-sentence-in 0.5s ease;
+}
+
+.daily-word {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+  color: var(--text-muted);
+  transition: color 0.2s ease;
+}
+
+.daily-word:hover {
+  color: var(--foreground);
+}
+
+.daily-word--active {
+  color: var(--accent-warm);
+}
+
+.daily-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+
+.daily-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+}
+
+.daily-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text-muted) 50%, transparent);
+}
+
+.daily-dot--active {
+  background: var(--text-muted);
+}
+
+.daily-button {
+  border: 1px solid var(--border-subtle);
+  padding: 10px 20px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: transparent;
+  color: var(--foreground);
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    background 0.2s ease;
+}
+
+.daily-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--accent-warm) 50%, var(--border-subtle));
+}
+
+.daily-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.daily-button--primary {
+  background: var(--foreground);
+  color: var(--background);
+  border-color: var(--foreground);
+}
+
+.daily-button--primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--foreground) 88%, #fff 12%);
+}
+
+.daily-complete {
+  text-align: center;
+  color: var(--accent-warm);
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
+}
+
+.daily-confetti {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 50;
+}
+
+.daily-confetti span {
+  position: absolute;
+  top: -12px;
+  width: 8px;
+  height: 14px;
+  border-radius: 2px;
+  animation-name: daily-confetti-fall;
+  animation-timing-function: ease-out;
+  animation-fill-mode: forwards;
+}
+
+@keyframes daily-sentence-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes daily-confetti-fall {
+  0% {
+    opacity: 0;
+    transform: translateY(0) rotate(0deg);
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(80vh) rotate(220deg);
+  }
+}
+
 .feeds-page {
   min-height: 100vh;
   background: var(--background);
