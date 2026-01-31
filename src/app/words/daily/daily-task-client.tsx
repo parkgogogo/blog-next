@@ -113,6 +113,7 @@ export const DailyTaskClient = ({
   const pendingReviewRef = useRef<Set<string>>(new Set());
   const masteredCardsRef = useRef<Set<string>>(new Set());
   const currentVisitOpenedRef = useRef(false);
+  const navLockRef = useRef(false);
   const [pendingVersion, setPendingVersion] = useState(0);
   const [masteredVersion, setMasteredVersion] = useState(0);
   const confettiPieces = useMemo(() => buildConfetti(), []);
@@ -289,85 +290,95 @@ export const DailyTaskClient = ({
     }
   };
 
+  const reportCard = (cardIndex: number, openedThisVisit: boolean) => {
+    void processCard(cardIndex, openedThisVisit).catch(() => undefined);
+  };
+
+  const acquireNavLock = () => {
+    if (navLockRef.current) return false;
+    navLockRef.current = true;
+    setIsProcessing(true);
+    queueMicrotask(() => {
+      navLockRef.current = false;
+      setIsProcessing(false);
+    });
+    return true;
+  };
+
   const handlePrev = () => {
     if (phase === "review" || index === 0 || isProcessing) return;
+    if (!acquireNavLock()) return;
     setIndex((current) => Math.max(0, current - 1));
   };
 
   const handleNext = async () => {
     if (!card || isProcessing) return;
-    setIsProcessing(true);
-    try {
-      const openedThisVisit = currentVisitOpenedRef.current;
-      if (phase === "initial") {
-        if (isLast) return;
-        await processCard(currentCardIndex, openedThisVisit);
-        setIndex((current) => Math.min(totalCards - 1, current + 1));
-        setLoopNotice(null);
+    if (!acquireNavLock()) return;
+    const openedThisVisit = currentVisitOpenedRef.current;
+    if (phase === "initial") {
+      if (isLast) return;
+      reportCard(currentCardIndex, openedThisVisit);
+      setIndex((current) => Math.min(totalCards - 1, current + 1));
+      setLoopNotice(null);
+    } else {
+      reportCard(currentCardIndex, openedThisVisit);
+      const currentId = reviewQueue[reviewCursor];
+      let updatedQueue = reviewQueue;
+      if (openedThisVisit && currentId) {
+        updatedQueue = [
+          ...reviewQueue.filter(
+            (id, idx) => idx !== reviewCursor && id !== currentId,
+          ),
+          currentId,
+        ];
       } else {
-        await processCard(currentCardIndex, openedThisVisit);
-        const currentId = reviewQueue[reviewCursor];
-        let updatedQueue = reviewQueue;
-        if (openedThisVisit && currentId) {
-          updatedQueue = [
-            ...reviewQueue.filter(
-              (id, idx) => idx !== reviewCursor && id !== currentId,
-            ),
-            currentId,
-          ];
-        } else {
-          updatedQueue = reviewQueue.filter((_, idx) => idx !== reviewCursor);
-        }
-        if (updatedQueue.length === 0) {
-          await completeDailyTaskAction(date);
-          setCompleted(true);
-          setReviewing(false);
-          setConfettiActive(true);
-          setLoopNotice(null);
-          setTimeout(() => setConfettiActive(false), 2200);
-          return;
-        }
-        const nextCursor = Math.min(reviewCursor, updatedQueue.length - 1);
-        setReviewQueue(updatedQueue);
-        setReviewCursor(nextCursor);
+        updatedQueue = reviewQueue.filter((_, idx) => idx !== reviewCursor);
       }
-    } finally {
-      currentVisitOpenedRef.current = false;
-      setIsProcessing(false);
-    }
-  };
-
-  const handleComplete = async () => {
-    if (!card || isProcessing) return;
-    setIsProcessing(true);
-    try {
-      const openedThisVisit = currentVisitOpenedRef.current;
-      if (phase === "initial") {
-        await processCard(currentCardIndex, openedThisVisit);
-        if (pendingReviewRef.current.size > 0) {
-          const reviewList = cards
-            .map((entry) => entry.id)
-            .filter((cardId) => pendingReviewRef.current.has(cardId));
-          pendingReviewRef.current.clear();
-          setPendingVersion((value) => value + 1);
-          setLoopCount((count) => count + 1);
-          setPhase("review");
-          setReviewQueue(reviewList);
-          setReviewCursor(0);
-          setLoopNotice("还有没掌握的词，再来一轮");
-          return;
-        }
-        await completeDailyTaskAction(date);
+      if (updatedQueue.length === 0) {
+        void completeDailyTaskAction(date).catch(() => undefined);
         setCompleted(true);
         setReviewing(false);
         setConfettiActive(true);
         setLoopNotice(null);
         setTimeout(() => setConfettiActive(false), 2200);
+        currentVisitOpenedRef.current = false;
+        return;
       }
-    } finally {
-      currentVisitOpenedRef.current = false;
-      setIsProcessing(false);
+      const nextCursor = Math.min(reviewCursor, updatedQueue.length - 1);
+      setReviewQueue(updatedQueue);
+      setReviewCursor(nextCursor);
     }
+    currentVisitOpenedRef.current = false;
+  };
+
+  const handleComplete = async () => {
+    if (!card || isProcessing) return;
+    if (!acquireNavLock()) return;
+    const openedThisVisit = currentVisitOpenedRef.current;
+    if (phase === "initial") {
+      reportCard(currentCardIndex, openedThisVisit);
+      if (pendingReviewRef.current.size > 0) {
+        const reviewList = cards
+          .map((entry) => entry.id)
+          .filter((cardId) => pendingReviewRef.current.has(cardId));
+        pendingReviewRef.current.clear();
+        setPendingVersion((value) => value + 1);
+        setLoopCount((count) => count + 1);
+        setPhase("review");
+        setReviewQueue(reviewList);
+        setReviewCursor(0);
+        setLoopNotice("还有没掌握的词，再来一轮");
+        currentVisitOpenedRef.current = false;
+        return;
+      }
+      void completeDailyTaskAction(date).catch(() => undefined);
+      setCompleted(true);
+      setReviewing(false);
+      setConfettiActive(true);
+      setLoopNotice(null);
+      setTimeout(() => setConfettiActive(false), 2200);
+    }
+    currentVisitOpenedRef.current = false;
   };
 
   const handleStartReview = () => {

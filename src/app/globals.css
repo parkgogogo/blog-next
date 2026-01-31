@@ -235,6 +235,28 @@ body {
   gap: 24px;
 }
 
+.daily-shell--loading {
+  justify-content: center;
+  align-items: center;
+}
+
+.daily-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: min(24vw, 120px);
+  height: min(24vw, 120px);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--accent-warm) 12%, transparent);
+}
+
+.daily-loading-icon {
+  width: 40px;
+  height: 40px;
+  color: var(--accent-warm);
+  animation: daily-spin 0.9s linear infinite;
+}
+
 .daily-progress {
   position: fixed;
   top: 0;
@@ -393,6 +415,15 @@ body {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes daily-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
   }
 }
 

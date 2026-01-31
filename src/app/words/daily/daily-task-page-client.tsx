@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Loader } from "lucide-react";
 import { DailyTaskClient } from "@/app/words/daily/daily-task-client";
 import { loadDailyTaskAction } from "@/app/words/daily/actions";
 
@@ -76,8 +77,10 @@ export const DailyTaskPageClient = () => {
           <div className="daily-progress-bar" style={{ width: "0%" }} />
         </div>
         <div className="daily-date">{localDate}</div>
-        <div className="daily-shell">
-          <div className="daily-sentence">任务加载中...</div>
+        <div className="daily-shell daily-shell--loading">
+          <div className="daily-loading" role="status" aria-label="任务加载中">
+            <Loader className="daily-loading-icon" />
+          </div>
         </div>
       </div>
     );
