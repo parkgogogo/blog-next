@@ -7,10 +7,10 @@ settings:
 dependencies:
   '@ai-sdk/openai':
     specifier: ^2.0.89
-    version: 2.0.89(zod@4.3.6)
+    version: 2.0.89(zod@3.25.76)
   '@ai-sdk/openai-compatible':
     specifier: ^1.0.31
-    version: 1.0.31(zod@4.3.6)
+    version: 1.0.31(zod@3.25.76)
   '@octokit/rest':
     specifier: ^21.1.1
     version: 21.1.1
@@ -28,7 +28,7 @@ dependencies:
     version: 3.9.0
   ai:
     specifier: ^5.0.123
-    version: 5.0.123(zod@4.3.6)
+    version: 5.0.123(zod@3.25.76)
   date-fns:
     specifier: ^4.1.0
     version: 4.1.0
@@ -46,7 +46,7 @@ dependencies:
     version: 15.4.10(react-dom@19.1.0)(react@19.1.0)
   openai:
     specifier: ^5.23.2
-    version: 5.23.2(zod@4.3.6)
+    version: 5.23.2(zod@3.25.76)
   react:
     specifier: 19.1.0
     version: 19.1.0
@@ -71,6 +71,9 @@ dependencies:
   tailwind-scrollbar-hide:
     specifier: ^4.0.0
     version: 4.0.0(tailwindcss@4.1.18)
+  zod:
+    specifier: ^3.25.76
+    version: 3.25.76
 
 devDependencies:
   '@eslint/eslintrc':
@@ -109,41 +112,41 @@ devDependencies:
 
 packages:
 
-  /@ai-sdk/gateway@2.0.29(zod@4.3.6):
+  /@ai-sdk/gateway@2.0.29(zod@3.25.76):
     resolution: {integrity: sha512-1b7E9F/B5gex/1uCkhs+sGIbH0KsZOItHnNz3iY5ir+nc4ZUA6WOU5Cu2w1USlc+3UVbhf+H+iNLlxVjLe4VvQ==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
     dependencies:
       '@ai-sdk/provider': 2.0.1
-      '@ai-sdk/provider-utils': 3.0.20(zod@4.3.6)
+      '@ai-sdk/provider-utils': 3.0.20(zod@3.25.76)
       '@vercel/oidc': 3.1.0
-      zod: 4.3.6
+      zod: 3.25.76
     dev: false
 
-  /@ai-sdk/openai-compatible@1.0.31(zod@4.3.6):
+  /@ai-sdk/openai-compatible@1.0.31(zod@3.25.76):
     resolution: {integrity: sha512-znBvaVHM0M6yWNerIEy3hR+O8ZK2sPcE7e2cxfb6kYLEX3k//JH5VDnRnajseVofg7LXtTCFFdjsB7WLf1BdeQ==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
     dependencies:
       '@ai-sdk/provider': 2.0.1
-      '@ai-sdk/provider-utils': 3.0.20(zod@4.3.6)
-      zod: 4.3.6
+      '@ai-sdk/provider-utils': 3.0.20(zod@3.25.76)
+      zod: 3.25.76
     dev: false
 
-  /@ai-sdk/openai@2.0.89(zod@4.3.6):
+  /@ai-sdk/openai@2.0.89(zod@3.25.76):
     resolution: {integrity: sha512-4+qWkBCbL9HPKbgrUO/F2uXZ8GqrYxHa8SWEYIzxEJ9zvWw3ISr3t1/27O1i8MGSym+PzEyHBT48EV4LAwWaEw==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
     dependencies:
       '@ai-sdk/provider': 2.0.1
-      '@ai-sdk/provider-utils': 3.0.20(zod@4.3.6)
-      zod: 4.3.6
+      '@ai-sdk/provider-utils': 3.0.20(zod@3.25.76)
+      zod: 3.25.76
     dev: false
 
-  /@ai-sdk/provider-utils@3.0.20(zod@4.3.6):
+  /@ai-sdk/provider-utils@3.0.20(zod@3.25.76):
     resolution: {integrity: sha512-iXHVe0apM2zUEzauqJwqmpC37A5rihrStAih5Ks+JE32iTe4LZ58y17UGBjpQQTCRw9YxMeo2UFLxLpBluyvLQ==}
     engines: {node: '>=18'}
     peerDependencies:
@@ -152,7 +155,7 @@ packages:
       '@ai-sdk/provider': 2.0.1
       '@standard-schema/spec': 1.1.0
       eventsource-parser: 3.0.6
-      zod: 4.3.6
+      zod: 3.25.76
     dev: false
 
   /@ai-sdk/provider@2.0.1:
@@ -1957,17 +1960,17 @@ packages:
     hasBin: true
     dev: true
 
-  /ai@5.0.123(zod@4.3.6):
+  /ai@5.0.123(zod@3.25.76):
     resolution: {integrity: sha512-V3Imb0tg0pHCa6a/VsoW/FZpT07mwUw/4Hj6nexJC1Nvf1eyKQJyaYVkl+YTLnA8cKQSUkoarKhXWbFy4CSgjw==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
     dependencies:
-      '@ai-sdk/gateway': 2.0.29(zod@4.3.6)
+      '@ai-sdk/gateway': 2.0.29(zod@3.25.76)
       '@ai-sdk/provider': 2.0.1
-      '@ai-sdk/provider-utils': 3.0.20(zod@4.3.6)
+      '@ai-sdk/provider-utils': 3.0.20(zod@3.25.76)
       '@opentelemetry/api': 1.9.0
-      zod: 4.3.6
+      zod: 3.25.76
     dev: false
 
   /ajv@6.12.6:
@@ -4349,7 +4352,7 @@ packages:
       es-object-atoms: 1.1.1
     dev: true
 
-  /openai@5.23.2(zod@4.3.6):
+  /openai@5.23.2(zod@3.25.76):
     resolution: {integrity: sha512-MQBzmTulj+MM5O8SKEk/gL8a7s5mktS9zUtAkU257WjvobGc9nKcBuVwjyEEcb9SI8a8Y2G/mzn3vm9n1Jlleg==}
     hasBin: true
     peerDependencies:
@@ -4361,7 +4364,7 @@ packages:
       zod:
         optional: true
     dependencies:
-      zod: 4.3.6
+      zod: 3.25.76
     dev: false
 
   /optionator@0.9.4:
@@ -5573,8 +5576,8 @@ packages:
     engines: {node: '>=10'}
     dev: true
 
-  /zod@4.3.6:
-    resolution: {integrity: sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==}
+  /zod@3.25.76:
+    resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
     dev: false
 
   /zwitch@2.0.4:

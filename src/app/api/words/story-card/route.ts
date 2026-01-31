@@ -1,31 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import type { ILuluWord } from "@/lib/words/types";
-import type { StoryWordCardRequest } from "@/lib/words/api-types";
 import { enforceRateLimit, requireApiKey } from "@/lib/middleware/security";
 import { getStoryWordCard } from "@/lib/words/ai-service";
-
-const buildWord = (payload: unknown): ILuluWord | null => {
-  if (!payload || typeof payload !== "object") return null;
-  const data = payload as Partial<ILuluWord> & {
-    context?: { line?: string };
-  };
-  const uuid = typeof data.uuid === "string" ? data.uuid.trim() : "";
-  const word = typeof data.word === "string" ? data.word.trim() : "";
-  const contextLine =
-    typeof data.context?.line === "string" ? data.context.line.trim() : "";
-
-  if (!uuid || !contextLine) return null;
-
-  return {
-    id: data.id || uuid,
-    uuid,
-    word: word || uuid,
-    exp: data.exp || "",
-    addtime: data.addtime || new Date(0).toISOString(),
-    context: { line: contextLine },
-    phon: data.phon || "",
-  };
-};
+import {
+  buildLuluWordFromInput,
+  storyWordCardRequestSchema,
+} from "@/lib/schemas/words";
 
 export async function POST(request: NextRequest) {
   const auth = requireApiKey(request);
@@ -37,20 +16,25 @@ export async function POST(request: NextRequest) {
     return rateLimit.response;
   }
 
-  let payload: Partial<StoryWordCardRequest> & {
-    word?: unknown;
-    story?: unknown;
-  };
+  let payload: unknown = {};
   try {
-    payload = (await request.json()) as typeof payload;
+    payload = await request.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const word = buildWord(payload.word);
-  const story = typeof payload.story === "string" ? payload.story.trim() : "";
+  const parsedPayload = storyWordCardRequestSchema.safeParse(payload);
+  if (!parsedPayload.success) {
+    return NextResponse.json(
+      { error: "word(uuid, context.line) and story are required" },
+      { status: 400 },
+    );
+  }
 
-  if (!word || !story) {
+  const word = buildLuluWordFromInput(parsedPayload.data.word);
+  const story = parsedPayload.data.story;
+
+  if (!word) {
     return NextResponse.json(
       { error: "word(uuid, context.line) and story are required" },
       { status: 400 },
@@ -58,7 +42,7 @@ export async function POST(request: NextRequest) {
   }
 
   const content = await getStoryWordCard(word, story, {
-    force: payload.force,
+    force: parsedPayload.data.force,
   });
 
   return NextResponse.json({ type: "word_card", content });

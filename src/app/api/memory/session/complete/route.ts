@@ -2,10 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { enforceRateLimit, requireApiKey } from "@/lib/middleware/security";
 import { applyMemoryEvent } from "@/lib/memory";
 import { getSupabaseClient } from "@/lib/supabase";
-
-type CompleteSessionPayload = {
-  sessionId?: string;
-};
+import { completeSessionPayloadSchema } from "@/lib/schemas/memory";
 
 export async function POST(request: NextRequest) {
   const auth = requireApiKey(request);
@@ -17,16 +14,19 @@ export async function POST(request: NextRequest) {
     return rateLimit.response;
   }
 
-  let payload: CompleteSessionPayload = {};
+  let payload: unknown = {};
   try {
-    payload = (await request.json()) as CompleteSessionPayload;
+    payload = await request.json();
   } catch {
     payload = {};
   }
 
+  const parsedPayload = completeSessionPayloadSchema.safeParse(payload);
   const sessionId =
-    typeof payload.sessionId === "string" ? payload.sessionId.trim() : "";
-  if (!sessionId) {
+    parsedPayload.success && parsedPayload.data.sessionId
+      ? parsedPayload.data.sessionId
+      : "";
+  if (!sessionId || sessionId.length === 0) {
     return NextResponse.json({ error: "sessionId required" }, { status: 400 });
   }
 

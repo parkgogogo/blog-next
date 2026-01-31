@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { enforceRateLimit, requireApiKey } from "@/lib/middleware/security";
 import { translateSentence } from "@/lib/words/ai-service";
-import type { SentenceTranslationRequest } from "@/lib/words/api-types";
+import { sentenceTranslationRequestSchema } from "@/lib/schemas/words";
 
 export async function POST(request: NextRequest) {
   const auth = requireApiKey(request);
@@ -13,21 +13,23 @@ export async function POST(request: NextRequest) {
     return rateLimit.response;
   }
 
-  let payload: Partial<SentenceTranslationRequest> & { text?: unknown };
+  let payload: unknown = {};
   try {
-    payload = (await request.json()) as typeof payload;
+    payload = await request.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const text = typeof payload.text === "string" ? payload.text.trim() : "";
-  if (!text) {
+  const parsedPayload = sentenceTranslationRequestSchema.safeParse(payload);
+  if (!parsedPayload.success) {
     return NextResponse.json(
       { error: "text is required" },
       { status: 400 },
     );
   }
 
-  const content = await translateSentence(text, { force: payload.force });
+  const content = await translateSentence(parsedPayload.data.text, {
+    force: parsedPayload.data.force,
+  });
   return NextResponse.json({ type: "sentence_translation", content });
 }

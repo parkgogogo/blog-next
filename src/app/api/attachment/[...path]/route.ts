@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Octokit } from "@octokit/rest";
+import { z } from "zod";
+
+const octokitErrorSchema = z
+  .object({
+    status: z.number(),
+  })
+  .passthrough();
 
 export async function GET(
   request: NextRequest,
@@ -101,12 +108,9 @@ export async function GET(
       });
     } catch (octokitError: unknown) {
       // Handle Octokit-specific errors
-      if (
-        octokitError &&
-        typeof octokitError === "object" &&
-        "status" in octokitError
-      ) {
-        const error = octokitError as { status: number };
+      const parsedError = octokitErrorSchema.safeParse(octokitError);
+      if (parsedError.success) {
+        const error = parsedError.data;
         if (error.status === 404) {
           return NextResponse.json(
             { error: "File not found" },

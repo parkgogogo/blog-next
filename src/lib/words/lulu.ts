@@ -1,5 +1,6 @@
 import { LULU_ENDPOINT, LULU_ENDPOINT_PRE } from "@/lib/words/constants";
-import type { IResponse, ILuluWord } from "@/lib/words/types";
+import { luluResponseSchema, luluSummarySchema } from "@/lib/schemas/words";
+import type { ILuluWord } from "@/lib/words/types";
 
 const fetchWithTimeout = async (
   input: RequestInfo | URL,
@@ -27,8 +28,9 @@ const getWordsLength = async () => {
       },
     });
     const result = await response.json();
-    if (typeof result.recordsTotal === "number") {
-      return result.recordsTotal;
+    const parsed = luluSummarySchema.safeParse(result);
+    if (parsed.success) {
+      return parsed.data.recordsTotal;
     }
   } catch {
     return 0;
@@ -46,12 +48,9 @@ export const getLuluWords = async (): Promise<ILuluWord[]> => {
       next: { revalidate: 60 * 5 },
     });
 
-    const parsedResult: IResponse = await result.json();
-
-    if (Array.isArray(parsedResult.data)) {
-      return parsedResult.data;
-    }
-    return [];
+    const parsedResult = luluResponseSchema.safeParse(await result.json());
+    if (!parsedResult.success) return [];
+    return parsedResult.data.data;
   } catch {
     return [];
   }

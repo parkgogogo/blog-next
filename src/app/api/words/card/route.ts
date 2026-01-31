@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import type { WordCardBundleRequest } from "@/lib/words/api-types";
 import { enforceRateLimit, requireApiKey } from "@/lib/middleware/security";
 import { getWordCardBundle } from "@/lib/words/ai-service";
 import { getWordEntryStatus } from "@/lib/words/storage";
+import { wordCardBundleRequestSchema } from "@/lib/schemas/words";
 
 export async function POST(request: NextRequest) {
   const auth = requireApiKey(request);
@@ -14,28 +14,25 @@ export async function POST(request: NextRequest) {
     return rateLimit.response;
   }
 
-  let payload: Partial<WordCardBundleRequest>;
+  let payload: unknown = {};
   try {
-    payload = (await request.json()) as typeof payload;
+    payload = await request.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const word = typeof payload.word === "string" ? payload.word.trim() : "";
-  const sourceText =
-    typeof payload.sourceText === "string" ? payload.sourceText.trim() : "";
-  const maxChars =
-    typeof payload.maxChars === "number" ? payload.maxChars : undefined;
-
-  if (!word || !sourceText) {
+  const parsedPayload = wordCardBundleRequestSchema.safeParse(payload);
+  if (!parsedPayload.success) {
     return NextResponse.json(
       { error: "word and sourceText are required" },
       { status: 400 },
     );
   }
 
+  const { word, sourceText, maxChars, force } = parsedPayload.data;
+
   const content = await getWordCardBundle(word, sourceText, {
-    force: payload.force,
+    force,
     maxChars,
   });
   const contextLine = content.context || sourceText;
