@@ -40,6 +40,7 @@ export const getDailyWordBundleAction = async (payload: {
   return getWordCardBundle(payload.word, payload.sourceText, {
     force: payload.force,
     maxChars: payload.maxChars,
+    contextMode: "none",
   });
 };
 
