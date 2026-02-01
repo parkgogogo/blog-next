@@ -241,12 +241,33 @@ const parseBundleContent = (raw: string) => {
 export const getWordCardBundle = async (
   word: string,
   sourceText: string,
-  options?: { force?: boolean; maxChars?: number },
+  options?: {
+    force?: boolean;
+    maxChars?: number;
+    contextLines?: string[];
+    contextTranslations?: string[];
+  },
 ) => {
   const maxChars = Math.max(80, Math.min(options?.maxChars ?? 160, 320));
-  const prompt = `word: ${word}\nsource_text: ${sourceText}\nmax_chars: ${maxChars}`;
+  const contextLines = (options?.contextLines ?? []).filter(Boolean);
+  const contextTranslations = (options?.contextTranslations ?? []).filter(
+    Boolean,
+  );
+  const contextBlock =
+    contextLines.length > 0
+      ? `\ncontext_lines:\n${contextLines
+          .map((line, index) => `${index + 1}) ${line}`)
+          .join("\n")}`
+      : "\ncontext_lines:\n(none)";
+  const translationBlock =
+    contextTranslations.length > 0
+      ? `\ncontext_translations:\n${contextTranslations
+          .map((line, index) => `${index + 1}) ${line}`)
+          .join("\n")}`
+      : "\ncontext_translations:\n(none)";
+  const prompt = `word: ${word}\nsource_text: ${sourceText}\nmax_chars: ${maxChars}${contextBlock}${translationBlock}`;
   const inputHash = createInputHash({
-    version: 1,
+    version: 2,
     type: "word_card_bundle",
     system: WORD_CARD_BUNDLE_PROMPT,
     prompt,

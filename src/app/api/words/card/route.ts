@@ -1,8 +1,55 @@
 import { NextRequest, NextResponse } from "next/server";
 import { enforceRateLimit, requireApiKey } from "@/lib/middleware/security";
-import { getWordCardBundle } from "@/lib/words/ai-service";
+import { getWordCardBundle, translateSentence } from "@/lib/words/ai-service";
 import { getWordEntryStatus } from "@/lib/words/storage";
 import { wordCardBundleRequestSchema } from "@/lib/schemas/words";
+import { getSupabaseClient } from "@/lib/supabase";
+
+const normalizeContextLine = (value: unknown) => {
+  if (typeof value !== "string") return "";
+  return value.trim();
+};
+
+const loadContextLinesForWord = async (word: string) => {
+  const supabase = getSupabaseClient();
+  const { data: wordRow, error: wordError } = await supabase
+    .from("words")
+    .select("id")
+    .eq("text", word)
+    .maybeSingle();
+
+  if (wordError) {
+    throw new Error(wordError.message);
+  }
+
+  if (!wordRow?.id) return [];
+
+  const { data: entries, error: entriesError } = await supabase
+    .from("word_entries")
+    .select("context_line, source_text, context")
+    .eq("word_id", wordRow.id)
+    .order("created_at", { ascending: false })
+    .limit(12);
+
+  if (entriesError) {
+    throw new Error(entriesError.message);
+  }
+
+  const seen = new Set<string>();
+  const lines: string[] = [];
+  for (const entry of entries ?? []) {
+    const contextLine =
+      normalizeContextLine(entry.context_line) ||
+      normalizeContextLine(entry.source_text) ||
+      normalizeContextLine(entry.context);
+    if (!contextLine || seen.has(contextLine)) continue;
+    seen.add(contextLine);
+    lines.push(contextLine);
+    if (lines.length >= 3) break;
+  }
+
+  return lines;
+};
 
 export async function POST(request: NextRequest) {
   const auth = requireApiKey(request);
@@ -31,9 +78,19 @@ export async function POST(request: NextRequest) {
 
   const { word, sourceText, maxChars, force } = parsedPayload.data;
 
+  const contextLines = await loadContextLinesForWord(word);
+  const contextTranslations =
+    contextLines.length > 0
+      ? await Promise.all(
+          contextLines.map((line) => translateSentence(line)),
+        )
+      : [];
+
   const content = await getWordCardBundle(word, sourceText, {
     force,
     maxChars,
+    contextLines,
+    contextTranslations,
   });
   const contextLine = content.context || sourceText;
   const status = await getWordEntryStatus(word, contextLine);
