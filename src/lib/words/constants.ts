@@ -93,6 +93,9 @@ export const WORD_CARD_BUNDLE_PROMPT = `
    例句：...（必须与 context 完全一致）
 
    例句翻译：...（必须是 context 的中文翻译）
+
+   语境记录：1) 英文 — 中文；2) 英文 — 中文；3) 英文 — 中文（如无语境，写“语境记录：暂无”）
+
 5) detail 使用 Markdown，格式严格为五段，段与段之间空一行，且每段单独成行：
    释义：...（完整、准确）
 
@@ -105,8 +108,9 @@ export const WORD_CARD_BUNDLE_PROMPT = `
    语义补充：1) ...；2) ...（至少两条）
 6) brief 与 detail 必须全部使用中文，不要输出英文解释（除目标单词本身可保留英文形式）。
 7) brief 必须短、只保留核心信息；detail 必须补充语法与语义差异，体现深度。
-8) 除“语法要点/语义补充”中的 1) 2) 之外，不要使用项目符号或列表。
+8) 除“语法要点/语义补充”中的 1) 2) 与“语境记录”中的 1) 2) 3) 之外，不要使用项目符号或列表。
 9) 如果输入内容包含 [[word]] 标记，输出 context 与例句时去掉 [[ ]]。
+10) 如果提供了 context_lines 与 context_translations，语境记录必须使用它们，且顺序保持一致；不得擅自改写英文语境或中文翻译。
 `;
 
 export const PASSAGE_TRANSLATE_PROMPT = `
