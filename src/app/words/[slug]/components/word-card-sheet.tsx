@@ -60,6 +60,7 @@ export const WordCardSheet = ({
   const briefAvailable = brief.available ?? true;
   const detailAvailable = detail.available ?? true;
   const audioRef = useRef<HTMLAudioElement>(null);
+  const lastPlayAtRef = useRef(0);
   const resolvedAudioSrc = audio?.src;
   const canPlayAudio = Boolean(resolvedAudioSrc);
   const previousOpenRef = useRef(open);
@@ -74,6 +75,9 @@ export const WordCardSheet = ({
 
   const handlePlay = useCallback(() => {
     if (!canPlayAudio) return;
+    const now = Date.now();
+    if (now - lastPlayAtRef.current < 800) return;
+    lastPlayAtRef.current = now;
     audio?.onPlay?.();
     if (resolvedAudioSrc && audioRef.current) {
       audioRef.current.src = resolvedAudioSrc;
@@ -87,6 +91,10 @@ export const WordCardSheet = ({
     if (!autoPlayOnOpen || !open || wasOpen || !canPlayAudio) return;
     handlePlay();
   }, [autoPlayOnOpen, open, canPlayAudio, handlePlay]);
+
+  useEffect(() => {
+    lastPlayAtRef.current = 0;
+  }, [resolvedAudioSrc, open]);
 
   return (
     <MobileSheet
