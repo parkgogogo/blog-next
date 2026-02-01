@@ -27,6 +27,7 @@ export type MemorySettings = {
   weight_novelty: number | string;
   weight_backlog: number | string;
   weight_score: number | string;
+  weight_difficulty: number | string;
   half_life_base: number | string;
   half_life_growth: number | string;
 };
@@ -42,11 +43,12 @@ export const getMemorySettings = async () => {
   const row = (data ?? [])[0] as MemorySettings | undefined;
   if (!row) {
     return {
-      daily_target: 20,
+      daily_target: 35,
       weight_forget: 1,
       weight_novelty: 1,
       weight_backlog: 1,
       weight_score: 1,
+      weight_difficulty: 0.6,
       half_life_base: 3,
       half_life_growth: 0.3,
     } as MemorySettings;
