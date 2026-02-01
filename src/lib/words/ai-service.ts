@@ -246,6 +246,7 @@ export const getWordCardBundle = async (
     maxChars?: number;
     contextLines?: string[];
     contextTranslations?: string[];
+    contextMode?: "auto" | "none";
   },
 ) => {
   const maxChars = Math.max(80, Math.min(options?.maxChars ?? 160, 320));
@@ -253,6 +254,7 @@ export const getWordCardBundle = async (
   const contextTranslations = (options?.contextTranslations ?? []).filter(
     Boolean,
   );
+  const contextMode = options?.contextMode ?? "auto";
   const contextBlock =
     contextLines.length > 0
       ? `\ncontext_lines:\n${contextLines
@@ -265,7 +267,7 @@ export const getWordCardBundle = async (
           .map((line, index) => `${index + 1}) ${line}`)
           .join("\n")}`
       : "\ncontext_translations:\n(none)";
-  const prompt = `word: ${word}\nsource_text: ${sourceText}\nmax_chars: ${maxChars}${contextBlock}${translationBlock}`;
+  const prompt = `word: ${word}\nsource_text: ${sourceText}\nmax_chars: ${maxChars}\ncontext_mode: ${contextMode}${contextBlock}${translationBlock}`;
   const inputHash = createInputHash({
     version: 2,
     type: "word_card_bundle",
