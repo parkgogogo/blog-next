@@ -12,6 +12,7 @@ type DailyTaskCard = {
   words: string[];
   word_count: number;
   char_count: number;
+  speechToken?: string | null;
 };
 
 type WordContext = {

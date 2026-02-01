@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { Volume2, X } from "lucide-react";
 import { MobileSheet } from "@/components/MobileSheet";
 import Markdown from "react-markdown";
@@ -38,6 +38,7 @@ interface WordCardSheetProps {
     loading?: boolean;
     onPlay?: () => void;
   };
+  autoPlayOnOpen?: boolean;
 }
 
 export const WordCardSheet = ({
@@ -53,6 +54,7 @@ export const WordCardSheet = ({
   brief,
   detail,
   audio,
+  autoPlayOnOpen = false,
 }: WordCardSheetProps) => {
   const activeContent = activeMode === "brief" ? brief : detail;
   const briefAvailable = brief.available ?? true;
@@ -60,6 +62,7 @@ export const WordCardSheet = ({
   const audioRef = useRef<HTMLAudioElement>(null);
   const resolvedAudioSrc = audio?.src;
   const canPlayAudio = Boolean(resolvedAudioSrc);
+  const previousOpenRef = useRef(open);
   const resolvedContextLines =
     contextLines && contextLines.length > 0
       ? contextLines
@@ -69,14 +72,21 @@ export const WordCardSheet = ({
   const contextListLoading =
     contextLoading && resolvedContextLines.length === 0;
 
-  const handlePlay = () => {
+  const handlePlay = useCallback(() => {
     if (!canPlayAudio) return;
     audio?.onPlay?.();
     if (resolvedAudioSrc && audioRef.current) {
       audioRef.current.src = resolvedAudioSrc;
       audioRef.current.play();
     }
-  };
+  }, [audio, canPlayAudio, resolvedAudioSrc]);
+
+  useEffect(() => {
+    const wasOpen = previousOpenRef.current;
+    previousOpenRef.current = open;
+    if (!autoPlayOnOpen || !open || wasOpen || !canPlayAudio) return;
+    handlePlay();
+  }, [autoPlayOnOpen, open, canPlayAudio, handlePlay]);
 
   return (
     <MobileSheet
