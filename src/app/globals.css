@@ -523,7 +523,7 @@ body {
 
 .feed-panel {
   width: 100%;
-  padding: 24px 16px;
+  padding: 24px 16px max(24px, 14vh);
 }
 
 .feed-panel--story .story-shell {
@@ -555,7 +555,7 @@ body {
 
 @media (min-width: 768px) {
   .feed-panel {
-    padding: 32px;
+    padding: 32px 32px max(32px, 14vh);
   }
 }
 
