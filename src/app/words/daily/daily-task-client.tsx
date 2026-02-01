@@ -125,6 +125,7 @@ export const DailyTaskClient = ({
     "idle" | "loading" | "playing"
   >("idle");
   const sentenceAudioRef = useRef<HTMLAudioElement>(null);
+  const sheetAudioRef = useRef<HTMLAudioElement>(null);
   const bundleCacheRef = useRef<BundleCache>({});
   const contextCacheRef = useRef<
     Record<string, { linesKey: string; translations: string[] }>
@@ -171,6 +172,11 @@ export const DailyTaskClient = ({
     });
     return `/api/speech/sentence?${params.toString()}`;
   }, [card, date]);
+
+  const sheetAudioSrc = useMemo(() => {
+    if (!sheetWordText) return undefined;
+    return `/api/speech/${sheetWordText}`;
+  }, [sheetWordText]);
 
   useEffect(() => {
     currentVisitOpenedRef.current = false;
@@ -442,6 +448,14 @@ export const DailyTaskClient = ({
     setSheetOpen(true);
     setSheetWordId(wordId);
     setSheetWordText(wordText);
+    if (sheetAudioRef.current) {
+      const nextAudioSrc = `/api/speech/${wordText}`;
+      sheetAudioRef.current.src = nextAudioSrc;
+      const playResult = sheetAudioRef.current.play();
+      if (playResult && typeof playResult.catch === "function") {
+        playResult.catch(() => undefined);
+      }
+    }
     const contextLines =
       wordContexts[wordId]?.contextLines?.map((line) => line.trim()) ?? [];
     const cleanedContextLines = contextLines.filter(Boolean);
@@ -703,11 +717,11 @@ export const DailyTaskClient = ({
           loading: sheetDetailLoading,
         }}
         audio={{
-          src: sheetWordText ? `/api/speech/${sheetWordText}` : undefined,
+          src: sheetAudioSrc,
           onPlay: () => undefined,
         }}
-        autoPlayOnOpen
       />
+      <audio ref={sheetAudioRef} />
       {sentenceAudioSrc && (
         <audio
           ref={sentenceAudioRef}
