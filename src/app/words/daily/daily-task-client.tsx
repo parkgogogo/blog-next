@@ -121,6 +121,9 @@ export const DailyTaskClient = ({
   const [sheetDetail, setSheetDetail] = useState("");
   const [sheetBriefLoading, setSheetBriefLoading] = useState(false);
   const [sheetDetailLoading, setSheetDetailLoading] = useState(false);
+  const [sentenceAudioStatus, setSentenceAudioStatus] = useState<
+    "idle" | "loading" | "playing"
+  >("idle");
   const sentenceAudioRef = useRef<HTMLAudioElement>(null);
   const bundleCacheRef = useRef<BundleCache>({});
   const contextCacheRef = useRef<
@@ -171,6 +174,7 @@ export const DailyTaskClient = ({
 
   useEffect(() => {
     currentVisitOpenedRef.current = false;
+    setSentenceAudioStatus("idle");
   }, [currentCardIndex, phase]);
 
   useEffect(() => {
@@ -462,8 +466,7 @@ export const DailyTaskClient = ({
       setSheetDetailLoading(false);
     }
 
-    const primaryContextLine =
-      cleanedContextLines[0]?.trim() || wordText;
+    const primaryContextLine = cleanedContextLines[0]?.trim() || wordText;
 
     const contextCache = contextCacheRef.current[wordId];
     const linesKey = cleanedContextLines.join("\n");
@@ -517,8 +520,13 @@ export const DailyTaskClient = ({
 
   const handlePlaySentence = () => {
     if (!sentenceAudioSrc || !sentenceAudioRef.current) return;
+    if (sentenceAudioStatus !== "idle") return;
+    setSentenceAudioStatus("loading");
     sentenceAudioRef.current.src = sentenceAudioSrc;
-    sentenceAudioRef.current.play();
+    const playResult = sentenceAudioRef.current.play();
+    if (playResult && typeof playResult.catch === "function") {
+      playResult.catch(() => setSentenceAudioStatus("idle"));
+    }
   };
 
   if (!card) {
@@ -541,10 +549,8 @@ export const DailyTaskClient = ({
               totalCards > 0
                 ? `${Math.min(
                     100,
-                    (completed
-                      ? totalCards
-                      : masteredCardsRef.current.size) /
-                      totalCards *
+                    ((completed ? totalCards : masteredCardsRef.current.size) /
+                      totalCards) *
                       100,
                   )}%`
                 : "0%",
@@ -573,11 +579,17 @@ export const DailyTaskClient = ({
             <button
               type="button"
               onClick={handlePlaySentence}
-              disabled={!sentenceAudioSrc}
+              disabled={!sentenceAudioSrc || sentenceAudioStatus !== "idle"}
               className="daily-sentence-audio"
               aria-label="朗读句子"
             >
               <Volume2 size={16} />
+              {sentenceAudioStatus === "loading" && (
+                <span className="daily-sentence-audio-label">LOADING</span>
+              )}
+              {sentenceAudioStatus === "playing" && (
+                <span className="daily-sentence-audio-label">PLAYING</span>
+              )}
             </button>
             <div key={card.id} className="daily-sentence daily-sentence-anim">
               {sentenceParts.map((part, idx) =>
@@ -691,12 +703,22 @@ export const DailyTaskClient = ({
           loading: sheetDetailLoading,
         }}
         audio={{
-          src: sheetWordId ? `/api/speech/${sheetWordId}` : undefined,
+          src: sheetWordText ? `/api/speech/${sheetWordText}` : undefined,
           onPlay: () => undefined,
         }}
         autoPlayOnOpen
       />
-      {sentenceAudioSrc && <audio ref={sentenceAudioRef} />}
+      {sentenceAudioSrc && (
+        <audio
+          ref={sentenceAudioRef}
+          onLoadStart={() => setSentenceAudioStatus("loading")}
+          onWaiting={() => setSentenceAudioStatus("loading")}
+          onPlaying={() => setSentenceAudioStatus("playing")}
+          onEnded={() => setSentenceAudioStatus("idle")}
+          onPause={() => setSentenceAudioStatus("idle")}
+          onError={() => setSentenceAudioStatus("idle")}
+        />
+      )}
     </div>
   );
 };
