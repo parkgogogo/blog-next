@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Volume2 } from "lucide-react";
 import { WordCardSheet } from "@/app/words/[slug]/components/word-card-sheet";
 import {
   completeDailyTaskAction,
@@ -21,6 +22,7 @@ type DailyTaskCard = {
   words: string[];
   word_count: number;
   char_count: number;
+  speechToken?: string | null;
 };
 
 type WordContext = {
@@ -119,6 +121,7 @@ export const DailyTaskClient = ({
   const [sheetDetail, setSheetDetail] = useState("");
   const [sheetBriefLoading, setSheetBriefLoading] = useState(false);
   const [sheetDetailLoading, setSheetDetailLoading] = useState(false);
+  const sentenceAudioRef = useRef<HTMLAudioElement>(null);
   const bundleCacheRef = useRef<BundleCache>({});
   const contextCacheRef = useRef<
     Record<string, { linesKey: string; translations: string[] }>
@@ -156,6 +159,15 @@ export const DailyTaskClient = ({
     if (!card) return [];
     return splitSentence(card.sentence, wordMap);
   }, [card, wordMap]);
+  const sentenceAudioSrc = useMemo(() => {
+    if (!card?.speechToken) return undefined;
+    const params = new URLSearchParams({
+      cardId: card.id,
+      date,
+      token: card.speechToken,
+    });
+    return `/api/speech/sentence?${params.toString()}`;
+  }, [card, date]);
 
   useEffect(() => {
     currentVisitOpenedRef.current = false;
@@ -503,6 +515,12 @@ export const DailyTaskClient = ({
     setSheetOpen(false);
   };
 
+  const handlePlaySentence = () => {
+    if (!sentenceAudioSrc || !sentenceAudioRef.current) return;
+    sentenceAudioRef.current.src = sentenceAudioSrc;
+    sentenceAudioRef.current.play();
+  };
+
   if (!card) {
     return (
       <div className="daily-page">
@@ -552,6 +570,15 @@ export const DailyTaskClient = ({
       <div className="daily-shell">
         <div className="daily-core">
           <div className="daily-sentence-wrap">
+            <button
+              type="button"
+              onClick={handlePlaySentence}
+              disabled={!sentenceAudioSrc}
+              className="daily-sentence-audio"
+              aria-label="朗读句子"
+            >
+              <Volume2 size={16} />
+            </button>
             <div key={card.id} className="daily-sentence daily-sentence-anim">
               {sentenceParts.map((part, idx) =>
                 part.type === "text" ? (
@@ -664,10 +691,12 @@ export const DailyTaskClient = ({
           loading: sheetDetailLoading,
         }}
         audio={{
-          src: sheetWordText ? `/api/speech/${sheetWordText}` : undefined,
+          src: sheetWordId ? `/api/speech/${sheetWordId}` : undefined,
           onPlay: () => undefined,
         }}
+        autoPlayOnOpen
       />
+      {sentenceAudioSrc && <audio ref={sentenceAudioRef} />}
     </div>
   );
 };

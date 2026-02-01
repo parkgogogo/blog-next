@@ -2,6 +2,7 @@
 
 import { applyMemoryEvent } from "@/lib/memory";
 import { completeDailyTask, type DailyTaskResult, generateDailyTask } from "@/lib/memory/task";
+import { createSpeechToken } from "@/lib/middleware/security";
 import { getWordCardBundle, translateSentence } from "@/lib/words/ai-service";
 import { getSupabaseClient } from "@/lib/supabase";
 
@@ -184,6 +185,7 @@ const loadWordContexts = async (
 
 export const loadDailyTaskAction = async (date: string) => {
   const result = await loadDailyTask(date);
+  const tokenExpiresAt = Date.now() + 10 * 60 * 1000;
   const wordIds = new Set<string>();
   const fallbackMap = new Map<string, string>();
   for (const card of result.cards) {
@@ -200,7 +202,14 @@ export const loadDailyTaskAction = async (date: string) => {
 
   return {
     date,
-    cards: result.cards,
+    cards: result.cards.map((card) => ({
+      ...card,
+      speechToken: createSpeechToken({
+        cardId: card.id,
+        date,
+        exp: tokenExpiresAt,
+      }),
+    })),
     wordContexts,
   };
 };
