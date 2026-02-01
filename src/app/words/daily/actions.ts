@@ -2,13 +2,13 @@
 
 import { applyMemoryEvent } from "@/lib/memory";
 import { completeDailyTask, type DailyTaskResult, generateDailyTask } from "@/lib/memory/task";
-import { getWordCardBundle } from "@/lib/words/ai-service";
+import { getWordCardBundle, translateSentence } from "@/lib/words/ai-service";
 import { getSupabaseClient } from "@/lib/supabase";
 
 type WordContext = {
   id: string;
   text: string;
-  contextLine: string;
+  contextLines: string[];
 };
 
 type DailyMemoryEventType = "exposure" | "open_card" | "mark_known";
@@ -41,6 +41,17 @@ export const getDailyWordBundleAction = async (payload: {
     force: payload.force,
     maxChars: payload.maxChars,
   });
+};
+
+export const translateContextLinesAction = async (payload: {
+  lines: string[];
+}) => {
+  const lines = (payload.lines ?? []).map((line) => line.trim()).filter(Boolean);
+  if (lines.length === 0) return [];
+  const translations = await Promise.all(
+    lines.map((line) => translateSentence(line)),
+  );
+  return translations;
 };
 
 const loadDailyTask = async (date: string): Promise<DailyTaskResult> => {
@@ -127,9 +138,9 @@ const loadWordContexts = async (
   }
 
   const result = new Map<string, WordContext>();
+  const seenByWord = new Map<string, Set<string>>();
   for (const entry of entries ?? []) {
     const wordId = entry.word_id as string;
-    if (result.has(wordId)) continue;
     const wordRow = entry.words as { text?: string } | null;
     const text = wordRow?.text || fallbackMap.get(wordId) || "";
     const contextLine =
@@ -137,11 +148,24 @@ const loadWordContexts = async (
       (entry.source_text as string | null) ||
       (entry.context as string | null) ||
       "";
-    result.set(wordId, {
-      id: wordId,
-      text,
-      contextLine: contextLine.trim(),
-    });
+    const normalized = contextLine.trim();
+    if (!normalized) continue;
+    if (!result.has(wordId)) {
+      result.set(wordId, {
+        id: wordId,
+        text,
+        contextLines: [],
+      });
+      seenByWord.set(wordId, new Set());
+    } else if (!result.get(wordId)?.text && text) {
+      result.get(wordId)!.text = text;
+    }
+    const seen = seenByWord.get(wordId) ?? new Set<string>();
+    if (!seen.has(normalized)) {
+      seen.add(normalized);
+      seenByWord.set(wordId, seen);
+      result.get(wordId)?.contextLines.push(normalized);
+    }
   }
 
   for (const wordId of wordIds) {
@@ -149,7 +173,7 @@ const loadWordContexts = async (
       result.set(wordId, {
         id: wordId,
         text: fallbackMap.get(wordId) || "",
-        contextLine: "",
+        contextLines: [],
       });
     }
   }

@@ -6,6 +6,7 @@ import {
   completeDailyTaskAction,
   getDailyWordBundleAction,
   recordMemoryEventAction,
+  translateContextLinesAction,
 } from "@/app/words/daily/actions";
 import {
   enqueuePendingMemoryEvent,
@@ -25,7 +26,7 @@ type DailyTaskCard = {
 type WordContext = {
   id: string;
   text: string;
-  contextLine: string;
+  contextLines: string[];
 };
 
 interface DailyTaskClientProps {
@@ -108,13 +109,20 @@ export const DailyTaskClient = ({
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sheetWordId, setSheetWordId] = useState<string | null>(null);
   const [sheetWordText, setSheetWordText] = useState("");
-  const [sheetContextLine, setSheetContextLine] = useState("");
+  const [sheetContextLines, setSheetContextLines] = useState<string[]>([]);
+  const [sheetContextTranslations, setSheetContextTranslations] = useState<
+    string[]
+  >([]);
+  const [sheetContextLoading, setSheetContextLoading] = useState(false);
   const [sheetMode, setSheetMode] = useState<"brief" | "detail">("brief");
   const [sheetBrief, setSheetBrief] = useState("");
   const [sheetDetail, setSheetDetail] = useState("");
   const [sheetBriefLoading, setSheetBriefLoading] = useState(false);
   const [sheetDetailLoading, setSheetDetailLoading] = useState(false);
   const bundleCacheRef = useRef<BundleCache>({});
+  const contextCacheRef = useRef<
+    Record<string, { linesKey: string; translations: string[] }>
+  >({});
   const pendingReviewRef = useRef<Set<string>>(new Set());
   const masteredCardsRef = useRef<Set<string>>(new Set());
   const currentVisitOpenedRef = useRef(false);
@@ -418,8 +426,12 @@ export const DailyTaskClient = ({
     setSheetOpen(true);
     setSheetWordId(wordId);
     setSheetWordText(wordText);
-    const contextLine = wordContexts[wordId]?.contextLine?.trim() || wordText;
-    setSheetContextLine(contextLine);
+    const contextLines =
+      wordContexts[wordId]?.contextLines?.map((line) => line.trim()) ?? [];
+    const cleanedContextLines = contextLines.filter(Boolean);
+    setSheetContextLines(cleanedContextLines);
+    setSheetContextTranslations([]);
+    setSheetContextLoading(cleanedContextLines.length > 0);
     setSheetMode("brief");
     setSheetBriefLoading(true);
     setSheetDetailLoading(true);
@@ -436,13 +448,41 @@ export const DailyTaskClient = ({
       setSheetDetail(cached.detail);
       setSheetBriefLoading(false);
       setSheetDetailLoading(false);
-      return;
     }
+
+    const primaryContextLine =
+      cleanedContextLines[0]?.trim() || wordText;
+
+    const contextCache = contextCacheRef.current[wordId];
+    const linesKey = cleanedContextLines.join("\n");
+    if (contextCache && contextCache.linesKey === linesKey) {
+      setSheetContextTranslations(contextCache.translations);
+      setSheetContextLoading(false);
+    } else if (cleanedContextLines.length > 0) {
+      try {
+        const translations = await translateContextLinesAction({
+          lines: cleanedContextLines,
+        });
+        contextCacheRef.current[wordId] = {
+          linesKey,
+          translations,
+        };
+        setSheetContextTranslations(translations);
+      } catch {
+        setSheetContextTranslations([]);
+      } finally {
+        setSheetContextLoading(false);
+      }
+    } else {
+      setSheetContextLoading(false);
+    }
+
+    if (cached) return;
 
     try {
       const bundle = await getDailyWordBundleAction({
         word: wordText,
-        sourceText: contextLine,
+        sourceText: primaryContextLine,
       });
       bundleCacheRef.current[wordId] = {
         brief: bundle.brief ?? "",
@@ -606,8 +646,11 @@ export const DailyTaskClient = ({
         open={sheetOpen}
         onClose={handleCloseSheet}
         wordText={sheetWordText}
-        contextLine={sheetContextLine}
-        contextLoading={sheetBriefLoading || sheetDetailLoading}
+        contextLines={sheetContextLines.map((line, index) => ({
+          line,
+          translation: sheetContextTranslations[index],
+        }))}
+        contextLoading={sheetContextLoading}
         activeMode={sheetMode}
         onModeChange={setSheetMode}
         brief={{

@@ -15,6 +15,7 @@ interface WordCardSheetProps {
   wordText: string;
   phon?: string;
   contextLine?: string;
+  contextLines?: Array<{ line: string; translation?: string }>;
   contextLoading?: boolean;
   activeMode: WordCardMode;
   onModeChange: (mode: WordCardMode) => void;
@@ -45,6 +46,7 @@ export const WordCardSheet = ({
   wordText,
   phon,
   contextLine,
+  contextLines,
   contextLoading = false,
   activeMode,
   onModeChange,
@@ -58,6 +60,14 @@ export const WordCardSheet = ({
   const audioRef = useRef<HTMLAudioElement>(null);
   const resolvedAudioSrc = audio?.src;
   const canPlayAudio = Boolean(resolvedAudioSrc);
+  const resolvedContextLines =
+    contextLines && contextLines.length > 0
+      ? contextLines
+      : contextLine
+        ? [{ line: contextLine }]
+        : [];
+  const contextListLoading =
+    contextLoading && resolvedContextLines.length === 0;
 
   const handlePlay = () => {
     if (!canPlayAudio) return;
@@ -109,15 +119,6 @@ export const WordCardSheet = ({
               dangerouslySetInnerHTML={{ __html: phon }}
             />
           )}
-          {(contextLoading || contextLine) && (
-            <div className="markdown-body border-b border-dashed border-[color:var(--border-subtle)] pb-3 text-sm text-[color:var(--text-muted)]">
-              {contextLoading ? (
-                <span>上下文解析中…</span>
-              ) : (
-                <Markdown>{`> ${contextLine}`}</Markdown>
-              )}
-            </div>
-          )}
           <div className="inline-flex items-center gap-1 rounded-full border border-[color:var(--border-subtle)] p-1 text-[color:var(--text-muted)]">
             <button
               type="button"
@@ -159,14 +160,52 @@ export const WordCardSheet = ({
         ) : null
       }
     >
-      <div className="min-h-[160px] text-[color:var(--foreground)]">
-        {activeContent.loading ? (
-          <span className="text-sm text-[color:var(--text-muted)]">
-            生成中…
-          </span>
-        ) : (
-          <Markdown>{activeContent.content || ""}</Markdown>
-        )}
+      <div className="min-h-[160px] space-y-6 text-[color:var(--foreground)]">
+        <section className="word-sheet-section">
+          <div className="word-sheet-section-title">词义</div>
+          <div className="word-sheet-section-body">
+            {activeContent.loading ? (
+              <span className="text-sm text-[color:var(--text-muted)]">
+                生成中…
+              </span>
+            ) : (
+              <Markdown>{activeContent.content || ""}</Markdown>
+            )}
+          </div>
+        </section>
+        <section className="word-sheet-section">
+          <div className="word-sheet-section-title">
+            语境记录
+            {resolvedContextLines.length > 0
+              ? ` (${resolvedContextLines.length})`
+              : ""}
+          </div>
+          {resolvedContextLines.length === 0 ? (
+            <div className="text-sm text-[color:var(--text-muted)]">
+              {contextListLoading ? "语境解析中…" : "暂无语境记录"}
+            </div>
+          ) : (
+            <div className="word-sheet-context-list">
+              {resolvedContextLines.map((item, index) => (
+                <div
+                  key={`${item.line}-${index}`}
+                  className="word-sheet-context-item"
+                >
+                  <div className="word-sheet-context-line">{item.line}</div>
+                  {item.translation ? (
+                    <div className="word-sheet-context-translation">
+                      {item.translation}
+                    </div>
+                  ) : contextLoading ? (
+                    <div className="word-sheet-context-translation word-sheet-context-translation--loading">
+                      翻译中…
+                    </div>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
       </div>
       {canPlayAudio && <audio ref={audioRef} src={resolvedAudioSrc} />}
     </MobileSheet>
