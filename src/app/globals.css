@@ -139,6 +139,61 @@ body {
   font-family: inherit;
 }
 
+.word-sheet-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.word-sheet-section-title {
+  font-size: 0.7rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.word-sheet-section-body {
+  font-size: 0.95rem;
+  color: var(--foreground);
+}
+
+.word-sheet-section-body p {
+  margin: 0 0 12px;
+}
+
+.word-sheet-section-body p:last-child {
+  margin-bottom: 0;
+}
+
+.word-sheet-context-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.word-sheet-context-item {
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.85rem;
+  border: 1px dashed var(--border-subtle);
+  background: color-mix(in srgb, var(--background) 92%, var(--foreground) 8%);
+}
+
+.word-sheet-context-line {
+  font-size: 0.95rem;
+  color: var(--foreground);
+}
+
+.word-sheet-context-translation {
+  margin-top: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.word-sheet-context-translation--loading {
+  opacity: 0.7;
+}
+
+
 .sheet-backdrop {
   background: color-mix(in srgb, var(--foreground) 28%, transparent);
   opacity: 0;

@@ -17,7 +17,7 @@ type DailyTaskCard = {
 type WordContext = {
   id: string;
   text: string;
-  contextLine: string;
+  contextLines: string[];
 };
 
 type LoadResult = {
