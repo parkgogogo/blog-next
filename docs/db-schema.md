@@ -73,6 +73,9 @@ This document reflects the current public schema in Supabase for the MVP single-
   - last_exposed_at (timestamptz, nullable)
   - last_interaction_at (timestamptz, nullable)
   - stability (numeric, default 0)
+  - daily_open_count (int, default 0)
+  - daily_difficulty (numeric, default 0)
+  - daily_window_at (timestamptz, nullable)
   - created_at (timestamptz, default now())
   - updated_at (timestamptz, default now())
 - Notes:
@@ -118,11 +121,12 @@ This document reflects the current public schema in Supabase for the MVP single-
 - Purpose: Global memory algorithm parameters (single row).
 - Columns:
   - id (uuid, PK, default gen_random_uuid())
-  - daily_target (int, default 20)
+  - daily_target (int, default 35)
   - weight_forget (numeric, default 1)
   - weight_novelty (numeric, default 1)
   - weight_backlog (numeric, default 1)
   - weight_score (numeric, default 1)
+  - weight_difficulty (numeric, default 0.6)
   - half_life_base (numeric, default 3)
   - half_life_growth (numeric, default 0.3)
   - created_at (timestamptz, default now())

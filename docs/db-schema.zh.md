@@ -73,6 +73,9 @@
   - last_exposed_at (timestamptz, nullable)：最近曝光时间。
   - last_interaction_at (timestamptz, nullable)：最近交互时间。
   - stability (numeric, default 0)：稳定度（衰减用）。
+  - daily_open_count (int, default 0)：当日打开次数。
+  - daily_difficulty (numeric, default 0)：当日困难度。
+  - daily_window_at (timestamptz, nullable)：当日窗口起点。
   - created_at (timestamptz)
   - updated_at (timestamptz)
 - 说明：updated_at 由触发器自动更新。
@@ -117,11 +120,12 @@
 - 作用：全局推荐参数（单行）。
 - 字段：
   - id (uuid, PK)
-  - daily_target (int, default 20)：每日目标词数。
+  - daily_target (int, default 35)：每日目标词数。
   - weight_forget (numeric, default 1)：遗忘风险权重。
   - weight_novelty (numeric, default 1)：新词权重。
   - weight_backlog (numeric, default 1)：曝光不足惩罚权重。
   - weight_score (numeric, default 1)：记忆分数权重。
+  - weight_difficulty (numeric, default 0.6)：当日困难度权重。
   - half_life_base (numeric, default 3)：基础半衰期（天）。
   - half_life_growth (numeric, default 0.3)：随稳定度增长的半衰期系数。
   - created_at (timestamptz)
