@@ -58,6 +58,12 @@ export const translateContextLinesAction = async (payload: {
   return translations;
 };
 
+export const translateSentenceAction = async (payload: { sentence: string }) => {
+  const sentence = payload.sentence?.trim();
+  if (!sentence) return "";
+  return translateSentence(sentence);
+};
+
 const loadDailyTask = async (date: string): Promise<DailyTaskResult> => {
   const supabase = getSupabaseClient();
   const { data: task, error: taskError } = await supabase

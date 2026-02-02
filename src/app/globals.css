@@ -359,7 +359,16 @@ body {
   gap: 10px;
 }
 
-.daily-sentence-audio {
+.daily-sentence-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.daily-sentence-audio,
+.daily-sentence-translate {
   border: 1px solid var(--border-subtle);
   border-radius: 999px;
   padding: 8px 12px;
@@ -377,7 +386,8 @@ body {
     transform 0.2s ease;
 }
 
-.daily-sentence-audio:hover {
+.daily-sentence-audio:hover,
+.daily-sentence-translate:hover {
   color: var(--foreground);
   border-color: color-mix(
     in srgb,
@@ -400,6 +410,15 @@ body {
   text-transform: uppercase;
 }
 
+.daily-sentence-translate--active {
+  color: var(--foreground);
+  border-color: color-mix(
+    in srgb,
+    var(--accent-warm) 65%,
+    var(--border-subtle)
+  );
+}
+
 .daily-sentence {
   font-size: 1.1rem;
   line-height: 1.85;
@@ -407,6 +426,14 @@ body {
   max-width: 70ch;
   text-wrap: pretty;
   text-align: center;
+}
+
+.daily-sentence-translation {
+  max-width: 68ch;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.98rem;
+  line-height: 1.7;
 }
 
 .daily-sentence-anim {

@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Volume2 } from "lucide-react";
+import { Languages, Volume2 } from "lucide-react";
 import { WordCardSheet } from "@/app/words/[slug]/components/word-card-sheet";
 import {
   completeDailyTaskAction,
   getDailyWordBundleAction,
   recordMemoryEventAction,
   translateContextLinesAction,
+  translateSentenceAction,
 } from "@/app/words/daily/actions";
 import {
   enqueuePendingMemoryEvent,
@@ -124,12 +125,17 @@ export const DailyTaskClient = ({
   const [sentenceAudioStatus, setSentenceAudioStatus] = useState<
     "idle" | "loading" | "playing"
   >("idle");
+  const [sentenceTranslationOpen, setSentenceTranslationOpen] = useState(false);
+  const [sentenceTranslation, setSentenceTranslation] = useState("");
+  const [sentenceTranslationLoading, setSentenceTranslationLoading] =
+    useState(false);
   const sentenceAudioRef = useRef<HTMLAudioElement>(null);
   const sheetAudioRef = useRef<HTMLAudioElement>(null);
   const bundleCacheRef = useRef<BundleCache>({});
   const contextCacheRef = useRef<
     Record<string, { linesKey: string; translations: string[] }>
   >({});
+  const sentenceTranslationCacheRef = useRef<Record<string, string>>({});
   const pendingReviewRef = useRef<Set<string>>(new Set());
   const masteredCardsRef = useRef<Set<string>>(new Set());
   const currentVisitOpenedRef = useRef(false);
@@ -188,6 +194,8 @@ export const DailyTaskClient = ({
   useEffect(() => {
     currentVisitOpenedRef.current = false;
     setSentenceAudioStatus("idle");
+    setSentenceTranslationOpen(false);
+    setSentenceTranslationLoading(false);
   }, [currentCardIndex, phase]);
 
   useEffect(() => {
@@ -542,6 +550,35 @@ export const DailyTaskClient = ({
     }
   };
 
+  const handleToggleSentenceTranslation = async () => {
+    if (!card || sentenceTranslationLoading) return;
+    const cached = sentenceTranslationCacheRef.current[card.id];
+    if (sentenceTranslationOpen) {
+      setSentenceTranslationOpen(false);
+      return;
+    }
+    if (cached) {
+      setSentenceTranslation(cached);
+      setSentenceTranslationOpen(true);
+      return;
+    }
+    setSentenceTranslationOpen(true);
+    setSentenceTranslationLoading(true);
+    try {
+      const translation = await translateSentenceAction({
+        sentence: card.sentence,
+      });
+      const safeTranslation = translation?.trim() || "暂无翻译。";
+      sentenceTranslationCacheRef.current[card.id] = safeTranslation;
+      setSentenceTranslation(safeTranslation);
+    } catch (error) {
+      console.error(error);
+      setSentenceTranslation("翻译失败，请稍后再试。");
+    } finally {
+      setSentenceTranslationLoading(false);
+    }
+  };
+
   if (!card) {
     return (
       <div className="daily-page">
@@ -589,21 +626,38 @@ export const DailyTaskClient = ({
       <div className="daily-shell">
         <div className="daily-core">
           <div className="daily-sentence-wrap">
-            <button
-              type="button"
-              onClick={handlePlaySentence}
-              disabled={!sentenceAudioSrc || sentenceAudioStatus !== "idle"}
-              className="daily-sentence-audio"
-              aria-label="朗读句子"
-            >
-              <Volume2 size={16} />
-              {sentenceAudioStatus === "loading" && (
-                <span className="daily-sentence-audio-label">LOADING</span>
-              )}
-              {sentenceAudioStatus === "playing" && (
-                <span className="daily-sentence-audio-label">PLAYING</span>
-              )}
-            </button>
+            <div className="daily-sentence-controls">
+              <button
+                type="button"
+                onClick={handlePlaySentence}
+                disabled={!sentenceAudioSrc || sentenceAudioStatus !== "idle"}
+                className="daily-sentence-audio"
+                aria-label="朗读句子"
+              >
+                <Volume2 size={16} />
+                {sentenceAudioStatus === "loading" && (
+                  <span className="daily-sentence-audio-label">LOADING</span>
+                )}
+                {sentenceAudioStatus === "playing" && (
+                  <span className="daily-sentence-audio-label">PLAYING</span>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={handleToggleSentenceTranslation}
+                className={buildClassName(
+                  "daily-sentence-translate",
+                  sentenceTranslationOpen ? "daily-sentence-translate--active" : "",
+                )}
+                aria-expanded={sentenceTranslationOpen}
+                aria-label="查看句子翻译"
+              >
+                <Languages size={16} />
+                <span className="daily-sentence-audio-label">
+                  {sentenceTranslationLoading ? "LOADING" : "翻译"}
+                </span>
+              </button>
+            </div>
             <div key={card.id} className="daily-sentence daily-sentence-anim">
               {sentenceParts.map((part, idx) =>
                 part.type === "text" ? (
@@ -630,6 +684,16 @@ export const DailyTaskClient = ({
                 ),
               )}
             </div>
+            {sentenceTranslationOpen && (
+              <div
+                className="daily-sentence-translation daily-sentence-anim"
+                aria-live="polite"
+              >
+                {sentenceTranslationLoading
+                  ? "翻译中..."
+                  : sentenceTranslation}
+              </div>
+            )}
           </div>
           <div className="daily-actions">
             <button
