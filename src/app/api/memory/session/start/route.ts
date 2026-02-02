@@ -26,6 +26,7 @@ export async function POST(request: NextRequest) {
   const limit = data.limit;
   const groupSize = data.groupSize;
   const target = groupSize ?? limit;
+  const timezone = data.timezone ?? null;
 
   try {
     const feedItems = await getMemoryFeed(target);
@@ -71,6 +72,7 @@ export async function POST(request: NextRequest) {
           sessionId,
           eventType: "exposure",
           payload: { source: "session_start" },
+          timezone,
         }),
       ),
     );

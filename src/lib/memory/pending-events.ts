@@ -7,6 +7,7 @@ export type DailyMemoryEventPayload = {
   eventType: DailyMemoryEventType;
   deltaScore?: number | null;
   meta?: Record<string, unknown> | null;
+  timezone?: string | null;
 };
 
 type PendingMemoryEvent = DailyMemoryEventPayload & {

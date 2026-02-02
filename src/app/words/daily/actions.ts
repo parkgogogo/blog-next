@@ -19,12 +19,14 @@ export const recordMemoryEventAction = async (payload: {
   eventType: DailyMemoryEventType;
   deltaScore?: number | null;
   meta?: Record<string, unknown> | null;
+  timezone?: string | null;
 }) => {
   return applyMemoryEvent({
     wordId: payload.wordId,
     eventType: payload.eventType,
     deltaScore: payload.deltaScore ?? null,
     payload: payload.meta ?? null,
+    timezone: payload.timezone ?? null,
   });
 };
 
