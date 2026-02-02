@@ -26,6 +26,7 @@ export const memoryEventRequestSchema = z
     sessionId: optionalNullableTrimmedStringSchema,
     eventType: trimmedEventTypeSchema,
     deltaScore: optionalFiniteNumberSchema,
+    timezone: optionalNullableTrimmedStringSchema,
     payload: z.record(z.unknown()).nullable().optional(),
   })
   .passthrough();
@@ -34,6 +35,7 @@ export const startSessionPayloadSchema = z
   .object({
     limit: optionalPositiveIntSchema,
     groupSize: optionalPositiveIntSchema,
+    timezone: optionalNullableTrimmedStringSchema,
     params: z.record(z.unknown()).nullable().optional(),
   })
   .passthrough();
@@ -41,6 +43,7 @@ export const startSessionPayloadSchema = z
 export const completeSessionPayloadSchema = z
   .object({
     sessionId: optionalNullableTrimmedStringSchema,
+    timezone: optionalNullableTrimmedStringSchema,
   })
   .passthrough();
 

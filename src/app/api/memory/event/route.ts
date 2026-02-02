@@ -29,6 +29,7 @@ export async function POST(request: NextRequest) {
   const wordId = parsedPayload.data.wordId;
   const sessionId = parsedPayload.data.sessionId ?? null;
   const eventType = parsedPayload.data.eventType;
+  const timezone = parsedPayload.data.timezone ?? null;
 
   try {
     const updated = await applyMemoryEvent({
@@ -37,6 +38,7 @@ export async function POST(request: NextRequest) {
       eventType,
       deltaScore: parsedPayload.data.deltaScore,
       payload: parsedPayload.data.payload,
+      timezone,
     });
 
     if (eventType === "open_card" && sessionId) {

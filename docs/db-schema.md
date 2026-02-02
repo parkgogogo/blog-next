@@ -169,9 +169,9 @@ This document reflects the current public schema in Supabase for the MVP single-
   - word_id, word_text, memory_score, exposure_count, success_count, fail_count,
     last_exposed_at, stability, priority
 
-### apply_memory_event(p_word_id, p_session_id, p_event_type, p_delta_score, p_payload)
+### apply_memory_event(p_word_id, p_session_id, p_event_type, p_delta_score, p_payload, p_tz)
 - Appends to word_memory_events and updates word_memory_states.
-- Note (2026-01-31): For score-impacting events (open_card/mark_known/mark_unknown), memory_score updates are idempotent per word + event_type per day. The event log is still written, but state changes only apply once per day for the same word/event_type.
+- Note (2026-01-31): For score-impacting events (open_card/mark_known/mark_unknown), memory_score updates are idempotent per word + event_type per day (day boundary uses p_tz, default UTC). The event log is still written, but state changes only apply once per day for the same word/event_type.
 - Note (2026-01-31): If open_card occurs for a word on a given day, subsequent mark_known updates for the same word/day are ignored for scoring (event log still records).
 
 ## Triggers

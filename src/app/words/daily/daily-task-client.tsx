@@ -137,6 +137,13 @@ export const DailyTaskClient = ({
   const [pendingVersion, setPendingVersion] = useState(0);
   const [masteredVersion, setMasteredVersion] = useState(0);
   const confettiPieces = useMemo(() => buildConfetti(), []);
+  const timezone = useMemo(() => {
+    try {
+      return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+    } catch {
+      return "UTC";
+    }
+  }, []);
 
   const cardIndexById = useMemo(() => {
     return new Map(cards.map((entry, idx) => [entry.id, idx]));
@@ -298,10 +305,14 @@ export const DailyTaskClient = ({
   };
 
   const reportMemoryEvent = async (payload: DailyMemoryEventPayload) => {
+    const resolvedPayload = {
+      ...payload,
+      timezone: payload.timezone ?? timezone,
+    };
     try {
-      await recordMemoryEventAction(payload);
+      await recordMemoryEventAction(resolvedPayload);
     } catch {
-      enqueuePendingMemoryEvent(payload);
+      enqueuePendingMemoryEvent(resolvedPayload);
     }
   };
 

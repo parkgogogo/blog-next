@@ -26,6 +26,7 @@ export async function POST(request: NextRequest) {
     parsedPayload.success && parsedPayload.data.sessionId
       ? parsedPayload.data.sessionId
       : "";
+  const timezone = parsedPayload.success ? parsedPayload.data.timezone ?? null : null;
   if (!sessionId || sessionId.length === 0) {
     return NextResponse.json({ error: "sessionId required" }, { status: 400 });
   }
@@ -59,6 +60,7 @@ export async function POST(request: NextRequest) {
           sessionId,
           eventType: "mark_known",
           payload: { source: "session_complete" },
+          timezone,
         }),
       ),
     );

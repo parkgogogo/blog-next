@@ -19,6 +19,7 @@ export type MemoryEventPayload = {
   eventType: "exposure" | "open_card" | "mark_known" | "mark_unknown";
   deltaScore?: number | null;
   payload?: Record<string, unknown> | null;
+  timezone?: string | null;
 };
 
 export type MemorySettings = {
@@ -80,6 +81,7 @@ export const applyMemoryEvent = async (payload: MemoryEventPayload) => {
     p_event_type: payload.eventType,
     p_delta_score: payload.deltaScore ?? null,
     p_payload: payload.payload ?? null,
+    p_tz: payload.timezone ?? null,
   });
 
   if (error) {
