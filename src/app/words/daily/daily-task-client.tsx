@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Languages, Volume2 } from "lucide-react";
 import { WordCardSheet } from "@/app/words/[slug]/components/word-card-sheet";
 import {
@@ -135,11 +135,16 @@ export const DailyTaskClient = ({
   const contextCacheRef = useRef<
     Record<string, { linesKey: string; translations: string[] }>
   >({});
+  const bundleInFlightRef = useRef<
+    Record<string, Promise<{ brief: string; detail: string }>>
+  >({});
+  const contextInFlightRef = useRef<Record<string, Promise<string[]>>>({});
   const sentenceTranslationCacheRef = useRef<Record<string, string>>({});
   const pendingReviewRef = useRef<Set<string>>(new Set());
   const masteredCardsRef = useRef<Set<string>>(new Set());
   const currentVisitOpenedRef = useRef(false);
   const navLockRef = useRef(false);
+  const sheetRequestIdRef = useRef(0);
   const [pendingVersion, setPendingVersion] = useState(0);
   const [masteredVersion, setMasteredVersion] = useState(0);
   const confettiPieces = useMemo(() => buildConfetti(), []);
@@ -448,13 +453,112 @@ export const DailyTaskClient = ({
     setLoopNotice(null);
   };
 
-  const handleOpenSheet = async (wordId: string, wordText: string) => {
+  const loadBundle = useCallback(
+    async (wordId: string, wordText: string, sourceText: string) => {
+      const cached = bundleCacheRef.current[wordId];
+      if (cached) return cached;
+
+      if (!bundleInFlightRef.current[wordId]) {
+        bundleInFlightRef.current[wordId] = getDailyWordBundleAction({
+          word: wordText,
+          sourceText,
+        })
+          .then((bundle) => ({
+            brief: bundle.brief ?? "",
+            detail: bundle.detail ?? "",
+          }))
+          .finally(() => {
+            delete bundleInFlightRef.current[wordId];
+          });
+      }
+
+      const resolved = await bundleInFlightRef.current[wordId];
+      bundleCacheRef.current[wordId] = resolved;
+      return resolved;
+    },
+    [],
+  );
+
+  const loadContextTranslations = useCallback(async (wordId: string, lines: string[]) => {
+    const linesKey = lines.join("\n");
+    const cacheKey = `${wordId}::${linesKey}`;
+    const cached = contextCacheRef.current[wordId];
+    if (cached && cached.linesKey === linesKey) {
+      return cached.translations;
+    }
+
+    if (!contextInFlightRef.current[cacheKey]) {
+      contextInFlightRef.current[cacheKey] = translateContextLinesAction({
+        lines,
+      })
+        .then((translations) => translations)
+        .finally(() => {
+          delete contextInFlightRef.current[cacheKey];
+        });
+    }
+
+    const translations = await contextInFlightRef.current[cacheKey];
+    contextCacheRef.current[wordId] = { linesKey, translations };
+    return translations;
+  }, []);
+
+  const prefetchWordData = useCallback(
+    (wordId: string, wordText: string) => {
+      if (!wordId || !wordText) return;
+      if (bundleCacheRef.current[wordId]) return;
+      const contextLines =
+        wordContexts[wordId]?.contextLines?.map((line) => line.trim()) ?? [];
+      const cleanedContextLines = contextLines.filter(Boolean);
+      const primaryContextLine = cleanedContextLines[0]?.trim() || wordText;
+
+      void loadBundle(wordId, wordText, primaryContextLine).catch(
+        () => undefined,
+      );
+      if (cleanedContextLines.length > 0) {
+        void loadContextTranslations(wordId, cleanedContextLines).catch(
+          () => undefined,
+        );
+      }
+    },
+    [loadBundle, loadContextTranslations, wordContexts],
+  );
+
+  useEffect(() => {
+    if (!card) return;
+    const handle =
+      typeof requestIdleCallback === "function"
+        ? requestIdleCallback(() => {
+            card.word_ids.forEach((wordId, index) => {
+              const wordText = card.words[index] || "";
+              prefetchWordData(wordId, wordText);
+            });
+          })
+        : window.setTimeout(() => {
+            card.word_ids.forEach((wordId, index) => {
+              const wordText = card.words[index] || "";
+              prefetchWordData(wordId, wordText);
+            });
+          }, 100);
+
+    return () => {
+      if (typeof cancelIdleCallback === "function") {
+        cancelIdleCallback(handle as number);
+      } else {
+        clearTimeout(handle as number);
+      }
+    };
+  }, [card, prefetchWordData]);
+
+  const handleOpenSheet = (wordId: string, wordText: string) => {
     if (isProcessing) return;
     flushPendingEvents();
     markWordOpened(currentCardIndex);
     setSheetOpen(true);
     setSheetWordId(wordId);
     setSheetWordText(wordText);
+    const requestId = sheetRequestIdRef.current + 1;
+    sheetRequestIdRef.current = requestId;
+
     if (sheetAudioRef.current) {
       const nextAudioSrc = `/api/speech/${wordText}`;
       sheetAudioRef.current.src = nextAudioSrc;
@@ -463,6 +567,7 @@ export const DailyTaskClient = ({
         playResult.catch(() => undefined);
       }
     }
+
     const contextLines =
       wordContexts[wordId]?.contextLines?.map((line) => line.trim()) ?? [];
     const cleanedContextLines = contextLines.filter(Boolean);
@@ -473,7 +578,7 @@ export const DailyTaskClient = ({
     setSheetBriefLoading(true);
     setSheetDetailLoading(true);
 
-    await reportMemoryEvent({
+    void reportMemoryEvent({
       wordId,
       eventType: "open_card",
       meta: { source: "daily_task", date },
@@ -489,49 +594,41 @@ export const DailyTaskClient = ({
 
     const primaryContextLine = cleanedContextLines[0]?.trim() || wordText;
 
-    const contextCache = contextCacheRef.current[wordId];
-    const linesKey = cleanedContextLines.join("\n");
-    if (contextCache && contextCache.linesKey === linesKey) {
-      setSheetContextTranslations(contextCache.translations);
-      setSheetContextLoading(false);
-    } else if (cleanedContextLines.length > 0) {
-      try {
-        const translations = await translateContextLinesAction({
-          lines: cleanedContextLines,
+    if (cleanedContextLines.length > 0) {
+      void loadContextTranslations(wordId, cleanedContextLines)
+        .then((translations) => {
+          if (sheetRequestIdRef.current !== requestId) return;
+          setSheetContextTranslations(translations);
+        })
+        .catch(() => {
+          if (sheetRequestIdRef.current !== requestId) return;
+          setSheetContextTranslations([]);
+        })
+        .finally(() => {
+          if (sheetRequestIdRef.current !== requestId) return;
+          setSheetContextLoading(false);
         });
-        contextCacheRef.current[wordId] = {
-          linesKey,
-          translations,
-        };
-        setSheetContextTranslations(translations);
-      } catch {
-        setSheetContextTranslations([]);
-      } finally {
-        setSheetContextLoading(false);
-      }
     } else {
       setSheetContextLoading(false);
     }
 
-    if (cached) return;
-
-    try {
-      const bundle = await getDailyWordBundleAction({
-        word: wordText,
-        sourceText: primaryContextLine,
-      });
-      bundleCacheRef.current[wordId] = {
-        brief: bundle.brief ?? "",
-        detail: bundle.detail ?? "",
-      };
-      setSheetBrief(bundle.brief ?? "");
-      setSheetDetail(bundle.detail ?? "");
-    } catch {
-      setSheetBrief("请求失败");
-      setSheetDetail("请求失败");
-    } finally {
-      setSheetBriefLoading(false);
-      setSheetDetailLoading(false);
+    if (!cached) {
+      void loadBundle(wordId, wordText, primaryContextLine)
+        .then((bundle) => {
+          if (sheetRequestIdRef.current !== requestId) return;
+          setSheetBrief(bundle.brief);
+          setSheetDetail(bundle.detail);
+        })
+        .catch(() => {
+          if (sheetRequestIdRef.current !== requestId) return;
+          setSheetBrief("请求失败");
+          setSheetDetail("请求失败");
+        })
+        .finally(() => {
+          if (sheetRequestIdRef.current !== requestId) return;
+          setSheetBriefLoading(false);
+          setSheetDetailLoading(false);
+        });
     }
   };
 
