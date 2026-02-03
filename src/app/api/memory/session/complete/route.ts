@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { enforceRateLimit, requireApiKey } from "@/lib/middleware/security";
+import { enforceRateLimit, requireSupabaseAuth } from "@/lib/middleware/security";
 import { applyMemoryEvent } from "@/lib/memory";
 import { getSupabaseClient } from "@/lib/supabase";
 import { completeSessionPayloadSchema } from "@/lib/schemas/memory";
 
 export async function POST(request: NextRequest) {
-  const auth = requireApiKey(request);
+  const auth = await requireSupabaseAuth(request);
   if (!auth.ok) {
     return auth.response;
   }
-  const rateLimit = enforceRateLimit(request, auth.token);
+  const rateLimit = enforceRateLimit(request, auth.accessToken);
   if (!rateLimit.ok) {
     return rateLimit.response;
   }
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const supabase = getSupabaseClient();
+    const supabase = getSupabaseClient({ accessToken: auth.accessToken });
     const { data: items, error: itemsError } = await supabase
       .from("word_memory_session_items")
       .select("word_id, opened_card")
@@ -55,13 +55,16 @@ export async function POST(request: NextRequest) {
     const toReward = (items ?? []).filter((item) => !item.opened_card);
     await Promise.all(
       toReward.map((item) =>
-        applyMemoryEvent({
-          wordId: item.word_id as string,
-          sessionId,
-          eventType: "mark_known",
-          payload: { source: "session_complete" },
-          timezone,
-        }),
+        applyMemoryEvent(
+          {
+            wordId: item.word_id as string,
+            sessionId,
+            eventType: "mark_known",
+            payload: { source: "session_complete" },
+            timezone,
+          },
+          { accessToken: auth.accessToken },
+        ),
       ),
     );
 

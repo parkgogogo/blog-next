@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { enforceRateLimit, requireApiKey } from "@/lib/middleware/security";
+import { enforceRateLimit, requireSupabaseAuth } from "@/lib/middleware/security";
 import { generateDailyTask } from "@/lib/memory/task";
 
 type GeneratePayload = {
@@ -12,11 +12,11 @@ type GeneratePayload = {
 };
 
 export async function POST(request: NextRequest) {
-  const auth = requireApiKey(request);
+  const auth = await requireSupabaseAuth(request);
   if (!auth.ok) {
     return auth.response;
   }
-  const rateLimit = enforceRateLimit(request, auth.token);
+  const rateLimit = enforceRateLimit(request, auth.accessToken);
   if (!rateLimit.ok) {
     return rateLimit.response;
   }
@@ -29,14 +29,17 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const result = await generateDailyTask({
-      date: payload.date,
-      force: payload.force,
-      targetWords: payload.targetWords,
-      maxExtraWords: payload.maxExtraWords,
-      maxChars: payload.maxChars,
-      maxSentences: payload.maxSentences,
-    });
+    const result = await generateDailyTask(
+      {
+        date: payload.date,
+        force: payload.force,
+        targetWords: payload.targetWords,
+        maxExtraWords: payload.maxExtraWords,
+        maxChars: payload.maxChars,
+        maxSentences: payload.maxSentences,
+      },
+      { accessToken: auth.accessToken },
+    );
     return NextResponse.json(result);
   } catch (error) {
     return NextResponse.json(

@@ -1,6 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { WordsService } from "@/lib/words";
 import { getDailyStory } from "@/lib/words/story";
+import { requireSupabaseAuth } from "@/lib/middleware/security";
 
 export const dynamic = "force-dynamic";
 
@@ -11,12 +12,19 @@ const parseLimit = (value: string | null, fallback: number) => {
   return Math.min(20, Math.floor(parsed));
 };
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
+  const auth = await requireSupabaseAuth(request);
+  if (!auth.ok) {
+    return auth.response;
+  }
+
   const { searchParams } = new URL(request.url);
   const before = searchParams.get("before");
   const limit = parseLimit(searchParams.get("limit"), 5);
 
-  const slugs = await WordsService.getWordsGroupKeys();
+  const slugs = await WordsService.getWordsGroupKeys({
+    accessToken: auth.accessToken,
+  });
   if (slugs.length === 0) {
     return NextResponse.json({ error: "no_data" }, { status: 404 });
   }
@@ -31,7 +39,9 @@ export async function GET(request: Request) {
 
   const items = await Promise.all(
     page.map(async (slug) => {
-      const words = await WordsService.getWordsByDate(slug);
+      const words = await WordsService.getWordsByDate(slug, {
+        accessToken: auth.accessToken,
+      });
       const story = await getDailyStory(words, slug);
       return { slug, words, story };
     }),

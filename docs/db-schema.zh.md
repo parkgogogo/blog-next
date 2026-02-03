@@ -1,8 +1,8 @@
 # 数据库 Schema 设计说明（中文）
 
-更新时间：2026-01-29
+更新时间：2026-02-03
 
-本文档基于 Supabase `public` schema 的实际结构，面向单用户 MVP。重点说明每张表以及字段用途，便于 review。
+本文档基于 Supabase `public` schema 的实际结构，面向多用户版本。重点说明每张表以及字段用途，便于 review。
 
 ## 核心单词数据
 
@@ -24,6 +24,7 @@
 - 作用：记录单词的上下文、来源、AI 产出等信息，支持按日期聚合。
 - 字段：
   - id (uuid, PK)：记录 ID。
+  - user_id (uuid, default auth.uid())：所属用户。
   - word_id (uuid, FK -> words.id)：关联单词。
   - source_text (text, nullable)：原文/来源文本。
   - context_line (text, nullable)：上下文语句（清洗后）。
@@ -62,9 +63,10 @@
 ## 记忆与推荐系统
 
 ### word_memory_states（单词记忆状态）
-- 作用：单词级记忆状态（单用户）。
+- 作用：单词级记忆状态（按用户隔离）。
 - 字段：
   - id (uuid, PK)
+  - user_id (uuid, default auth.uid())：所属用户。
   - word_id (uuid, FK -> words.id)：关联单词。
   - memory_score (numeric, default 0)：记忆分数，越高越熟。
   - exposure_count (int, default 0)：曝光次数。
@@ -81,9 +83,10 @@
 - 说明：updated_at 由触发器自动更新。
 
 ### word_memory_sessions（即时记忆 Session）
-- 作用：记录一次记忆 session（feed 生成的一组词）。
+- 作用：记录一次记忆 session（feed 生成的一组词，按用户隔离）。
 - 字段：
   - id (uuid, PK)
+  - user_id (uuid, default auth.uid())：所属用户。
   - status (text, default 'active')：状态（active/completed/abandoned）。
   - group_size (int, default 10)：本次 session 单词数。
   - opened_card_count (int, default 0)：本次 session 打开卡片的数量。
@@ -93,9 +96,10 @@
   - created_at (timestamptz)
 
 ### word_memory_session_items（Session 内单词）
-- 作用：记录某个 session 内的具体单词状态。
+- 作用：记录某个 session 内的具体单词状态（按用户隔离）。
 - 字段：
   - id (uuid, PK)
+  - user_id (uuid, default auth.uid())：所属用户。
   - session_id (uuid, FK -> word_memory_sessions.id)
   - word_id (uuid, FK -> words.id)
   - rank (int, nullable)：推荐序位。
@@ -106,9 +110,10 @@
   - created_at (timestamptz)
 
 ### word_memory_events（行为事件）
-- 作用：记录用户行为，用于记忆分数更新和学习迭代。
+- 作用：记录用户行为，用于记忆分数更新和学习迭代（按用户隔离）。
 - 字段：
   - id (uuid, PK)
+  - user_id (uuid, default auth.uid())：所属用户。
   - word_id (uuid, FK -> words.id, nullable)：关联单词。
   - session_id (uuid, FK -> word_memory_sessions.id, nullable)：关联 session。
   - event_type (text)：事件类型（exposure/open_card/mark_known/mark_unknown 等）。
@@ -135,9 +140,10 @@
 ## 每日任务与 AI 句子卡片
 
 ### word_memory_daily_tasks（每日任务）
-- 作用：按天生成的学习任务批次。
+- 作用：按天生成的学习任务批次（按用户隔离）。
 - 字段：
   - id (uuid, PK)
+  - user_id (uuid, default auth.uid())：所属用户。
   - task_date (date)：任务日期。
   - status (text, default 'pending')：状态（pending/running/completed）。
   - target_words (int, default 20)：本日目标词数。
@@ -146,9 +152,10 @@
   - completed_at (timestamptz, nullable)
 
 ### word_memory_cards（每日 AI 卡片）
-- 作用：AI 生成的高信息密度句子卡片。
+- 作用：AI 生成的高信息密度句子卡片（按用户隔离）。
 - 字段：
   - id (uuid, PK)
+  - user_id (uuid, default auth.uid())：所属用户。
   - task_id (uuid, FK -> word_memory_daily_tasks.id)
   - primary_word_id (uuid, FK -> words.id)：主词 A。
   - extra_word_ids (uuid[], default '{}')：附带词 B/C/D。

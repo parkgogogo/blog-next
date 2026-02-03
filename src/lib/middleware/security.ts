@@ -1,5 +1,6 @@
 import { createHmac } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
+import { getAccessTokenFromRequest, getUserFromAccessToken } from "@/lib/auth";
 
 type AuthResult =
   | { ok: true; token: string }
@@ -7,6 +8,10 @@ type AuthResult =
 
 type RateLimitResult =
   | { ok: true }
+  | { ok: false; response: NextResponse };
+
+type SupabaseAuthResult =
+  | { ok: true; userId: string; accessToken: string }
   | { ok: false; response: NextResponse };
 
 const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
@@ -58,6 +63,28 @@ export const requireApiKey = (request: NextRequest): AuthResult => {
   }
 
   return { ok: true, token };
+};
+
+export const requireSupabaseAuth = async (
+  request: Request,
+): Promise<SupabaseAuthResult> => {
+  const accessToken = getAccessTokenFromRequest(request);
+  if (!accessToken) {
+    return {
+      ok: false,
+      response: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
+    };
+  }
+
+  const user = await getUserFromAccessToken(accessToken);
+  if (!user?.id) {
+    return {
+      ok: false,
+      response: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
+    };
+  }
+
+  return { ok: true, userId: user.id, accessToken };
 };
 
 export const enforceRateLimit = (

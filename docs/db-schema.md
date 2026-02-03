@@ -1,8 +1,8 @@
 # Database Schema (Supabase)
 
-Last updated: 2026-01-29
+Last updated: 2026-02-03
 
-This document reflects the current public schema in Supabase for the MVP single-user mode.
+This document reflects the current public schema in Supabase for the multi-user setup.
 
 ## Core Vocabulary Tables
 
@@ -24,6 +24,7 @@ This document reflects the current public schema in Supabase for the MVP single-
 - Purpose: Word instances imported or added (context, source, AI outputs).
 - Columns:
   - id (uuid, PK, default gen_random_uuid())
+  - user_id (uuid, default auth.uid())
   - word_id (uuid, FK -> words.id)
   - source_text (text, nullable)
   - context_line (text, nullable)
@@ -62,9 +63,10 @@ This document reflects the current public schema in Supabase for the MVP single-
 ## Memory / Recommendation System
 
 ### word_memory_states
-- Purpose: Per-word memory state (single-user).
+- Purpose: Per-word memory state (per user).
 - Columns:
   - id (uuid, PK, default gen_random_uuid())
+  - user_id (uuid, default auth.uid())
   - word_id (uuid, FK -> words.id)
   - memory_score (numeric, default 0)
   - exposure_count (int, default 0)
@@ -82,9 +84,10 @@ This document reflects the current public schema in Supabase for the MVP single-
   - updated_at maintained by trigger on update.
 
 ### word_memory_sessions
-- Purpose: Ad-hoc memory session (feed-driven).
+- Purpose: Ad-hoc memory session (feed-driven, per user).
 - Columns:
   - id (uuid, PK, default gen_random_uuid())
+  - user_id (uuid, default auth.uid())
   - status (text, default 'active')
   - group_size (int, default 10)
   - opened_card_count (int, default 0)
@@ -94,9 +97,10 @@ This document reflects the current public schema in Supabase for the MVP single-
   - created_at (timestamptz, default now())
 
 ### word_memory_session_items
-- Purpose: Words within a memory session.
+- Purpose: Words within a memory session (per user).
 - Columns:
   - id (uuid, PK, default gen_random_uuid())
+  - user_id (uuid, default auth.uid())
   - session_id (uuid, FK -> word_memory_sessions.id)
   - word_id (uuid, FK -> words.id)
   - rank (int, nullable)
@@ -107,9 +111,10 @@ This document reflects the current public schema in Supabase for the MVP single-
   - created_at (timestamptz, default now())
 
 ### word_memory_events
-- Purpose: Event log for memory actions.
+- Purpose: Event log for memory actions (per user).
 - Columns:
   - id (uuid, PK, default gen_random_uuid())
+  - user_id (uuid, default auth.uid())
   - word_id (uuid, FK -> words.id, nullable)
   - session_id (uuid, FK -> word_memory_sessions.id, nullable)
   - event_type (text)
@@ -137,9 +142,10 @@ This document reflects the current public schema in Supabase for the MVP single-
 ## Daily Task / AI Sentence Cards
 
 ### word_memory_daily_tasks
-- Purpose: Daily task batch.
+- Purpose: Daily task batch (per user).
 - Columns:
   - id (uuid, PK, default gen_random_uuid())
+  - user_id (uuid, default auth.uid())
   - task_date (date)
   - status (text, default 'pending')
   - target_words (int, default 20)
@@ -148,9 +154,10 @@ This document reflects the current public schema in Supabase for the MVP single-
   - completed_at (timestamptz, nullable)
 
 ### word_memory_cards
-- Purpose: AI-generated sentence cards for daily tasks.
+- Purpose: AI-generated sentence cards for daily tasks (per user).
 - Columns:
   - id (uuid, PK, default gen_random_uuid())
+  - user_id (uuid, default auth.uid())
   - task_id (uuid, FK -> word_memory_daily_tasks.id)
   - primary_word_id (uuid, FK -> words.id)
   - extra_word_ids (uuid[], default '{}')

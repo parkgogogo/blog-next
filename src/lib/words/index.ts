@@ -29,24 +29,27 @@ const toWord = (entry: WordEntryRecord): ILuluWord => {
 };
 
 export const WordsService = (() => {
-  const getWordsByDate = async (date: string) => {
-    const entries = await listWordEntriesByDate(date);
+  const getWordsByDate = async (
+    date: string,
+    options?: { accessToken?: string | null },
+  ) => {
+    const entries = await listWordEntriesByDate(date, options);
     return entries.map(toWord);
   };
 
-  const getWordsGroupKeys = async () => {
-    return await listWordEntryDates();
+  const getWordsGroupKeys = async (options?: { accessToken?: string | null }) => {
+    return await listWordEntryDates(options);
   };
 
-  const getAllWordUuids = async () => {
-    return await listWordTexts();
+  const getAllWordUuids = async (options?: { accessToken?: string | null }) => {
+    return await listWordTexts(options);
   };
 
-  const getAllWords = async () => {
-    const dates = await listWordEntryDates();
+  const getAllWords = async (options?: { accessToken?: string | null }) => {
+    const dates = await listWordEntryDates(options);
     const wordsMap = new Map<string, ILuluWord[]>();
     for (const date of dates) {
-      const words = await getWordsByDate(date);
+      const words = await getWordsByDate(date, options);
       wordsMap.set(date, words);
     }
     return wordsMap;

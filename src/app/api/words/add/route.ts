@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { enforceRateLimit, requireApiKey } from "@/lib/middleware/security";
+import { enforceRateLimit, requireSupabaseAuth } from "@/lib/middleware/security";
 import { insertWordEntry } from "@/lib/words/storage";
 import { addWordEntryRequestSchema } from "@/lib/schemas/words";
 
 export async function POST(request: NextRequest) {
-  const auth = requireApiKey(request);
+  const auth = await requireSupabaseAuth(request);
   if (!auth.ok) {
     return auth.response;
   }
-  const rateLimit = enforceRateLimit(request, auth.token);
+  const rateLimit = enforceRateLimit(request, auth.accessToken);
   if (!rateLimit.ok) {
     return rateLimit.response;
   }
@@ -33,17 +33,20 @@ export async function POST(request: NextRequest) {
   const resolvedLanguage = language ?? "en";
   const resolvedProvider = provider ?? "manual";
 
-  const entry = await insertWordEntry({
-    word,
-    language: resolvedLanguage,
-    context: contextLine,
-    brief: "",
-    detail: "",
-    contextLine,
-    sourceLink: sourceLink || null,
-    provider: resolvedProvider,
-    providerPayload: null,
-  });
+  const entry = await insertWordEntry(
+    {
+      word,
+      language: resolvedLanguage,
+      context: contextLine,
+      brief: "",
+      detail: "",
+      contextLine,
+      sourceLink: sourceLink || null,
+      provider: resolvedProvider,
+      providerPayload: null,
+    },
+    { accessToken: auth.accessToken },
+  );
 
   return NextResponse.json({
     type: "word_entry",

@@ -659,6 +659,96 @@ body {
   animation-delay: 3s;
 }
 
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  background: #f8f9fb;
+}
+
+.login-card {
+  width: min(400px, 92vw);
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  padding: 28px;
+  box-shadow: none;
+}
+
+.login-title {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.login-subtitle {
+  margin-top: 8px;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.login-providers {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.login-button {
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  color: #111827;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.login-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.login-button:hover:not(:disabled) {
+  border-color: #cbd5e1;
+  background: #f9fafb;
+}
+
+.login-button-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.login-provider-icon {
+  width: 18px;
+  height: 18px;
+  color: #111827;
+}
+
+.login-button-status {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.login-note {
+  margin-top: 16px;
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+.login-error {
+  margin-top: 16px;
+  color: #dc2626;
+  font-size: 13px;
+}
+
 /* Enhance existing animations */
 .animate-pulse {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;

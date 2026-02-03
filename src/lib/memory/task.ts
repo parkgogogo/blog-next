@@ -81,25 +81,28 @@ export type DailyTaskResult = {
   }>;
 };
 
-export const generateDailyTask = async (options?: {
-  date?: string;
-  force?: boolean;
-  targetWords?: number;
-  maxExtraWords?: number;
-  maxChars?: number;
-  maxSentences?: number;
-}) => {
+export const generateDailyTask = async (
+  options?: {
+    date?: string;
+    force?: boolean;
+    targetWords?: number;
+    maxExtraWords?: number;
+    maxChars?: number;
+    maxSentences?: number;
+  },
+  authOptions?: { accessToken?: string | null },
+) => {
   const parsedOptions = dailyTaskOptionsSchema.safeParse(options ?? {});
   const resolvedOptions = parsedOptions.success ? parsedOptions.data : {};
   const taskDate = resolveTaskDate(resolvedOptions.date);
-  const settings = await getMemorySettings();
+  const settings = await getMemorySettings(authOptions);
   const force = resolvedOptions.force;
   const targetWords = resolvedOptions.targetWords ?? settings.daily_target;
   const maxExtraWords = Math.min(3, resolvedOptions.maxExtraWords ?? 3);
   const maxChars = resolvedOptions.maxChars ?? 160;
   const maxSentences = resolvedOptions.maxSentences ?? 2;
 
-  const supabase = getSupabaseClient();
+  const supabase = getSupabaseClient({ accessToken: authOptions?.accessToken });
   const { data: existingTask, error: taskError } = await supabase
     .from("word_memory_daily_tasks")
     .select("*")
@@ -192,7 +195,7 @@ export const generateDailyTask = async (options?: {
     taskId = created.id as string;
   }
 
-  const feedItems = (await getMemoryFeed(targetWords)) as MemoryFeedItemLite[];
+  const feedItems = (await getMemoryFeed(targetWords, authOptions)) as MemoryFeedItemLite[];
   if (feedItems.length === 0) {
     throw new Error("no_memory_words");
   }
@@ -294,9 +297,12 @@ export const generateDailyTask = async (options?: {
   } satisfies DailyTaskResult;
 };
 
-export const completeDailyTask = async (taskDate?: string) => {
+export const completeDailyTask = async (
+  taskDate?: string,
+  authOptions?: { accessToken?: string | null },
+) => {
   const date = resolveTodayDate(taskDate);
-  const supabase = getSupabaseClient();
+  const supabase = getSupabaseClient({ accessToken: authOptions?.accessToken });
   const { data: task, error: taskError } = await supabase
     .from("word_memory_daily_tasks")
     .select("*")
