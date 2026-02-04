@@ -236,10 +236,11 @@ export const generateDailyTask = async (
     const words = [entry.primary.word_text, ...extras.map((extra) => extra.word_text)].filter(
       Boolean,
     );
+    const sentenceMax = words.length === 1 ? 1 : maxSentences;
     const sentence = await ensureMemorySentence({
       words,
       maxChars,
-      maxSentences,
+      maxSentences: sentenceMax,
       taskDate,
       contexts: Object.fromEntries(
         words.map((word) => [word, contextMap[word] ?? ""]),

@@ -12,6 +12,20 @@ import {
 const normalizeSentence = (value: string) =>
   value.replace(/\s+/g, " ").trim();
 
+const normalizeWordToken = (value: string) =>
+  value.toLowerCase().replace(/[^a-z0-9-]/g, "").trim();
+
+const escapeRegex = (value: string) =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const countWordOccurrences = (sentence: string, word: string) => {
+  const normalizedSentence = sentence.toLowerCase();
+  const target = normalizeWordToken(word);
+  if (!target) return 0;
+  const pattern = new RegExp(`\\b${escapeRegex(target)}\\b`, "g");
+  return normalizedSentence.match(pattern)?.length ?? 0;
+};
+
 const includesAllWords = (sentence: string, words: string[]) => {
   const lower = sentence.toLowerCase();
   return words.every((word) => lower.includes(word.toLowerCase()));
@@ -100,6 +114,15 @@ export const ensureMemorySentence = async (options: {
         sentenceCount <= options.maxSentences &&
         includesAllWords(normalized, options.words)
       ) {
+        if (options.words.length === 1) {
+          const occurrences = countWordOccurrences(
+            normalized,
+            options.words[0],
+          );
+          if (occurrences > 1) {
+            continue;
+          }
+        }
         return normalized;
       }
     }
@@ -110,19 +133,42 @@ export const ensureMemorySentence = async (options: {
   return buildFallbackSentence(options.words);
 };
 
+const buildWordLookup = (words: string[]) => {
+  const lookup = new Map<string, string>();
+  for (const word of words) {
+    const normalized = normalizeWordToken(word);
+    if (!normalized) continue;
+    if (!lookup.has(normalized)) {
+      lookup.set(normalized, word);
+    }
+    if (normalized.endsWith("ies")) {
+      const variant = `${normalized.slice(0, -3)}y`;
+      if (!lookup.has(variant)) lookup.set(variant, word);
+    }
+    if (normalized.endsWith("es")) {
+      const variant = normalized.slice(0, -2);
+      if (!lookup.has(variant)) lookup.set(variant, word);
+    }
+    if (normalized.endsWith("s")) {
+      const variant = normalized.slice(0, -1);
+      if (!lookup.has(variant)) lookup.set(variant, word);
+    }
+  }
+  return lookup;
+};
+
 const parseGrouping = (raw: string, words: string[]) => {
+  const lookup = buildWordLookup(words);
   const attempt = (value: string) => {
     const parsed = JSON.parse(value) as { groups?: string[][] };
     const groups = Array.isArray(parsed.groups) ? parsed.groups : [];
-    const flattened = groups.flat().map((word) => word.trim());
-    const lowerSet = new Set(flattened.map((word) => word.toLowerCase()));
-    const missing = words.filter(
-      (word) => !lowerSet.has(word.toLowerCase()),
-    );
-    if (missing.length > 0) {
-      return null;
-    }
-    return groups.filter((group) => group.length > 0);
+    return groups
+      .map((group) =>
+        group
+          .map((word) => lookup.get(normalizeWordToken(word)) ?? "")
+          .filter(Boolean),
+      )
+      .filter((group) => group.length > 0);
   };
 
   try {
@@ -144,11 +190,13 @@ const parseGrouping = (raw: string, words: string[]) => {
 
 const normalizeGroups = (groups: string[][], words: string[]) => {
   const seen = new Set<string>();
+  const allowed = new Set(words.map((word) => word.toLowerCase()));
   const normalized: string[][] = [];
   for (const group of groups) {
     const cleaned = group
       .map((word) => word.trim())
       .filter(Boolean)
+      .filter((word) => allowed.has(word.toLowerCase()))
       .filter((word) => {
         const key = word.toLowerCase();
         if (seen.has(key)) return false;
