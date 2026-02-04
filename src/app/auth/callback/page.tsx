@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getBrowserSupabaseClient } from "@/lib/supabase/browser";
 
@@ -8,6 +8,9 @@ const CallbackContent = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+  const [isExtensionDone, setIsExtensionDone] = useState(false);
+  const hasPostedRef = useRef(false);
+  const isExtension = searchParams.get("client") === "extension";
 
   useEffect(() => {
     const run = async () => {
@@ -20,6 +23,14 @@ const CallbackContent = () => {
       const hashParams = new URLSearchParams(hash);
       const accessToken = hashParams.get("access_token");
       const refreshToken = hashParams.get("refresh_token");
+
+      if (code && !hasPostedRef.current) {
+        hasPostedRef.current = true;
+        window.postMessage(
+          { type: "supabase_oauth_code", code },
+          "https://www.parkgogogo.me",
+        );
+      }
 
       if (!code && !accessToken) {
         setError(
@@ -67,19 +78,30 @@ const CallbackContent = () => {
         return;
       }
 
+      if (isExtension) {
+        setIsExtensionDone(true);
+        return;
+      }
+
       router.replace(nextPath);
     };
 
     run().catch(() => setError("登录失败：未知错误。"));
-  }, [router, searchParams]);
+  }, [isExtension, router, searchParams]);
+
+  const subtitle = error
+    ? "登录失败"
+    : isExtension
+      ? isExtensionDone
+        ? "已完成登录，请关闭此窗口返回插件。"
+        : "请稍候，正在完成登录…"
+      : "请稍候，即将进入词库…";
 
   return (
     <div className="login-page">
       <div className="login-card">
         <div className="login-title">正在完成登录</div>
-        <div className="login-subtitle">
-          {error ? "登录失败" : "请稍候，即将进入词库…"}
-        </div>
+        <div className="login-subtitle">{subtitle}</div>
         {error && <div className="login-error">{error}</div>}
       </div>
     </div>
