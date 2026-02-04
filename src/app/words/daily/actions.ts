@@ -5,6 +5,7 @@ import { completeDailyTask, type DailyTaskResult, generateDailyTask } from "@/li
 import { createSpeechToken } from "@/lib/middleware/security";
 import { getWordCardBundle, translateSentence } from "@/lib/words/ai-service";
 import { getSupabaseClient } from "@/lib/supabase";
+import { requireAuth } from "@/lib/auth/server";
 
 type WordContext = {
   id: string;
@@ -21,17 +22,22 @@ export const recordMemoryEventAction = async (payload: {
   meta?: Record<string, unknown> | null;
   timezone?: string | null;
 }) => {
-  return applyMemoryEvent({
-    wordId: payload.wordId,
-    eventType: payload.eventType,
-    deltaScore: payload.deltaScore ?? null,
-    payload: payload.meta ?? null,
-    timezone: payload.timezone ?? null,
-  });
+  const auth = await requireAuth();
+  return applyMemoryEvent(
+    {
+      wordId: payload.wordId,
+      eventType: payload.eventType,
+      deltaScore: payload.deltaScore ?? null,
+      payload: payload.meta ?? null,
+      timezone: payload.timezone ?? null,
+    },
+    { accessToken: auth.accessToken },
+  );
 };
 
 export const completeDailyTaskAction = async (date: string) => {
-  return completeDailyTask(date);
+  const auth = await requireAuth();
+  return completeDailyTask(date, { accessToken: auth.accessToken });
 };
 
 export const getDailyWordBundleAction = async (payload: {
@@ -40,6 +46,7 @@ export const getDailyWordBundleAction = async (payload: {
   force?: boolean;
   maxChars?: number;
 }) => {
+  await requireAuth();
   return getWordCardBundle(payload.word, payload.sourceText, {
     force: payload.force,
     maxChars: payload.maxChars,
@@ -50,6 +57,7 @@ export const getDailyWordBundleAction = async (payload: {
 export const translateContextLinesAction = async (payload: {
   lines: string[];
 }) => {
+  await requireAuth();
   const lines = (payload.lines ?? []).map((line) => line.trim()).filter(Boolean);
   if (lines.length === 0) return [];
   const translations = await Promise.all(
@@ -59,13 +67,17 @@ export const translateContextLinesAction = async (payload: {
 };
 
 export const translateSentenceAction = async (payload: { sentence: string }) => {
+  await requireAuth();
   const sentence = payload.sentence?.trim();
   if (!sentence) return "";
   return translateSentence(sentence);
 };
 
-const loadDailyTask = async (date: string): Promise<DailyTaskResult> => {
-  const supabase = getSupabaseClient();
+const loadDailyTask = async (
+  date: string,
+  accessToken: string,
+): Promise<DailyTaskResult> => {
+  const supabase = getSupabaseClient({ accessToken });
   const { data: task, error: taskError } = await supabase
     .from("word_memory_daily_tasks")
     .select("*")
@@ -77,7 +89,7 @@ const loadDailyTask = async (date: string): Promise<DailyTaskResult> => {
   }
 
   if (!task) {
-    return generateDailyTask({ date });
+    return generateDailyTask({ date }, { accessToken });
   }
 
   const { data: cards, error: cardsError } = await supabase
@@ -134,9 +146,10 @@ const loadDailyTask = async (date: string): Promise<DailyTaskResult> => {
 const loadWordContexts = async (
   wordIds: string[],
   fallbackMap: Map<string, string>,
+  accessToken: string,
 ): Promise<Record<string, WordContext>> => {
   if (wordIds.length === 0) return {};
-  const supabase = getSupabaseClient();
+  const supabase = getSupabaseClient({ accessToken });
   const { data: entries, error } = await supabase
     .from("word_entries")
     .select("word_id, context_line, context, source_text, words ( text )")
@@ -192,7 +205,8 @@ const loadWordContexts = async (
 };
 
 export const loadDailyTaskAction = async (date: string) => {
-  const result = await loadDailyTask(date);
+  const auth = await requireAuth();
+  const result = await loadDailyTask(date, auth.accessToken);
   const tokenExpiresAt = Date.now() + 10 * 60 * 1000;
   const wordIds = new Set<string>();
   const fallbackMap = new Map<string, string>();
@@ -206,6 +220,7 @@ export const loadDailyTaskAction = async (date: string) => {
   const wordContexts = await loadWordContexts(
     Array.from(wordIds),
     fallbackMap,
+    auth.accessToken,
   );
 
   return {

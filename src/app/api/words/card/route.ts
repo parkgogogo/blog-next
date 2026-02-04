@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { enforceRateLimit, requireApiKey } from "@/lib/middleware/security";
+import { enforceRateLimit, requireSupabaseAuth } from "@/lib/middleware/security";
 import { getWordCardBundle, translateSentence } from "@/lib/words/ai-service";
 import { getWordEntryStatus } from "@/lib/words/storage";
 import { wordCardBundleRequestSchema } from "@/lib/schemas/words";
@@ -10,8 +10,8 @@ const normalizeContextLine = (value: unknown) => {
   return value.trim();
 };
 
-const loadContextLinesForWord = async (word: string) => {
-  const supabase = getSupabaseClient();
+const loadContextLinesForWord = async (word: string, accessToken: string) => {
+  const supabase = getSupabaseClient({ accessToken });
   const { data: wordRow, error: wordError } = await supabase
     .from("words")
     .select("id")
@@ -52,11 +52,11 @@ const loadContextLinesForWord = async (word: string) => {
 };
 
 export async function POST(request: NextRequest) {
-  const auth = requireApiKey(request);
+  const auth = await requireSupabaseAuth(request);
   if (!auth.ok) {
     return auth.response;
   }
-  const rateLimit = enforceRateLimit(request, auth.token);
+  const rateLimit = enforceRateLimit(request, auth.accessToken);
   if (!rateLimit.ok) {
     return rateLimit.response;
   }
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
 
   const { word, sourceText, maxChars, force } = parsedPayload.data;
 
-  const contextLines = await loadContextLinesForWord(word);
+  const contextLines = await loadContextLinesForWord(word, auth.accessToken);
   const contextTranslations =
     contextLines.length > 0
       ? await Promise.all(
@@ -93,7 +93,9 @@ export async function POST(request: NextRequest) {
     contextTranslations,
   });
   const contextLine = content.context || sourceText;
-  const status = await getWordEntryStatus(word, contextLine);
+  const status = await getWordEntryStatus(word, contextLine, {
+    accessToken: auth.accessToken,
+  });
 
   return NextResponse.json({
     type: "word_card_bundle",

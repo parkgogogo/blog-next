@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { enforceRateLimit, requireApiKey } from "@/lib/middleware/security";
+import { enforceRateLimit, requireSupabaseAuth } from "@/lib/middleware/security";
 import { getMemoryFeed } from "@/lib/memory";
 
 const parseLimit = (value: string | null) => {
@@ -10,11 +10,11 @@ const parseLimit = (value: string | null) => {
 };
 
 export async function GET(request: NextRequest) {
-  const auth = requireApiKey(request);
+  const auth = await requireSupabaseAuth(request);
   if (!auth.ok) {
     return auth.response;
   }
-  const rateLimit = enforceRateLimit(request, auth.token);
+  const rateLimit = enforceRateLimit(request, auth.accessToken);
   if (!rateLimit.ok) {
     return rateLimit.response;
   }
@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
   const limit = parseLimit(searchParams.get("limit"));
 
   try {
-    const items = await getMemoryFeed(limit);
+    const items = await getMemoryFeed(limit, { accessToken: auth.accessToken });
     if (items.length === 0) {
       return NextResponse.json({ error: "no_data" }, { status: 404 });
     }

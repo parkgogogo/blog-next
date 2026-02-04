@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { enforceRateLimit, requireApiKey } from "@/lib/middleware/security";
+import { enforceRateLimit, requireSupabaseAuth } from "@/lib/middleware/security";
 import { getLuluWords } from "@/lib/words/lulu";
 import { insertWordEntry } from "@/lib/words/storage";
 import { getSupabaseClient } from "@/lib/supabase";
@@ -16,11 +16,11 @@ const normalizeWord = (value: unknown) => {
 };
 
 export async function POST(request: NextRequest) {
-  const auth = requireApiKey(request);
+  const auth = await requireSupabaseAuth(request);
   if (!auth.ok) {
     return auth.response;
   }
-  const rateLimit = enforceRateLimit(request, auth.token);
+  const rateLimit = enforceRateLimit(request, auth.accessToken);
   if (!rateLimit.ok) {
     return rateLimit.response;
   }
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unsupported provider" }, { status: 400 });
   }
 
-  const supabase = getSupabaseClient();
+  const supabase = getSupabaseClient({ accessToken: auth.accessToken });
   const { data: job, error: jobError } = await supabase
     .from("word_sync_jobs")
     .insert({
@@ -93,24 +93,27 @@ export async function POST(request: NextRequest) {
         continue;
       }
 
-      await insertWordEntry({
-        word: wordText,
-        language: "en",
-        context: contextLine,
-        brief: "",
-        detail: "",
-        sourceText: contextLine,
-        contextLine,
-        provider,
-        providerPayload: {
-          id: entry.id,
-          uuid: entry.uuid,
-          exp: entry.exp,
-          addtime: entry.addtime,
-          phon: entry.phon,
+      await insertWordEntry(
+        {
+          word: wordText,
+          language: "en",
+          context: contextLine,
+          brief: "",
+          detail: "",
+          sourceText: contextLine,
+          contextLine,
+          provider,
+          providerPayload: {
+            id: entry.id,
+            uuid: entry.uuid,
+            exp: entry.exp,
+            addtime: entry.addtime,
+            phon: entry.phon,
+          },
+          createdAt: entry.addtime,
         },
-        createdAt: entry.addtime,
-      });
+        { accessToken: auth.accessToken },
+      );
       inserted += 1;
     }
 

@@ -15,8 +15,12 @@ export interface WordEntryRecord {
   createdAt: string;
 }
 
-export const ensureWordId = async (word: string, language = "en") => {
-  const supabase = getSupabaseClient();
+export const ensureWordId = async (
+  word: string,
+  language = "en",
+  options?: { accessToken?: string | null },
+) => {
+  const supabase = getSupabaseClient({ accessToken: options?.accessToken });
   const { data, error } = await supabase
     .from(WORDS_TABLE)
     .upsert(
@@ -36,7 +40,8 @@ export const ensureWordId = async (word: string, language = "en") => {
   return data.id as string;
 };
 
-export const insertWordEntry = async (payload: {
+export const insertWordEntry = async (
+  payload: {
   word: string;
   language?: string;
   context: string;
@@ -49,9 +54,11 @@ export const insertWordEntry = async (payload: {
   provider?: string;
   providerPayload?: Record<string, unknown> | null;
   createdAt?: string;
-}) => {
-  const wordId = await ensureWordId(payload.word, payload.language ?? "en");
-  const supabase = getSupabaseClient();
+},
+  options?: { accessToken?: string | null },
+) => {
+  const wordId = await ensureWordId(payload.word, payload.language ?? "en", options);
+  const supabase = getSupabaseClient({ accessToken: options?.accessToken });
   const { data, error } = await supabase
     .from(ENTRIES_TABLE)
     .insert({
@@ -83,13 +90,14 @@ export const insertWordEntry = async (payload: {
 
 export const listWordEntriesByDate = async (
   dateSlug: string,
+  options?: { accessToken?: string | null },
 ): Promise<WordEntryRecord[]> => {
   const start = new Date(`${dateSlug}T00:00:00`);
   if (Number.isNaN(start.getTime())) {
     throw new Error("Invalid date slug");
   }
   const end = addDays(start, 1);
-  const supabase = getSupabaseClient();
+  const supabase = getSupabaseClient({ accessToken: options?.accessToken });
   const { data, error } = await supabase
     .from(ENTRIES_TABLE)
     .select(
@@ -118,8 +126,10 @@ export const listWordEntriesByDate = async (
   });
 };
 
-export const listWordEntryDates = async (): Promise<string[]> => {
-  const supabase = getSupabaseClient();
+export const listWordEntryDates = async (
+  options?: { accessToken?: string | null },
+): Promise<string[]> => {
+  const supabase = getSupabaseClient({ accessToken: options?.accessToken });
   const { data, error } = await supabase
     .from(ENTRIES_TABLE)
     .select("created_at")
@@ -139,8 +149,10 @@ export const listWordEntryDates = async (): Promise<string[]> => {
   return Array.from(dates).sort((a, b) => b.localeCompare(a));
 };
 
-export const listWordTexts = async (): Promise<string[]> => {
-  const supabase = getSupabaseClient();
+export const listWordTexts = async (
+  options?: { accessToken?: string | null },
+): Promise<string[]> => {
+  const supabase = getSupabaseClient({ accessToken: options?.accessToken });
   const { data, error } = await supabase.from(WORDS_TABLE).select("text");
 
   if (error) {
@@ -155,8 +167,9 @@ export const listWordTexts = async (): Promise<string[]> => {
 export const getWordEntryStatus = async (
   word: string,
   contextLine: string,
+  options?: { accessToken?: string | null },
 ): Promise<"new" | "existing_same" | "existing_diff"> => {
-  const supabase = getSupabaseClient();
+  const supabase = getSupabaseClient({ accessToken: options?.accessToken });
   const { data: wordRow, error: wordError } = await supabase
     .from(WORDS_TABLE)
     .select("id")

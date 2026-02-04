@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { enforceRateLimit, requireApiKey } from "@/lib/middleware/security";
+import { enforceRateLimit, requireSupabaseAuth } from "@/lib/middleware/security";
 import { applyMemoryEvent, getMemoryFeed } from "@/lib/memory";
 import { getSupabaseClient } from "@/lib/supabase";
 import { startSessionPayloadSchema } from "@/lib/schemas/memory";
 
 export async function POST(request: NextRequest) {
-  const auth = requireApiKey(request);
+  const auth = await requireSupabaseAuth(request);
   if (!auth.ok) {
     return auth.response;
   }
-  const rateLimit = enforceRateLimit(request, auth.token);
+  const rateLimit = enforceRateLimit(request, auth.accessToken);
   if (!rateLimit.ok) {
     return rateLimit.response;
   }
@@ -29,12 +29,14 @@ export async function POST(request: NextRequest) {
   const timezone = data.timezone ?? null;
 
   try {
-    const feedItems = await getMemoryFeed(target);
+    const feedItems = await getMemoryFeed(target, {
+      accessToken: auth.accessToken,
+    });
     if (feedItems.length === 0) {
       return NextResponse.json({ error: "no_data" }, { status: 404 });
     }
 
-    const supabase = getSupabaseClient();
+    const supabase = getSupabaseClient({ accessToken: auth.accessToken });
     const { data: session, error: sessionError } = await supabase
       .from("word_memory_sessions")
       .insert({
@@ -67,13 +69,16 @@ export async function POST(request: NextRequest) {
 
     await Promise.all(
       feedItems.map((item) =>
-        applyMemoryEvent({
-          wordId: item.word_id,
-          sessionId,
-          eventType: "exposure",
-          payload: { source: "session_start" },
-          timezone,
-        }),
+        applyMemoryEvent(
+          {
+            wordId: item.word_id,
+            sessionId,
+            eventType: "exposure",
+            payload: { source: "session_start" },
+            timezone,
+          },
+          { accessToken: auth.accessToken },
+        ),
       ),
     );
 

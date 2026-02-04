@@ -33,8 +33,8 @@ export type MemorySettings = {
   half_life_growth: number | string;
 };
 
-export const getMemorySettings = async () => {
-  const supabase = getSupabaseClient();
+export const getMemorySettings = async (options?: { accessToken?: string | null }) => {
+  const supabase = getSupabaseClient({ accessToken: options?.accessToken });
   const { data, error } = await supabase.rpc("get_memory_settings");
 
   if (error) {
@@ -58,10 +58,13 @@ export const getMemorySettings = async () => {
   return row;
 };
 
-export const getMemoryFeed = async (limit?: number) => {
+export const getMemoryFeed = async (
+  limit?: number,
+  options?: { accessToken?: string | null },
+) => {
   const parsedLimit = optionalFiniteNumberSchema.safeParse(limit);
   const limitValue = parsedLimit.success ? parsedLimit.data : undefined;
-  const supabase = getSupabaseClient();
+  const supabase = getSupabaseClient({ accessToken: options?.accessToken });
   const { data, error } = await supabase.rpc("get_memory_feed", {
     p_limit: limitValue ?? null,
   });
@@ -73,8 +76,11 @@ export const getMemoryFeed = async (limit?: number) => {
   return (data ?? []) as MemoryFeedItem[];
 };
 
-export const applyMemoryEvent = async (payload: MemoryEventPayload) => {
-  const supabase = getSupabaseClient();
+export const applyMemoryEvent = async (
+  payload: MemoryEventPayload,
+  options?: { accessToken?: string | null },
+) => {
+  const supabase = getSupabaseClient({ accessToken: options?.accessToken });
   const { data, error } = await supabase.rpc("apply_memory_event", {
     p_word_id: payload.wordId,
     p_session_id: payload.sessionId ?? null,

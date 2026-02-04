@@ -1,17 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ai_generateSpeech } from "@/lib/ai";
 import {
-  enforcePublicRateLimit,
+  enforceRateLimit,
+  requireSupabaseAuth,
   verifySpeechToken,
 } from "@/lib/middleware/security";
 import { getSupabaseClient } from "@/lib/supabase";
 
 export async function GET(request: NextRequest) {
-  const rateLimit = enforcePublicRateLimit(request, {
-    max: 10,
-    windowMs: 60_000,
-    scope: "speech_sentence",
-  });
+  const auth = await requireSupabaseAuth(request);
+  if (!auth.ok) {
+    return auth.response;
+  }
+  const rateLimit = enforceRateLimit(request, auth.accessToken);
   if (!rateLimit.ok) {
     return rateLimit.response;
   }
@@ -30,7 +31,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const supabase = getSupabaseClient();
+  const supabase = getSupabaseClient({ accessToken: auth.accessToken });
   const { data: task, error: taskError } = await supabase
     .from("word_memory_daily_tasks")
     .select("id")
