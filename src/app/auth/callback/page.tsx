@@ -30,6 +30,10 @@ const CallbackContent = () => {
           { type: "supabase_oauth_code", code },
           "https://www.parkgogogo.me",
         );
+        if (isExtension) {
+          setIsExtensionDone(true);
+          return;
+        }
       }
 
       if (!code && !accessToken) {
