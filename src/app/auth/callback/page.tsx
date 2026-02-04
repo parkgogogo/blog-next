@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getBrowserSupabaseClient } from "@/lib/supabase/browser";
 
-export default function AuthCallbackPage() {
+const CallbackContent = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +22,11 @@ export default function AuthCallbackPage() {
       const refreshToken = hashParams.get("refresh_token");
 
       if (!code && !accessToken) {
-        setError(errorDescription ? decodeURIComponent(errorDescription) : "登录失败：缺少 code。");
+        setError(
+          errorDescription
+            ? decodeURIComponent(errorDescription)
+            : "登录失败：缺少 code。",
+        );
         return;
       }
 
@@ -32,7 +36,11 @@ export default function AuthCallbackPage() {
       if (code) {
         const { data, error: exchangeError } =
           await supabase.auth.exchangeCodeForSession(code);
-        if (exchangeError || !data.session?.access_token || !data.session?.refresh_token) {
+        if (
+          exchangeError ||
+          !data.session?.access_token ||
+          !data.session?.refresh_token
+        ) {
           setError(exchangeError?.message || "登录失败：无法获取会话。");
           return;
         }
@@ -75,5 +83,13 @@ export default function AuthCallbackPage() {
         {error && <div className="login-error">{error}</div>}
       </div>
     </div>
+  );
+};
+
+export default function AuthCallbackPage() {
+  return (
+    <Suspense>
+      <CallbackContent />
+    </Suspense>
   );
 }

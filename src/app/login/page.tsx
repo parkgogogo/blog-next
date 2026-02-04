@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { getBrowserSupabaseClient } from "@/lib/supabase/browser";
 
@@ -10,10 +10,13 @@ const providers: Array<{ id: OAuthProvider; label: string }> = [
   { id: "github", label: "GitHub" },
 ];
 
-export default function LoginPage() {
+const LoginContent = () => {
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState<OAuthProvider | null>(null);
-  const nextPath = useMemo(() => searchParams.get("next") || "/words", [searchParams]);
+  const nextPath = useMemo(
+    () => searchParams.get("next") || "/words",
+    [searchParams],
+  );
 
   const handleLogin = async (provider: OAuthProvider) => {
     setLoading(provider);
@@ -71,5 +74,13 @@ export default function LoginPage() {
         <div className="login-note">登录后将自动回到原页面。</div>
       </div>
     </div>
+  );
+};
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginContent />
+    </Suspense>
   );
 }
