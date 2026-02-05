@@ -24,16 +24,47 @@ const CallbackContent = () => {
       const accessToken = hashParams.get("access_token");
       const refreshToken = hashParams.get("refresh_token");
 
+      if (code && !hasPostedRef.current && isExtension) {
+        hasPostedRef.current = true;
+        const supabase = getBrowserSupabaseClient();
+        const { data, error: exchangeError } =
+          await supabase.auth.exchangeCodeForSession(code);
+        if (
+          exchangeError ||
+          !data.session?.access_token ||
+          !data.session?.refresh_token
+        ) {
+          setError(exchangeError?.message || "登录失败：无法获取会话。");
+          return;
+        }
+
+        window.postMessage(
+          {
+            type: "supabase_oauth_session",
+            session: {
+              access_token: data.session.access_token,
+              refresh_token: data.session.refresh_token,
+              expires_at: data.session.expires_at ?? null,
+              token_type: data.session.token_type,
+              user: {
+                id: data.session.user?.id || "",
+                email: data.session.user?.email ?? null,
+                user_metadata: data.session.user?.user_metadata ?? {},
+              },
+            },
+          },
+          window.location.origin,
+        );
+        setIsExtensionDone(true);
+        return;
+      }
+
       if (code && !hasPostedRef.current) {
         hasPostedRef.current = true;
         window.postMessage(
           { type: "supabase_oauth_code", code },
-          "https://www.parkgogogo.me",
+          window.location.origin,
         );
-        if (isExtension) {
-          setIsExtensionDone(true);
-          return;
-        }
       }
 
       if (!code && !accessToken) {
