@@ -9,8 +9,35 @@ const CallbackContent = () => {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isExtensionDone, setIsExtensionDone] = useState(false);
+  const [countdown, setCountdown] = useState(5);
   const hasPostedRef = useRef(false);
   const isExtension = searchParams.get("client") === "extension";
+
+  useEffect(() => {
+    if (!isExtension || !isExtensionDone || error) {
+      return;
+    }
+
+    let secondsLeft = 5;
+    setCountdown(secondsLeft);
+
+    const intervalId = window.setInterval(() => {
+      secondsLeft -= 1;
+      setCountdown(Math.max(secondsLeft, 0));
+      if (secondsLeft <= 0) {
+        window.clearInterval(intervalId);
+      }
+    }, 1000);
+
+    const closeTimerId = window.setTimeout(() => {
+      window.close();
+    }, 5000);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.clearTimeout(closeTimerId);
+    };
+  }, [error, isExtension, isExtensionDone]);
 
   useEffect(() => {
     const run = async () => {
@@ -93,19 +120,29 @@ const CallbackContent = () => {
     run().catch(() => setError("登录失败：未知错误。"));
   }, [isExtension, router, searchParams]);
 
+  const title = error ? "认证失败" : isExtension ? "认证完成" : "登录中";
   const subtitle = error
     ? "登录失败"
     : isExtension
       ? isExtensionDone
-        ? "已完成登录，请关闭此窗口返回插件。"
-        : "请稍候，正在完成登录…"
-      : "请稍候，即将进入词库…";
+        ? "可以立即关闭窗口返回插件"
+        : "认证处理中"
+      : "即将进入词库…";
 
   return (
     <div className="login-page">
       <div className="login-card">
-        <div className="login-title">正在完成登录</div>
+        <div className="login-title">{title}</div>
         <div className="login-subtitle">{subtitle}</div>
+        {isExtension && isExtensionDone && !error && (
+          <button
+            type="button"
+            onClick={() => window.close()}
+            className="login-button"
+          >
+            关闭窗口（{countdown}s）
+          </button>
+        )}
         {error && <div className="login-error">{error}</div>}
       </div>
     </div>
