@@ -749,6 +749,52 @@ body {
   font-size: 13px;
 }
 
+.callback-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 24px 16px;
+  text-align: center;
+  background: #f8f9fb;
+}
+
+.callback-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.callback-subtitle {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.callback-close-button {
+  margin-top: 8px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  color: #111827;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+  line-height: 1.2;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.callback-close-button:hover {
+  border-color: #9ca3af;
+  background: #f9fafb;
+}
+
+.callback-error {
+  margin-top: 6px;
+  color: #dc2626;
+  font-size: 13px;
+}
+
 /* Enhance existing animations */
 .animate-pulse {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;

@@ -130,21 +130,19 @@ const CallbackContent = () => {
       : "即将进入词库…";
 
   return (
-    <div className="login-page">
-      <div className="login-card">
-        <div className="login-title">{title}</div>
-        <div className="login-subtitle">{subtitle}</div>
-        {isExtension && isExtensionDone && !error && (
-          <button
-            type="button"
-            onClick={() => window.close()}
-            className="login-button"
-          >
-            关闭窗口（{countdown}s）
-          </button>
-        )}
-        {error && <div className="login-error">{error}</div>}
-      </div>
+    <div className="callback-page">
+      <div className="callback-title">{title}</div>
+      <div className="callback-subtitle">{subtitle}</div>
+      {isExtension && isExtensionDone && !error && (
+        <button
+          type="button"
+          onClick={() => window.close()}
+          className="callback-close-button"
+        >
+          关闭窗口（{countdown}s）
+        </button>
+      )}
+      {error && <div className="callback-error">{error}</div>}
     </div>
   );
 };
