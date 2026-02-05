@@ -16,6 +16,11 @@ const parseCookieHeader = (header: string | null) => {
 };
 
 export const getAccessTokenFromRequest = (request: Request) => {
+  const headerToken = request.headers
+    .get("authorization")
+    ?.replace(/^Bearer\s+/i, "")
+    .trim();
+  if (headerToken) return headerToken;
   const cookies = parseCookieHeader(request.headers.get("cookie"));
   return cookies.get(ACCESS_TOKEN_COOKIE) ?? null;
 };
