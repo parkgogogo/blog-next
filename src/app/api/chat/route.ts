@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { AI_TEXT_MODEL } from "@/lib/ai";
+import { AI_TEXT_BASE_URL, AI_TEXT_MODEL, AI_TEXT_TOKEN } from "@/lib/ai";
 import { enforceRateLimit, requireApiKey } from "@/lib/middleware/security";
 
 const resolveModel = (modelId?: string, fallback?: string) => {
@@ -33,12 +33,15 @@ export async function POST(request: NextRequest) {
     return rateLimit.response;
   }
 
-  const baseUrl = process.env.AI_BASE_URL;
-  const token = process.env.AI_TOKEN;
+  const baseUrl = AI_TEXT_BASE_URL;
+  const token = AI_TEXT_TOKEN;
 
   if (!baseUrl || !token) {
     return NextResponse.json(
-      { error: "AI_BASE_URL or AI_TOKEN is not configured" },
+      {
+        error:
+          "AI_TEXT_BASE_URL or AI_TEXT_TOKEN is not configured (or fallback AI_BASE_URL and AI_TOKEN)",
+      },
       { status: 500 },
     );
   }
