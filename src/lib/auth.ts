@@ -71,6 +71,56 @@ export const clearAuthCookies = (response: NextResponse) => {
   });
 };
 
+const decodeJwtExp = (token: string): number | null => {
+  const [, payload = ""] = token.split(".");
+  if (!payload) return null;
+  try {
+    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
+    const raw = atob(padded);
+    const parsed = JSON.parse(raw) as { exp?: number };
+    return typeof parsed.exp === "number" ? parsed.exp : null;
+  } catch {
+    return null;
+  }
+};
+
+export const shouldRefreshAccessToken = (
+  accessToken: string | null | undefined,
+  options?: { thresholdSeconds?: number },
+) => {
+  if (!accessToken) return true;
+  const exp = decodeJwtExp(accessToken);
+  if (!exp) return true;
+  const now = Math.floor(Date.now() / 1000);
+  const threshold = options?.thresholdSeconds ?? 15 * 60;
+  return exp - now <= threshold;
+};
+
+export const refreshAuthSession = async (refreshToken: string) => {
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase.auth.refreshSession({
+    refresh_token: refreshToken,
+  });
+
+  if (
+    error ||
+    !data.session?.access_token ||
+    !data.session?.refresh_token
+  ) {
+    return null;
+  }
+
+  return {
+    accessToken: data.session.access_token,
+    refreshToken: data.session.refresh_token,
+    expiresIn: data.session.expires_in ?? 60 * 60,
+    expiresAt: new Date(
+      Date.now() + (data.session.expires_in ?? 60 * 60) * 1000,
+    ).toISOString(),
+  };
+};
+
 export const getUserFromAccessToken = async (accessToken: string) => {
   const supabase = getSupabaseClient({ accessToken });
   const { data, error } = await supabase.auth.getUser(accessToken);
