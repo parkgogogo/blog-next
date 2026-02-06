@@ -51,16 +51,14 @@ const CallbackContent = () => {
       const accessToken = hashParams.get("access_token");
       const refreshToken = hashParams.get("refresh_token");
 
-      if (code && !hasPostedRef.current) {
+      if (isExtension && code && !hasPostedRef.current) {
         hasPostedRef.current = true;
         window.postMessage(
           { type: "supabase_oauth_code", code },
           window.location.origin,
         );
-        if (isExtension) {
-          setIsExtensionDone(true);
-          return;
-        }
+        setIsExtensionDone(true);
+        return;
       }
 
       if (!code && !accessToken) {
