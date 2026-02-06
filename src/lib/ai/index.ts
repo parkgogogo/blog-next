@@ -2,22 +2,33 @@ import { generateText } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
 import OpenAI from "openai";
 
-export const AI_TEXT_MODEL = "gemini-2.5-flash-lite";
-export const AI_SPEECH_MODEL = "gpt-4o-mini-tts";
+export const AI_TEXT_MODEL =
+  process.env.AI_TEXT_MODEL?.trim() || "gemini-2.5-flash-lite";
+export const AI_SPEECH_MODEL =
+  process.env.AI_SPEECH_MODEL?.trim() || "gpt-4o-mini-tts";
 export const AI_SPEECH_VOICE = "shimmer";
 export const AI_SPEECH_FORMAT = "wav";
+export const AI_TEXT_BASE_URL =
+  process.env.AI_TEXT_BASE_URL?.trim() || process.env.AI_BASE_URL?.trim() || "";
+export const AI_TEXT_TOKEN =
+  process.env.AI_TEXT_TOKEN?.trim() || process.env.AI_TOKEN?.trim() || "";
+export const AI_SPEECH_BASE_URL =
+  process.env.AI_SPEECH_BASE_URL?.trim() ||
+  process.env.AI_BASE_URL?.trim() ||
+  "";
+export const AI_SPEECH_TOKEN =
+  process.env.AI_SPEECH_TOKEN?.trim() || process.env.AI_TOKEN?.trim() || "";
 
 export const ai_generateSpeech = async (text: string) => {
-  const BASE_URL = process.env.AI_BASE_URL;
-  const TOKEN = process.env.AI_TOKEN;
-
-  if (!BASE_URL || !TOKEN) {
-    throw new Error("please configure AI_BASE_URL and AI_TOKEN");
+  if (!AI_SPEECH_BASE_URL || !AI_SPEECH_TOKEN) {
+    throw new Error(
+      "please configure AI_SPEECH_BASE_URL and AI_SPEECH_TOKEN (or fallback AI_BASE_URL and AI_TOKEN)",
+    );
   }
 
   const openai = new OpenAI({
-    baseURL: BASE_URL,
-    apiKey: TOKEN,
+    baseURL: AI_SPEECH_BASE_URL,
+    apiKey: AI_SPEECH_TOKEN,
   });
 
   const mp3 = await openai.audio.speech.create({
@@ -34,16 +45,15 @@ export const ai_generateText = async (options: {
   system: string;
   prompt: string;
 }) => {
-  const BASE_URL = process.env.AI_BASE_URL;
-  const TOKEN = process.env.AI_TOKEN;
-
-  if (!BASE_URL || !TOKEN) {
-    throw new Error("please configure AI_BASE_URL and AI_TOKEN");
+  if (!AI_TEXT_BASE_URL || !AI_TEXT_TOKEN) {
+    throw new Error(
+      "please configure AI_TEXT_BASE_URL and AI_TEXT_TOKEN (or fallback AI_BASE_URL and AI_TOKEN)",
+    );
   }
 
   const openai = createOpenAI({
-    baseURL: BASE_URL,
-    apiKey: TOKEN,
+    baseURL: AI_TEXT_BASE_URL,
+    apiKey: AI_TEXT_TOKEN,
   });
 
   const { text } = await Promise.race([
