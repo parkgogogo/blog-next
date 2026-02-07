@@ -10,7 +10,12 @@ Hard rules:
 1) Output JSON only. No markdown, no explanations.
 2) Use only words from the input word list.
 3) Card words must keep original spelling from input (case-insensitive matching is fine).
-4) Each card "words" length must be 1-3.
+4) Group words into cards with compression in mind:
+   - each card words length must be 1-3
+   - prefer 2-3 words per card when meanings are compatible
+   - use 1-word cards only when necessary
+   - avoid overly fragmented grouping because too many cards increase memorization complexity
+   - prioritize stronger semantic association within each card to improve recall links between words
 5) For each card, sentence length <= max_chars.
 6) For each card, sentence count <= max_sentences.
 7) Keep English natural, simple, and clear.
