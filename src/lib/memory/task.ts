@@ -1,5 +1,5 @@
 import { addDays, format } from "date-fns";
-import { ensureMemorySentence, groupMemoryWords } from "@/lib/memory/ai-service";
+import { generateMemoryCards } from "@/lib/memory/ai-service";
 import { getMemoryFeed, getMemorySettings } from "@/lib/memory";
 import { getSupabaseClient } from "@/lib/supabase";
 import { dailyTaskOptionsSchema } from "@/lib/schemas/memory";
@@ -13,7 +13,12 @@ type MemoryFeedItemLite = {
   fail_count: number | string;
 };
 
-type WordContextMap = Record<string, string>;
+type RawContextRecord = {
+  context_line: string;
+  source_text: string;
+  context: string;
+  created_at: string;
+};
 
 const isValidDateSlug = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value);
 
@@ -25,40 +30,6 @@ const resolveTaskDate = (input?: string) => {
 const resolveTodayDate = (input?: string) => {
   if (input && isValidDateSlug(input)) return input;
   return format(new Date(), "yyyy-MM-dd");
-};
-
-const buildCardPlan = async (
-  items: MemoryFeedItemLite[],
-  taskDate: string,
-  contextMap: WordContextMap,
-  force: boolean | undefined,
-) => {
-  if (items.length === 0) return [];
-
-  const words = items.map((item) => item.word_text).filter(Boolean);
-  const groups = await groupMemoryWords({
-    words,
-    taskDate,
-    contexts: contextMap,
-    force,
-  });
-
-  const lookup = new Map(
-    items.map((item) => [item.word_text.toLowerCase(), item]),
-  );
-
-  return groups.map((group) => {
-    const resolved = group
-      .map((word) => lookup.get(word.toLowerCase()))
-      .filter(Boolean) as MemoryFeedItemLite[];
-
-    const primary = resolved[0] ?? items[0];
-    const extras = resolved.slice(1, 4);
-    return {
-      primary,
-      extras,
-    };
-  });
 };
 
 export type DailyTaskResult = {
@@ -211,50 +182,56 @@ export const generateDailyTask = async (
     throw new Error(entriesError.message);
   }
 
-  const contextById = new Map<string, string>();
+  const contextsByWordId = new Map<string, RawContextRecord[]>();
   for (const entry of entries ?? []) {
     const wordId = entry.word_id as string;
-    if (contextById.has(wordId)) continue;
-    const contextLine =
-      (entry.context_line as string | null) ||
-      (entry.source_text as string | null) ||
-      (entry.context as string | null) ||
-      "";
-    contextById.set(wordId, contextLine.trim());
+    const list = contextsByWordId.get(wordId) ?? [];
+    list.push({
+      context_line: (entry.context_line as string | null) ?? "",
+      source_text: (entry.source_text as string | null) ?? "",
+      context: (entry.context as string | null) ?? "",
+      created_at: (entry.created_at as string | null) ?? "",
+    });
+    contextsByWordId.set(wordId, list);
   }
 
-  const contextMap: WordContextMap = {};
+  const contextMap: Record<string, RawContextRecord[]> = {};
   for (const item of feedItems) {
-    contextMap[item.word_text] = contextById.get(item.word_id) ?? "";
+    contextMap[item.word_text] = contextsByWordId.get(item.word_id) ?? [];
   }
 
-  const plan = await buildCardPlan(feedItems, taskDate, contextMap, force);
+  const plannedCards = await generateMemoryCards({
+    words: feedItems.map((item) => item.word_text).filter(Boolean),
+    maxChars,
+    maxSentences,
+    maxWordsPerCard: Math.min(3, maxExtraWords + 1),
+    taskDate,
+    contexts: contextMap,
+    force,
+  });
+  const itemByWord = new Map(
+    feedItems.map((item) => [item.word_text.toLowerCase(), item]),
+  );
   const cards: DailyTaskResult["cards"] = [];
 
-  for (const entry of plan) {
-    const extras = entry.extras.slice(0, maxExtraWords);
-    const words = [entry.primary.word_text, ...extras.map((extra) => extra.word_text)].filter(
-      Boolean,
-    );
-    const sentenceMax = words.length === 1 ? 1 : maxSentences;
-    const sentence = await ensureMemorySentence({
-      words,
-      maxChars,
-      maxSentences: sentenceMax,
-      taskDate,
-      contexts: Object.fromEntries(
-        words.map((word) => [word, contextMap[word] ?? ""]),
-      ),
-      force,
-    });
+  for (const planned of plannedCards) {
+    const resolved = planned.words
+      .map((word) => itemByWord.get(word.toLowerCase()))
+      .filter(Boolean) as MemoryFeedItemLite[];
+    if (resolved.length === 0) continue;
+
+    const primary = resolved[0];
+    const extras = resolved.slice(1, 3);
+    const words = [primary.word_text, ...extras.map((extra) => extra.word_text)];
+    const sentence = planned.sentence;
     const charCount = sentence.length;
-    const wordIds = [entry.primary.word_id, ...extras.map((extra) => extra.word_id)];
+    const wordIds = [primary.word_id, ...extras.map((extra) => extra.word_id)];
 
     const { data: cardRow, error: cardError } = await supabase
       .from("word_memory_cards")
       .insert({
         task_id: taskId,
-        primary_word_id: entry.primary.word_id,
+        primary_word_id: primary.word_id,
         extra_word_ids: extras.map((extra) => extra.word_id),
         sentence,
         word_count: words.length,
@@ -275,6 +252,10 @@ export const generateDailyTask = async (
       word_count: words.length,
       char_count: charCount,
     });
+  }
+
+  if (cards.length === 0) {
+    throw new Error("no_memory_cards");
   }
 
   const { data: finalTask, error: finalError } = await supabase

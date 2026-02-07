@@ -16,7 +16,8 @@ export type AIGenerationType =
   | "passage_translation"
   | "sentence_translation"
   | "memory_sentence"
-  | "memory_grouping";
+  | "memory_grouping"
+  | "memory_cards";
 
 const recordSchema = z.record(z.unknown());
 
