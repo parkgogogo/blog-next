@@ -21,6 +21,11 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
+  const payloadObject =
+    payload && typeof payload === "object"
+      ? (payload as Record<string, unknown>)
+      : {};
+  const streamRequested = payloadObject.stream === true;
 
   const parsedPayload = sentenceTranslationRequestSchema.safeParse(payload);
   if (!parsedPayload.success) {
@@ -30,7 +35,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (parsedPayload.data.stream) {
+  if (streamRequested) {
     const baseUrl = AI_TEXT_BASE_URL;
     const token = AI_TEXT_TOKEN;
 
