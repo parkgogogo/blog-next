@@ -65,6 +65,7 @@ export const sentenceTranslationRequestSchema = z
   .object({
     text: nonEmptyTrimmedStringSchema,
     force: optionalBooleanSchema,
+    stream: optionalBooleanSchema,
   })
   .passthrough();
 
