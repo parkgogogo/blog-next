@@ -261,9 +261,9 @@ export const generateDailyTask = async (
   const { data: finalTask, error: finalError } = await supabase
     .from("word_memory_daily_tasks")
     .update({
-      status: "completed",
+      status: "running",
       card_count: cards.length,
-      completed_at: new Date().toISOString(),
+      completed_at: null,
     })
     .eq("id", taskId)
     .select("*")

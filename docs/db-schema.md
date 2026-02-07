@@ -152,6 +152,13 @@ This document reflects the current public schema in Supabase for the multi-user 
   - card_count (int, default 0)
   - created_at (timestamptz, default now())
   - completed_at (timestamptz, nullable)
+- Status semantics:
+  - `pending`: reserved/initial state before generation starts.
+  - `running`: cards have been generated and the user is still doing/reviewing this daily task.
+  - `completed`: the user has finished the daily task flow for that date.
+- `completed_at` semantics:
+  - `null` means not finished yet (even if cards are already generated).
+  - non-null means the user actually completed that day's task flow.
 
 ### word_memory_cards
 - Purpose: AI-generated sentence cards for daily tasks (per user).
