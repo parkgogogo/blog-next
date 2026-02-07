@@ -20,7 +20,8 @@ const ensureAllowedModel = (model: string) => {
 };
 
 const buildUpstreamUrl = (baseUrl: string) => {
-  return new URL("/v1/chat/completions", baseUrl).toString();
+  const normalized = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
+  return new URL("chat/completions", normalized).toString();
 };
 
 export async function POST(request: NextRequest) {
