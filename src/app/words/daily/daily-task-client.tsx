@@ -1,6 +1,6 @@
 "use client";
 
-import { type MutableRefObject, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Languages, Volume2 } from "lucide-react";
 import { WordCardSheet } from "@/app/words/[slug]/components/word-card-sheet";
 import {
@@ -15,6 +15,7 @@ import {
   flushPendingMemoryEvents,
   type DailyMemoryEventPayload,
 } from "@/lib/memory/pending-events";
+import { MemoryAudioPreloader } from "@/lib/audio/memory-audio-preloader";
 
 type DailyTaskCard = {
   id: string;
@@ -110,6 +111,7 @@ export const DailyTaskClient = ({
   cards,
   wordContexts,
 }: DailyTaskClientProps) => {
+  const SENTENCE_AUDIO_LOADING_TIMEOUT_MS = 15000;
   const storageKey = `daily-task-state:${date}`;
   const [index, setIndex] = useState(0);
   const [phase, setPhase] = useState<"initial" | "review">("initial");
@@ -143,8 +145,10 @@ export const DailyTaskClient = ({
     useState(false);
   const sentenceAudioRef = useRef<HTMLAudioElement>(null);
   const sheetAudioRef = useRef<HTMLAudioElement>(null);
-  const sentenceAudioCacheRef = useRef<Map<string, HTMLAudioElement>>(new Map());
-  const wordAudioCacheRef = useRef<Map<string, HTMLAudioElement>>(new Map());
+  const audioPreloaderRef = useRef<MemoryAudioPreloader | null>(null);
+  const sentenceAudioLoadingTimerRef = useRef<number | null>(null);
+  const sentencePlaybackRequestIdRef = useRef(0);
+  const sheetAudioPlaybackRequestIdRef = useRef(0);
   const bundleCacheRef = useRef<BundleCache>({});
   const contextCacheRef = useRef<
     Record<string, { linesKey: string; translations: string[] }>
@@ -158,11 +162,13 @@ export const DailyTaskClient = ({
   const masteredCardsRef = useRef<Set<string>>(new Set());
   const currentVisitOpenedRef = useRef(false);
   const pendingSentenceAutoPlayRef = useRef(false);
+  const autoPlayRetryOnGestureRef = useRef(false);
   const sentencePlayRequestedRef = useRef(false);
   const navLockRef = useRef(false);
   const sheetRequestIdRef = useRef(0);
   const [pendingVersion, setPendingVersion] = useState(0);
   const [masteredVersion, setMasteredVersion] = useState(0);
+  const [, setAudioCacheVersion] = useState(0);
   const confettiPieces = useMemo(() => buildConfetti(), []);
   const timezone = useMemo(() => {
     try {
@@ -201,41 +207,127 @@ export const DailyTaskClient = ({
     return getSentenceAudioSrc(card, date);
   }, [card, date]);
 
-  const sheetAudioSrc = useMemo(() => {
-    if (!sheetWordText) return undefined;
-    return `/api/speech/${sheetWordText}`;
-  }, [sheetWordText]);
+  const sheetAudioSrc = sheetWordText
+    ? (audioPreloaderRef.current?.getPlayableSrc(`/api/speech/${sheetWordText}`) ??
+      `/api/speech/${sheetWordText}`)
+    : undefined;
 
-  const preloadAudio = useCallback((cache: MutableRefObject<Map<string, HTMLAudioElement>>, src?: string) => {
-    if (!src || cache.current.has(src)) return;
-    const audio = new Audio();
-    audio.preload = "auto";
-    audio.src = src;
-    audio.load();
-    cache.current.set(src, audio);
-  }, []);
+  const taskAudioSrcList = useMemo(() => {
+    const sentenceSrcList = cards
+      .map((taskCard) => getSentenceAudioSrc(taskCard, date))
+      .filter((src): src is string => Boolean(src));
+    const uniqueWordText = new Set<string>();
+    cards.forEach((taskCard) => {
+      taskCard.words.forEach((wordText) => {
+        if (!wordText) return;
+        uniqueWordText.add(wordText);
+      });
+    });
+    const wordSrcList = Array.from(uniqueWordText).map(
+      (wordText) => `/api/speech/${wordText}`,
+    );
+    return [...sentenceSrcList, ...wordSrcList];
+  }, [cards, date]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const preloader = new MemoryAudioPreloader({
+      concurrency: 3,
+      onReady: () => {
+        if (cancelled) return;
+        setAudioCacheVersion((value) => value + 1);
+      },
+    });
+    const previous = audioPreloaderRef.current;
+    previous?.dispose();
+    audioPreloaderRef.current = preloader;
+    preloader.registerMany(taskAudioSrcList);
+    setAudioCacheVersion((value) => value + 1);
+
+    const runPreload = () => {
+      void preloader.preloadMany(taskAudioSrcList);
+    };
+
+    const handle =
+      typeof requestIdleCallback === "function"
+        ? requestIdleCallback(runPreload)
+        : window.setTimeout(runPreload, 120);
+
+    return () => {
+      cancelled = true;
+      if (typeof cancelIdleCallback === "function") {
+        cancelIdleCallback(handle as number);
+      } else {
+        clearTimeout(handle as number);
+      }
+      if (audioPreloaderRef.current === preloader) {
+        audioPreloaderRef.current = null;
+      }
+      preloader.dispose();
+    };
+  }, [taskAudioSrcList]);
 
   const playSentenceAudio = useCallback(
-    (src?: string) => {
+    async (src?: string, options?: { waitForPreload?: boolean }) => {
       if (!src || !sentenceAudioRef.current) return;
       if (sentenceAudioStatus !== "idle") return;
-      sentencePlayRequestedRef.current = true;
+      const shouldWaitForPreload = options?.waitForPreload ?? true;
+      const requestId = sentencePlaybackRequestIdRef.current + 1;
+      sentencePlaybackRequestIdRef.current = requestId;
+      if (sentenceAudioLoadingTimerRef.current !== null) {
+        window.clearTimeout(sentenceAudioLoadingTimerRef.current);
+        sentenceAudioLoadingTimerRef.current = null;
+      }
       setSentenceAudioStatus("loading");
-      sentenceAudioRef.current.src = src;
+      let resolvedSrc: string | undefined;
+      if (shouldWaitForPreload) {
+        resolvedSrc =
+          (await audioPreloaderRef.current?.resolveForPlayback(src)) ?? src;
+      } else {
+        resolvedSrc = audioPreloaderRef.current?.getPlayableSrc(src) ?? src;
+      }
+      if (sentencePlaybackRequestIdRef.current !== requestId) return;
+      if (!sentenceAudioRef.current) {
+        setSentenceAudioStatus("idle");
+        return;
+      }
+      sentencePlayRequestedRef.current = true;
+      sentenceAudioLoadingTimerRef.current = window.setTimeout(() => {
+        sentencePlayRequestedRef.current = false;
+        setSentenceAudioStatus("idle");
+      }, SENTENCE_AUDIO_LOADING_TIMEOUT_MS);
+      sentenceAudioRef.current.src = resolvedSrc;
       const playResult = sentenceAudioRef.current.play();
       if (playResult && typeof playResult.catch === "function") {
-        playResult.catch(() => {
+        playResult.catch((error: unknown) => {
+          if (
+            options?.waitForPreload === false &&
+            error instanceof DOMException &&
+            error.name === "NotAllowedError"
+          ) {
+            autoPlayRetryOnGestureRef.current = true;
+          }
+          if (sentenceAudioLoadingTimerRef.current !== null) {
+            window.clearTimeout(sentenceAudioLoadingTimerRef.current);
+            sentenceAudioLoadingTimerRef.current = null;
+          }
           sentencePlayRequestedRef.current = false;
           setSentenceAudioStatus("idle");
         });
       }
     },
-    [sentenceAudioStatus],
+    [SENTENCE_AUDIO_LOADING_TIMEOUT_MS, sentenceAudioStatus],
   );
 
   useEffect(() => {
     currentVisitOpenedRef.current = false;
     pendingSentenceAutoPlayRef.current = true;
+    autoPlayRetryOnGestureRef.current = false;
+    sentencePlaybackRequestIdRef.current += 1;
+    if (sentenceAudioLoadingTimerRef.current !== null) {
+      window.clearTimeout(sentenceAudioLoadingTimerRef.current);
+      sentenceAudioLoadingTimerRef.current = null;
+    }
     sentencePlayRequestedRef.current = false;
     setSentenceAudioStatus("idle");
     setSentenceTranslationOpen(false);
@@ -243,12 +335,35 @@ export const DailyTaskClient = ({
   }, [currentCardIndex, phase]);
 
   useEffect(() => {
+    return () => {
+      if (sentenceAudioLoadingTimerRef.current !== null) {
+        window.clearTimeout(sentenceAudioLoadingTimerRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     if (!sentenceAudioSrc) return;
     if (!pendingSentenceAutoPlayRef.current) return;
     if (sentenceAudioStatus !== "idle") return;
     pendingSentenceAutoPlayRef.current = false;
-    playSentenceAudio(sentenceAudioSrc);
+    void playSentenceAudio(sentenceAudioSrc, { waitForPreload: false });
   }, [sentenceAudioSrc, sentenceAudioStatus, playSentenceAudio]);
+
+  useEffect(() => {
+    const retryOnGesture = () => {
+      if (!autoPlayRetryOnGestureRef.current) return;
+      if (!sentenceAudioSrc) return;
+      if (sentenceAudioStatus !== "idle") return;
+      autoPlayRetryOnGestureRef.current = false;
+      void playSentenceAudio(sentenceAudioSrc, { waitForPreload: false });
+    };
+
+    window.addEventListener("pointerdown", retryOnGesture, { passive: true });
+    return () => {
+      window.removeEventListener("pointerdown", retryOnGesture);
+    };
+  }, [playSentenceAudio, sentenceAudioSrc, sentenceAudioStatus]);
 
   useEffect(() => {
     flushPendingEvents();
@@ -562,9 +677,11 @@ export const DailyTaskClient = ({
           () => undefined,
         );
       }
-      preloadAudio(wordAudioCacheRef, `/api/speech/${wordText}`);
+      const audioSrc = `/api/speech/${wordText}`;
+      audioPreloaderRef.current?.register(audioSrc);
+      void audioPreloaderRef.current?.preload(audioSrc).catch(() => undefined);
     },
-    [loadBundle, loadContextTranslations, preloadAudio, wordContexts],
+    [loadBundle, loadContextTranslations, wordContexts],
   );
 
   useEffect(() => {
@@ -593,52 +710,6 @@ export const DailyTaskClient = ({
     };
   }, [card, prefetchWordData]);
 
-  useEffect(() => {
-    if (cards.length === 0) return;
-    const handle =
-      typeof requestIdleCallback === "function"
-        ? requestIdleCallback(() => {
-            cards.forEach((taskCard) => {
-              const src = getSentenceAudioSrc(taskCard, date);
-              preloadAudio(sentenceAudioCacheRef, src);
-            });
-            const uniqueWordTexts = new Set<string>();
-            cards.forEach((taskCard) => {
-              taskCard.words.forEach((wordText) => {
-                if (!wordText) return;
-                uniqueWordTexts.add(wordText);
-              });
-            });
-            uniqueWordTexts.forEach((wordText) => {
-              preloadAudio(wordAudioCacheRef, `/api/speech/${wordText}`);
-            });
-          })
-        : window.setTimeout(() => {
-            cards.forEach((taskCard) => {
-              const src = getSentenceAudioSrc(taskCard, date);
-              preloadAudio(sentenceAudioCacheRef, src);
-            });
-            const uniqueWordTexts = new Set<string>();
-            cards.forEach((taskCard) => {
-              taskCard.words.forEach((wordText) => {
-                if (!wordText) return;
-                uniqueWordTexts.add(wordText);
-              });
-            });
-            uniqueWordTexts.forEach((wordText) => {
-              preloadAudio(wordAudioCacheRef, `/api/speech/${wordText}`);
-            });
-          }, 120);
-
-    return () => {
-      if (typeof cancelIdleCallback === "function") {
-        cancelIdleCallback(handle as number);
-      } else {
-        clearTimeout(handle as number);
-      }
-    };
-  }, [cards, date, preloadAudio]);
-
   const handleOpenSheet = (wordId: string, wordText: string) => {
     if (isProcessing) return;
     flushPendingEvents();
@@ -651,11 +722,20 @@ export const DailyTaskClient = ({
 
     if (sheetAudioRef.current) {
       const nextAudioSrc = `/api/speech/${wordText}`;
-      sheetAudioRef.current.src = nextAudioSrc;
-      const playResult = sheetAudioRef.current.play();
-      if (playResult && typeof playResult.catch === "function") {
-        playResult.catch(() => undefined);
-      }
+      const playbackRequestId = sheetAudioPlaybackRequestIdRef.current + 1;
+      sheetAudioPlaybackRequestIdRef.current = playbackRequestId;
+      void (async () => {
+        const resolvedAudioSrc =
+          (await audioPreloaderRef.current?.resolveForPlayback(nextAudioSrc)) ??
+          nextAudioSrc;
+        if (sheetAudioPlaybackRequestIdRef.current !== playbackRequestId) return;
+        if (!sheetAudioRef.current) return;
+        sheetAudioRef.current.src = resolvedAudioSrc;
+        const playResult = sheetAudioRef.current.play();
+        if (playResult && typeof playResult.catch === "function") {
+          playResult.catch(() => undefined);
+        }
+      })();
     }
 
     const contextLines =
@@ -723,11 +803,15 @@ export const DailyTaskClient = ({
   };
 
   const handleCloseSheet = () => {
+    sheetAudioPlaybackRequestIdRef.current += 1;
+    if (sheetAudioRef.current) {
+      sheetAudioRef.current.pause();
+    }
     setSheetOpen(false);
   };
 
   const handlePlaySentence = () => {
-    playSentenceAudio(sentenceAudioSrc);
+    void playSentenceAudio(sentenceAudioSrc);
   };
 
   const handleToggleSentenceTranslation = async () => {
@@ -976,16 +1060,34 @@ export const DailyTaskClient = ({
             if (!sentencePlayRequestedRef.current) return;
             setSentenceAudioStatus("loading");
           }}
-          onPlaying={() => setSentenceAudioStatus("playing")}
+          onPlaying={() => {
+            if (sentenceAudioLoadingTimerRef.current !== null) {
+              window.clearTimeout(sentenceAudioLoadingTimerRef.current);
+              sentenceAudioLoadingTimerRef.current = null;
+            }
+            setSentenceAudioStatus("playing");
+          }}
           onEnded={() => {
+            if (sentenceAudioLoadingTimerRef.current !== null) {
+              window.clearTimeout(sentenceAudioLoadingTimerRef.current);
+              sentenceAudioLoadingTimerRef.current = null;
+            }
             sentencePlayRequestedRef.current = false;
             setSentenceAudioStatus("idle");
           }}
           onPause={() => {
+            if (sentenceAudioLoadingTimerRef.current !== null) {
+              window.clearTimeout(sentenceAudioLoadingTimerRef.current);
+              sentenceAudioLoadingTimerRef.current = null;
+            }
             sentencePlayRequestedRef.current = false;
             setSentenceAudioStatus("idle");
           }}
           onError={() => {
+            if (sentenceAudioLoadingTimerRef.current !== null) {
+              window.clearTimeout(sentenceAudioLoadingTimerRef.current);
+              sentenceAudioLoadingTimerRef.current = null;
+            }
             sentencePlayRequestedRef.current = false;
             setSentenceAudioStatus("idle");
           }}
