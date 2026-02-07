@@ -34,6 +34,7 @@ type WordContext = {
 
 interface DailyTaskClientProps {
   date: string;
+  initialCompleted: boolean;
   cards: DailyTaskCard[];
   wordContexts: Record<string, WordContext>;
 }
@@ -95,6 +96,7 @@ const buildConfetti = () =>
 
 export const DailyTaskClient = ({
   date,
+  initialCompleted,
   cards,
   wordContexts,
 }: DailyTaskClientProps) => {
@@ -104,7 +106,7 @@ export const DailyTaskClient = ({
   const [reviewQueue, setReviewQueue] = useState<string[]>([]);
   const [reviewCursor, setReviewCursor] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [completed, setCompleted] = useState(false);
+  const [completed, setCompleted] = useState(initialCompleted);
   const [reviewing, setReviewing] = useState(false);
   const [confettiActive, setConfettiActive] = useState(false);
   const [loopCount, setLoopCount] = useState(0);
@@ -229,7 +231,6 @@ export const DailyTaskClient = ({
         pendingReview?: string[];
         masteredCards?: string[];
         loopCount?: number;
-        completed?: boolean;
       };
       const validCardIds = new Set(cards.map((entry) => entry.id));
       const storedIndex = typeof parsed.index === "number" ? parsed.index : 0;
@@ -259,9 +260,6 @@ export const DailyTaskClient = ({
       setMasteredVersion((value) => value + 1);
       if (typeof parsed.loopCount === "number") {
         setLoopCount(Math.max(0, parsed.loopCount));
-      }
-      if (parsed.completed) {
-        setCompleted(true);
       }
     } catch {
       // Ignore corrupted storage.

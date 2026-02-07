@@ -23,6 +23,11 @@ type WordContext = {
 
 type LoadResult = {
   date: string;
+  task: {
+    id: string;
+    status: string;
+    completedAt: string | null;
+  };
   cards: DailyTaskCard[];
   wordContexts: Record<string, WordContext>;
 };
@@ -90,6 +95,7 @@ export const DailyTaskPageClient = () => {
   return (
     <DailyTaskClient
       date={result.date}
+      initialCompleted={result.task.status === "completed"}
       cards={result.cards}
       wordContexts={result.wordContexts}
     />
