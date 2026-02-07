@@ -1,9 +1,10 @@
-import { ai_generateText, AI_TEXT_MODEL } from "@/lib/ai";
+import { ai_generateObject, ai_generateText, AI_TEXT_MODEL } from "@/lib/ai";
 import {
   createInputHash,
   getCachedGeneration,
   saveGeneration,
 } from "@/lib/ai-cache";
+import { memoryCardsContentSchema } from "@/lib/schemas/memory";
 import { MEMORY_CARDS_PROMPT } from "@/lib/memory/constants";
 
 type RawContextRecord = {
@@ -16,6 +17,10 @@ type RawContextRecord = {
 type MemoryCardDraft = {
   words: string[];
   sentence: string;
+};
+
+type MemoryCardsContent = {
+  cards: MemoryCardDraft[];
 };
 
 const normalizeText = (value: string) => value.replace(/\s+/g, " ").trim();
@@ -48,6 +53,21 @@ const parseJSONFromModel = (raw: string) => {
     }
     throw new Error("invalid_memory_cards_json");
   }
+};
+
+const parseMemoryCardsContent = (raw: string): MemoryCardsContent => {
+  const parsed = parseJSONFromModel(raw);
+  const validated = memoryCardsContentSchema.safeParse(parsed);
+  if (!validated.success) {
+    throw new Error("invalid_memory_cards_json");
+  }
+
+  return {
+    cards: validated.data.cards.map((card) => ({
+      words: card.words,
+      sentence: card.sentence,
+    })),
+  };
 };
 
 const normalizeCards = (raw: unknown[], words: string[]) => {
@@ -107,29 +127,56 @@ export const generateMemoryCards = async (options: {
   if (!options.force) {
     const cached = await getCachedGeneration("memory_cards", inputHash);
     if (cached) {
-      const parsed = parseJSONFromModel(cached);
-      return normalizeCards(parsed.cards ?? [], options.words);
+      const parsed = parseMemoryCardsContent(cached);
+      return normalizeCards(parsed.cards, options.words);
     }
   }
 
-  const result = await ai_generateText({
-    system: MEMORY_CARDS_PROMPT,
-    prompt,
-  });
+  try {
+    const parsed = await ai_generateObject({
+      system: MEMORY_CARDS_PROMPT,
+      prompt,
+      schema: memoryCardsContentSchema,
+      schemaName: "memory_cards",
+      schemaDescription:
+        "Daily memory cards with 1-3 words per card and one sentence per card.",
+    });
 
-  await saveGeneration({
-    type: "memory_cards",
-    key,
-    inputHash,
-    content: result,
-    meta: {
-      words: options.words,
-      contexts: options.contexts,
-      model: AI_TEXT_MODEL,
-      taskDate: options.taskDate,
-    },
-  });
+    await saveGeneration({
+      type: "memory_cards",
+      key,
+      inputHash,
+      content: JSON.stringify(parsed),
+      meta: {
+        words: options.words,
+        contexts: options.contexts,
+        model: AI_TEXT_MODEL,
+        taskDate: options.taskDate,
+      },
+    });
 
-  const parsed = parseJSONFromModel(result);
-  return normalizeCards(parsed.cards ?? [], options.words);
+    return normalizeCards(parsed.cards, options.words);
+  } catch {
+    const result = await ai_generateText({
+      system: MEMORY_CARDS_PROMPT,
+      prompt,
+    });
+    const parsed = parseMemoryCardsContent(result);
+
+    await saveGeneration({
+      type: "memory_cards",
+      key,
+      inputHash,
+      content: result,
+      meta: {
+        words: options.words,
+        contexts: options.contexts,
+        model: AI_TEXT_MODEL,
+        taskDate: options.taskDate,
+        fallback: "text_parse",
+      },
+    });
+
+    return normalizeCards(parsed.cards, options.words);
+  }
 };

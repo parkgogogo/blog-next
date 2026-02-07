@@ -57,3 +57,16 @@ export const dailyTaskOptionsSchema = z
     maxSentences: optionalPositiveIntSchema,
   })
   .passthrough();
+
+export const memoryCardSchema = z
+  .object({
+    words: z.array(nonEmptyTrimmedStringSchema).min(1).max(3),
+    sentence: nonEmptyTrimmedStringSchema,
+  })
+  .passthrough();
+
+export const memoryCardsContentSchema = z
+  .object({
+    cards: z.array(memoryCardSchema).min(1),
+  })
+  .passthrough();

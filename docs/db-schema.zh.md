@@ -150,6 +150,13 @@
   - card_count (int, default 0)：生成的卡片数量。
   - created_at (timestamptz)
   - completed_at (timestamptz, nullable)
+- 状态语义：
+  - `pending`：保留/初始状态，表示任务尚未开始生成。
+  - `running`：卡片已生成，但用户仍在进行或复习该日任务。
+  - `completed`：用户已完成该日期的任务流程。
+- `completed_at` 语义：
+  - `null` 表示任务尚未完成（即使卡片已经生成）。
+  - 非空表示用户确实完成了当日任务流程。
 
 ### word_memory_cards（每日 AI 卡片）
 - 作用：AI 生成的高信息密度句子卡片（按用户隔离）。
