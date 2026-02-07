@@ -225,6 +225,11 @@ export const loadDailyTaskAction = async (date: string) => {
 
   return {
     date,
+    task: {
+      id: result.task.id,
+      status: result.task.status,
+      completedAt: result.task.completed_at,
+    },
     cards: result.cards.map((card) => ({
       ...card,
       speechToken: createSpeechToken({
