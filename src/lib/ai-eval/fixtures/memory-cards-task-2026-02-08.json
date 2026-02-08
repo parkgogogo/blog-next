@@ -1,0 +1,327 @@
+{
+  "task_date": "2026-02-08",
+  "source_generation_id": "493a41fa-c157-4299-8904-e083b5aa36c6",
+  "source_created_at": "2026-02-07T18:23:34.625385+00:00",
+  "max_chars": 160,
+  "max_sentences": 2,
+  "max_words_per_card": 3,
+  "words": [
+    "specialised",
+    "depression",
+    "therapy",
+    "symptoms",
+    "compromise",
+    "freelancing",
+    "demographic",
+    "drifts",
+    "retrospect",
+    "retrieved",
+    "repetitive",
+    "plausible",
+    "impressive",
+    "eager",
+    "idiosyncrasies",
+    "procrastinating",
+    "translucent",
+    "slightest",
+    "pandemic",
+    "cover",
+    "cumulative",
+    "largely",
+    "steerability",
+    "multiplexer",
+    "manner",
+    "mechanisms",
+    "occur",
+    "Resembling",
+    "ramblings",
+    "beefy",
+    "suboptimal",
+    "immunizations",
+    "heuristics",
+    "bewildered",
+    "Alternatively"
+  ],
+  "raw_contexts_by_word": {
+    "beefy": [
+      {
+        "context": "So you open Obsidian and begin drafting beefy spec docs that describe the feature in your head with impressive detail.",
+        "created_at": "2026-01-27T05:40:28.217884+00:00",
+        "source_text": "",
+        "context_line": "So you open Obsidian and begin drafting beefy spec docs that describe the feature in your head with impressive detail."
+      }
+    ],
+    "cover": [
+      {
+        "context": "It’s not until I opened up the full codebase and read its latest state cover to cover that I began to see what we theorized and hoped was only a diminishing artifact of earlier models: slop.",
+        "created_at": "2026-01-27T06:06:47.008614+00:00",
+        "source_text": "",
+        "context_line": "It’s not until I opened up the full codebase and read its latest state cover to cover that I began to see what we theorized and hoped was only a diminishing artifact of earlier models: slop."
+      }
+    ],
+    "eager": [
+      {
+        "context": "Opus on the other hand is much more eager - great for smaller edits - not so good for larger features or refactors, it often doesn’t read the whole file or misses parts and then delivers inefficient outcomes or misses sth.",
+        "created_at": "2026-01-28T10:00:16.143241+00:00",
+        "source_text": "",
+        "context_line": "Opus on the other hand is much more eager - great for smaller edits - not so good for larger features or refactors, it often doesn’t read the whole file or misses parts and then delivers inefficient outcomes or misses sth."
+      }
+    ],
+    "occur": [
+      {
+        "context": "Template compilation could occur before runtime — allowing errors to be caught earlier in the development lifecycle模板编译可以在运行时之前发生，从而可以在开发生命周期中更早地发现错误。",
+        "created_at": "2025-08-01T13:21:04.833+00:00",
+        "source_text": "",
+        "context_line": "Template compilation could occur before runtime — allowing errors to be caught earlier in the development lifecycle模板编译可以在运行时之前发生，从而可以在开发生命周期中更早地发现错误。"
+      }
+    ],
+    "drifts": [
+      {
+        "context": "Simpler than worktrees because drifts on main are easy to reconcile.",
+        "created_at": "2026-01-28T10:32:43.442813+00:00",
+        "source_text": "",
+        "context_line": "Simpler than worktrees because drifts on main are easy to reconcile."
+      }
+    ],
+    "manner": [
+      {
+        "context": "In real life, design docs and specs are living documents that evolve in a volatile manner through discovery and implementation.",
+        "created_at": "2026-01-27T05:51:23.491282+00:00",
+        "source_text": "",
+        "context_line": "In real life, design docs and specs are living documents that evolve in a volatile manner through discovery and implementation."
+      }
+    ],
+    "largely": [
+      {
+        "context": "Serious engineers using AI to do real work and not just weekend projects largely also follow a predictable development arc.",
+        "created_at": "2026-01-27T05:05:46.90063+00:00",
+        "source_text": "",
+        "context_line": "Serious engineers using AI to do real work and not just weekend projects largely also follow a predictable development arc."
+      }
+    ],
+    "therapy": [
+      {
+        "context": "I’ve been seeking therapy and slowly trying to learn about myself and symptoms as well as learning to manage my life with ADHD",
+        "created_at": "2026-01-29T18:18:22.969937+00:00",
+        "source_text": "",
+        "context_line": "I’ve been seeking therapy and slowly trying to learn about myself and symptoms as well as learning to manage my life with ADHD"
+      }
+    ],
+    "pandemic": [
+      {
+        "context": "Here comes the second pandemic",
+        "created_at": "2026-01-26T18:22:08.124135+00:00",
+        "source_text": "",
+        "context_line": "Here comes the second pandemic"
+      }
+    ],
+    "symptoms": [
+      {
+        "context": "Given that I’m 18, I want to dedicate myself to mange my symptoms before I grow further into adulthood.",
+        "created_at": "2026-01-29T18:15:25.627558+00:00",
+        "source_text": "",
+        "context_line": "Given that I’m 18, I want to dedicate myself to mange my symptoms before I grow further into adulthood."
+      }
+    ],
+    "plausible": [
+      {
+        "context": "What’s worse is code that agents write looks plausible and impressive while it’s being written and presented to you.",
+        "created_at": "2026-01-27T06:05:21.945387+00:00",
+        "source_text": "",
+        "context_line": "What’s worse is code that agents write looks plausible and impressive while it’s being written and presented to you."
+      }
+    ],
+    "ramblings": [
+      {
+        "context": "If you wanna hear more ramblings and ideas how to build in this new world, follow me on Twitter.",
+        "created_at": "2026-01-28T10:44:29.781104+00:00",
+        "source_text": "",
+        "context_line": "If you wanna hear more ramblings and ideas how to build in this new world, follow me on Twitter."
+      }
+    ],
+    "retrieved": [
+      {
+        "context": "manages sessions so answers can be retrieved later.",
+        "created_at": "2026-01-28T10:04:11.206958+00:00",
+        "source_text": "",
+        "context_line": "manages sessions so answers can be retrieved later."
+      }
+    ],
+    "slightest": [
+      {
+        "context": "Go wasn’t something I gave even the slightest thought even a few months ago, but eventually I played around and found that agents are really great at writing it, and its simple type system makes linting fast.",
+        "created_at": "2026-01-28T09:56:07.711873+00:00",
+        "source_text": "",
+        "context_line": "Go wasn’t something I gave even the slightest thought even a few months ago, but eventually I played around and found that agents are really great at writing it, and its simple type system makes linting fast."
+      }
+    ],
+    "Resembling": [
+      {
+        "context": "Resembling state over all points in time",
+        "created_at": "2025-08-01T13:27:54.201+00:00",
+        "source_text": "",
+        "context_line": "Resembling state over all points in time"
+      }
+    ],
+    "bewildered": [
+      {
+        "context": "It was pure, unadulterated slop. I was bewildered.",
+        "created_at": "2026-01-27T06:07:48.90272+00:00",
+        "source_text": "",
+        "context_line": "It was pure, unadulterated slop. I was bewildered."
+      }
+    ],
+    "compromise": [
+      {
+        "context": "The “you should have caught it anyway” is s face saving compromise that you should take.",
+        "created_at": "2026-01-29T04:57:45.727049+00:00",
+        "source_text": "",
+        "context_line": "The “you should have caught it anyway” is s face saving compromise that you should take."
+      }
+    ],
+    "cumulative": [
+      {
+        "context": "After reading months of cumulative highly-specified agentic code, I said to myself: I’m not shipping this shit.",
+        "created_at": "2026-01-27T06:12:35.844416+00:00",
+        "source_text": "",
+        "context_line": "After reading months of cumulative highly-specified agentic code, I said to myself: I’m not shipping this shit."
+      }
+    ],
+    "depression": [
+      {
+        "context": "Over the last few months, I was suffering from depression and have been trying my best to slowly manage my life.",
+        "created_at": "2026-01-29T18:18:07.366228+00:00",
+        "source_text": "",
+        "context_line": "Over the last few months, I was suffering from depression and have been trying my best to slowly manage my life."
+      }
+    ],
+    "heuristics": [
+      {
+        "context": "js' caching heuristics are determined by your API usage and have defaults for the best performance with zero or minimal configuration .",
+        "created_at": "2025-08-01T23:53:55.858+00:00",
+        "source_text": "",
+        "context_line": "js' caching heuristics are determined by your API usage and have defaults for the best performance with zero or minimal configuration ."
+      }
+    ],
+    "impressive": [
+      {
+        "context": "So you open Obsidian and begin drafting beefy spec docs that describe the feature in your head with impressive detail.",
+        "created_at": "2026-01-27T05:41:25.429656+00:00",
+        "source_text": "",
+        "context_line": "So you open Obsidian and begin drafting beefy spec docs that describe the feature in your head with impressive detail."
+      }
+    ],
+    "mechanisms": [
+      {
+        "context": "Here's a high-level overview of the different caching mechanisms and their purpose:",
+        "created_at": "2025-08-01T23:55:39.271+00:00",
+        "source_text": "",
+        "context_line": "Here's a high-level overview of the different caching mechanisms and their purpose:"
+      }
+    ],
+    "repetitive": [
+      {
+        "context": "I asked it to write everything into a markdown file and then did the query myself, and that felt like a repetitive waste of time",
+        "created_at": "2026-01-28T10:09:07.268265+00:00",
+        "source_text": "",
+        "context_line": "I asked it to write everything into a markdown file and then did the query myself, and that felt like a repetitive waste of time"
+      }
+    ],
+    "retrospect": [
+      {
+        "context": "In retrospect, it made sense.",
+        "created_at": "2026-01-27T06:08:43.042458+00:00",
+        "source_text": "",
+        "context_line": "In retrospect, it made sense."
+      }
+    ],
+    "suboptimal": [
+      {
+        "context": "Ofc I could do that in a worktree, but that would just cause lots of merge conflicts and suboptimal refactors.",
+        "created_at": "2026-01-28T19:01:02.059429+00:00",
+        "source_text": "",
+        "context_line": "Ofc I could do that in a worktree, but that would just cause lots of merge conflicts and suboptimal refactors."
+      }
+    ],
+    "demographic": [
+      {
+        "context": "Wondering what the general demographic of hhkb enjoyers does for work. I'd assume something that requires a lot of typing.",
+        "created_at": "2026-01-29T05:36:26.596893+00:00",
+        "source_text": "",
+        "context_line": "Wondering what the general demographic of hhkb enjoyers does for work. I'd assume something that requires a lot of typing."
+      }
+    ],
+    "freelancing": [
+      {
+        "context": "I know it sounds basic but stuff like freelancing or contract work might hit different since you're not stuck in the same routine forever.",
+        "created_at": "2026-01-29T18:12:45.567537+00:00",
+        "source_text": "",
+        "context_line": "I know it sounds basic but stuff like freelancing or contract work might hit different since you're not stuck in the same routine forever."
+      }
+    ],
+    "multiplexer": [
+      {
+        "context": "A terminal-multiplexer so you can code on-the-go.",
+        "created_at": "2026-01-28T10:14:11.122957+00:00",
+        "source_text": "",
+        "context_line": "A terminal-multiplexer so you can code on-the-go."
+      }
+    ],
+    "specialised": [
+      {
+        "context": "Doing a PhD in unemployment, specialised in depression🤘🏼",
+        "created_at": "2026-01-28T18:39:09.40138+00:00",
+        "source_text": "",
+        "context_line": "Doing a PhD in unemployment, specialised in depression🤘🏼"
+      }
+    ],
+    "translucent": [
+      {
+        "context": "a translucent material that reflects and refracts its surroundings, while dynamically transforming to help bring greater focus to content, delivering a new level of vitality across controls, navigation, app icons, widgets, and more.",
+        "created_at": "2026-01-26T18:53:05.892554+00:00",
+        "source_text": "",
+        "context_line": "a translucent material that reflects and refracts its surroundings, while dynamically transforming to help bring greater focus to content, delivering a new level of vitality across controls, navigation, app icons, widgets, and more."
+      }
+    ],
+    "steerability": [
+      {
+        "context": "I did experiment with real async agents like codex or Cursor web in the past, but I miss the steerability, and ultimately the work ends up as pull request, which again adds complexity to my setup.",
+        "created_at": "2026-01-28T10:34:27.661283+00:00",
+        "source_text": "",
+        "context_line": "I did experiment with real async agents like codex or Cursor web in the past, but I miss the steerability, and ultimately the work ends up as pull request, which again adds complexity to my setup."
+      }
+    ],
+    "Alternatively": [
+      {
+        "context": "Alternatively, add this configuration to ~/.codex/config.toml:",
+        "created_at": "2026-01-29T17:06:01.349304+00:00",
+        "source_text": "",
+        "context_line": "Alternatively, add this configuration to ~/.codex/config.toml:"
+      }
+    ],
+    "immunizations": [
+      {
+        "context": "Moderna Inc.'s CEO said the company doesn't plan to invest in new late-stage vaccine trials due to growing opposition to immunizations from US officials",
+        "created_at": "2026-01-26T18:36:57.605654+00:00",
+        "source_text": "",
+        "context_line": "Moderna Inc.'s CEO said the company doesn't plan to invest in new late-stage vaccine trials due to growing opposition to immunizations from US officials"
+      }
+    ],
+    "idiosyncrasies": [
+      {
+        "context": "Hell, it even picked up on the idiosyncrasies of the various characters.",
+        "created_at": "2026-01-27T06:11:35.743484+00:00",
+        "source_text": "",
+        "context_line": "Hell, it even picked up on the idiosyncrasies of the various characters."
+      }
+    ],
+    "procrastinating": [
+      {
+        "context": "and use the app massively for procrastinating lately.",
+        "created_at": "2026-01-26T18:16:39.773621+00:00",
+        "source_text": "",
+        "context_line": "and use the app massively for procrastinating lately."
+      }
+    ]
+  }
+}

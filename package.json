@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:memory": "vitest run src/lib/ai-eval/memory-cards/quality.test.ts",
+    "memory:prompt:eval": "node --experimental-strip-types --env-file=.env.local scripts/memory-prompt-eval.ts"
   },
   "dependencies": {
     "@ai-sdk/openai": "^2.0.89",
