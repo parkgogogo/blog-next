@@ -36,35 +36,50 @@ export const streamSseText = async ({
     onDelta?.(delta);
   };
 
+  const consumeEvent = (event: string) => {
+    const lines = event.split(/\r?\n/);
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed.startsWith("data:")) continue;
+      const data = trimmed.replace(/^data:\s*/, "");
+      onEventData?.(data);
+      if (data === "[DONE]") {
+        done = true;
+        break;
+      }
+      try {
+        const payload = JSON.parse(data) as StreamChunk;
+        const delta =
+          payload.choices?.[0]?.delta?.content ??
+          payload.choices?.[0]?.message?.content ??
+          payload.choices?.[0]?.text ??
+          "";
+        pushDelta(delta);
+      } catch {
+        continue;
+      }
+    }
+  };
+
   while (!done) {
     const { value, done: streamDone } = await reader.read();
     if (streamDone) break;
     buffer += decoder.decode(value, { stream: true });
-    const events = buffer.split("\n\n");
+    const events = buffer.split(/\r?\n\r?\n/);
     buffer = events.pop() ?? "";
     for (const event of events) {
-      const lines = event.split("\n");
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed.startsWith("data:")) continue;
-        const data = trimmed.replace(/^data:\s*/, "");
-        onEventData?.(data);
-        if (data === "[DONE]") {
-          done = true;
-          break;
-        }
-        try {
-          const payload = JSON.parse(data) as StreamChunk;
-          const delta =
-            payload.choices?.[0]?.delta?.content ??
-            payload.choices?.[0]?.message?.content ??
-            payload.choices?.[0]?.text ??
-            "";
-          pushDelta(delta);
-        } catch {
-          continue;
-        }
-      }
+      consumeEvent(event);
+      if (done) break;
+    }
+  }
+
+  buffer += decoder.decode();
+  if (!done && buffer.trim()) {
+    const trailingEvents = buffer
+      .split(/\r?\n\r?\n/)
+      .filter((event) => event.trim().length > 0);
+    for (const event of trailingEvents) {
+      consumeEvent(event);
       if (done) break;
     }
   }
