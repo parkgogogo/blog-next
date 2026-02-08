@@ -187,6 +187,12 @@ export const DailyTaskClient = ({
       : (cardIndexById.get(reviewQueue[reviewCursor] ?? "") ?? 0);
   const card = cards[currentCardIndex];
   const totalCards = cards.length;
+  const masteredCount = completed
+    ? totalCards
+    : Math.min(totalCards, masteredCardsRef.current.size);
+  const unmasteredCount = Math.max(0, totalCards - masteredCount);
+  const progressPercent =
+    totalCards > 0 ? Math.min(100, (masteredCount / totalCards) * 100) : 0;
   const isLast = index === totalCards - 1;
   const wordMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -855,21 +861,23 @@ export const DailyTaskClient = ({
 
   return (
     <div className="daily-page">
-      <div className="daily-progress">
+      <div
+        className="daily-progress"
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={totalCards}
+        aria-valuenow={masteredCount}
+        aria-valuetext={`已背 ${masteredCount}，未背 ${unmasteredCount}`}
+      >
         <div
           className="daily-progress-bar"
           style={{
-            width:
-              totalCards > 0
-                ? `${Math.min(
-                    100,
-                    ((completed ? totalCards : masteredCardsRef.current.size) /
-                      totalCards) *
-                      100,
-                  )}%`
-                : "0%",
+            width: `${progressPercent}%`,
           }}
         />
+        <div className="daily-progress-text" aria-hidden>
+          已背 {masteredCount} · 未背 {unmasteredCount}
+        </div>
       </div>
       <div className="daily-date">{date}</div>
       {confettiActive && (
