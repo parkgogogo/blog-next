@@ -66,13 +66,6 @@ export const translateContextLinesAction = async (payload: {
   return translations;
 };
 
-export const translateSentenceAction = async (payload: { sentence: string }) => {
-  await requireAuth();
-  const sentence = payload.sentence?.trim();
-  if (!sentence) return "";
-  return translateSentence(sentence);
-};
-
 const loadDailyTask = async (
   date: string,
   accessToken: string,
