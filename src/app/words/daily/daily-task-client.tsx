@@ -1010,9 +1010,8 @@ export const DailyTaskClient = ({
                 className="daily-sentence-translation daily-sentence-anim"
                 aria-live="polite"
               >
-                {sentenceTranslationLoading
-                  ? "翻译中..."
-                  : sentenceTranslation}
+                {sentenceTranslation ||
+                  (sentenceTranslationLoading ? "翻译中..." : "")}
               </div>
             )}
           </div>
