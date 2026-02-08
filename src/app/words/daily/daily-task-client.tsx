@@ -3,12 +3,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Languages, Volume2 } from "lucide-react";
 import { WordCardSheet } from "@/app/words/[slug]/components/word-card-sheet";
+import { streamSseText } from "@/lib/ai/streaming";
 import {
   completeDailyTaskAction,
   getDailyWordBundleAction,
   recordMemoryEventAction,
   translateContextLinesAction,
-  translateSentenceAction,
 } from "@/app/words/daily/actions";
 import {
   enqueuePendingMemoryEvent,
@@ -158,6 +158,8 @@ export const DailyTaskClient = ({
   >({});
   const contextInFlightRef = useRef<Record<string, Promise<string[]>>>({});
   const sentenceTranslationCacheRef = useRef<Record<string, string>>({});
+  const sentenceTranslationControllerRef = useRef<AbortController | null>(null);
+  const sentenceTranslationRequestIdRef = useRef(0);
   const pendingReviewRef = useRef<Set<string>>(new Set());
   const masteredCardsRef = useRef<Set<string>>(new Set());
   const currentVisitOpenedRef = useRef(false);
@@ -338,6 +340,10 @@ export const DailyTaskClient = ({
     setSentenceAudioStatus("idle");
     setSentenceTranslationOpen(false);
     setSentenceTranslationLoading(false);
+    setSentenceTranslation("");
+    sentenceTranslationControllerRef.current?.abort();
+    sentenceTranslationControllerRef.current = null;
+    sentenceTranslationRequestIdRef.current += 1;
   }, [currentCardIndex, phase]);
 
   useEffect(() => {
@@ -345,6 +351,7 @@ export const DailyTaskClient = ({
       if (sentenceAudioLoadingTimerRef.current !== null) {
         window.clearTimeout(sentenceAudioLoadingTimerRef.current);
       }
+      sentenceTranslationControllerRef.current?.abort();
     };
   }, []);
 
@@ -820,11 +827,41 @@ export const DailyTaskClient = ({
     void playSentenceAudio(sentenceAudioSrc);
   };
 
+  const streamSentenceTranslation = async (
+    sentence: string,
+    requestId: number,
+  ) => {
+    sentenceTranslationControllerRef.current?.abort();
+    const controller = new AbortController();
+    sentenceTranslationControllerRef.current = controller;
+    const response = await fetch("/api/words/translate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ text: sentence, stream: true }),
+      signal: controller.signal,
+    });
+    let assembled = "";
+    return streamSseText({
+      response,
+      onDelta: (delta) => {
+        assembled += delta;
+        if (sentenceTranslationRequestIdRef.current === requestId) {
+          setSentenceTranslation(assembled);
+        }
+      },
+    });
+  };
+
   const handleToggleSentenceTranslation = async () => {
-    if (!card || sentenceTranslationLoading) return;
+    if (!card) return;
     const cached = sentenceTranslationCacheRef.current[card.id];
     if (sentenceTranslationOpen) {
+      sentenceTranslationControllerRef.current?.abort();
+      sentenceTranslationControllerRef.current = null;
       setSentenceTranslationOpen(false);
+      setSentenceTranslationLoading(false);
       return;
     }
     if (cached) {
@@ -833,19 +870,31 @@ export const DailyTaskClient = ({
       return;
     }
     setSentenceTranslationOpen(true);
+    setSentenceTranslation("");
     setSentenceTranslationLoading(true);
+    const requestId = sentenceTranslationRequestIdRef.current + 1;
+    sentenceTranslationRequestIdRef.current = requestId;
     try {
-      const translation = await translateSentenceAction({
-        sentence: card.sentence,
-      });
+      const translation = await streamSentenceTranslation(
+        card.sentence,
+        requestId,
+      );
+      if (sentenceTranslationRequestIdRef.current !== requestId) return;
       const safeTranslation = translation?.trim() || "暂无翻译。";
       sentenceTranslationCacheRef.current[card.id] = safeTranslation;
       setSentenceTranslation(safeTranslation);
     } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        return;
+      }
       console.error(error);
-      setSentenceTranslation("翻译失败，请稍后再试。");
+      if (sentenceTranslationRequestIdRef.current === requestId) {
+        setSentenceTranslation("翻译失败，请稍后再试。");
+      }
     } finally {
-      setSentenceTranslationLoading(false);
+      if (sentenceTranslationRequestIdRef.current === requestId) {
+        setSentenceTranslationLoading(false);
+      }
     }
   };
 
