@@ -189,12 +189,59 @@ export const DailyTaskClient = ({
       : (cardIndexById.get(reviewQueue[reviewCursor] ?? "") ?? 0);
   const card = cards[currentCardIndex];
   const totalCards = cards.length;
-  const masteredCount = completed
-    ? totalCards
-    : Math.min(totalCards, masteredCardsRef.current.size);
-  const unmasteredCount = Math.max(0, totalCards - masteredCount);
-  const progressPercent =
+  const { masteredCount, learningCount, unmasteredCount } = (() => {
+    if (totalCards === 0) {
+      return {
+        masteredCount: 0,
+        learningCount: 0,
+        unmasteredCount: 0,
+      };
+    }
+
+    if (completed) {
+      return {
+        masteredCount: totalCards,
+        learningCount: 0,
+        unmasteredCount: 0,
+      };
+    }
+
+    const validCardIds = new Set(cards.map((entry) => entry.id));
+    const masteredIds = new Set(
+      Array.from(masteredCardsRef.current).filter((cardId) =>
+        validCardIds.has(cardId),
+      ),
+    );
+    const learningIds = new Set<string>();
+
+    pendingReviewRef.current.forEach((cardId) => {
+      if (!validCardIds.has(cardId) || masteredIds.has(cardId)) return;
+      learningIds.add(cardId);
+    });
+    reviewQueue.forEach((cardId) => {
+      if (!validCardIds.has(cardId) || masteredIds.has(cardId)) return;
+      learningIds.add(cardId);
+    });
+
+    const resolvedMasteredCount = Math.min(totalCards, masteredIds.size);
+    const resolvedLearningCount = Math.min(
+      totalCards - resolvedMasteredCount,
+      learningIds.size,
+    );
+
+    return {
+      masteredCount: resolvedMasteredCount,
+      learningCount: resolvedLearningCount,
+      unmasteredCount: Math.max(
+        0,
+        totalCards - resolvedMasteredCount - resolvedLearningCount,
+      ),
+    };
+  })();
+  const masteredPercent =
     totalCards > 0 ? Math.min(100, (masteredCount / totalCards) * 100) : 0;
+  const learningPercent =
+    totalCards > 0 ? Math.min(100, (learningCount / totalCards) * 100) : 0;
   const isLast = index === totalCards - 1;
   const wordMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -492,11 +539,11 @@ export const DailyTaskClient = ({
     void flushPendingMemoryEvents(recordMemoryEventAction);
   };
 
-  const processCard = async (cardIndex: number, openedThisVisit: boolean) => {
+  const processCard = (cardIndex: number, openedThisVisit: boolean) => {
     const target = cards[cardIndex];
     if (!target) return;
 
-    await Promise.all(
+    void Promise.all(
       target.word_ids.map((wordId) =>
         reportMemoryEvent({
           wordId,
@@ -508,11 +555,11 @@ export const DailyTaskClient = ({
 
     if (!openedThisVisit) {
       const cardId = target.id;
-      if (cardId) {
+      if (cardId && !masteredCardsRef.current.has(cardId)) {
         masteredCardsRef.current.add(cardId);
         setMasteredVersion((value) => value + 1);
       }
-      await Promise.all(
+      void Promise.all(
         target.word_ids.map((wordId) =>
           reportMemoryEvent({
             wordId,
@@ -526,7 +573,7 @@ export const DailyTaskClient = ({
 
   const reportCard = (cardIndex: number, openedThisVisit: boolean) => {
     flushPendingEvents();
-    void processCard(cardIndex, openedThisVisit).catch(() => undefined);
+    processCard(cardIndex, openedThisVisit);
   };
 
   const acquireNavLock = () => {
@@ -915,17 +962,26 @@ export const DailyTaskClient = ({
         role="progressbar"
         aria-valuemin={0}
         aria-valuemax={totalCards}
-        aria-valuenow={masteredCount}
-        aria-valuetext={`已背 ${masteredCount}，未背 ${unmasteredCount}`}
+        aria-valuenow={masteredCount + learningCount}
+        aria-valuetext={`已背 ${masteredCount}，学习中 ${learningCount}，未背 ${unmasteredCount}`}
       >
         <div
-          className="daily-progress-bar"
+          className="daily-progress-bar daily-progress-bar--mastered"
           style={{
-            width: `${progressPercent}%`,
+            width: `${masteredPercent}%`,
           }}
         />
+        {learningPercent > 0 && (
+          <div
+            className="daily-progress-bar daily-progress-bar--learning"
+            style={{
+              left: `${masteredPercent}%`,
+              width: `${learningPercent}%`,
+            }}
+          />
+        )}
         <div className="daily-progress-text" aria-hidden>
-          已背 {masteredCount} · 未背 {unmasteredCount}
+          已背 {masteredCount} · 学习中 {learningCount} · 未背 {unmasteredCount}
         </div>
       </div>
       <div className="daily-date">{date}</div>

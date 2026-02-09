@@ -68,7 +68,7 @@ export const DailyTaskPageClient = () => {
         <div className="daily-progress">
           <div className="daily-progress-bar" style={{ width: "0%" }} />
           <div className="daily-progress-text" aria-hidden>
-            已背 0 · 未背 0
+            已背 0 · 学习中 0 · 未背 0
           </div>
         </div>
         <div className="daily-date">{localDate}</div>
@@ -85,7 +85,7 @@ export const DailyTaskPageClient = () => {
         <div className="daily-progress">
           <div className="daily-progress-bar" style={{ width: "0%" }} />
           <div className="daily-progress-text" aria-hidden>
-            已背 0 · 未背 0
+            已背 0 · 学习中 0 · 未背 0
           </div>
         </div>
         <div className="daily-date">{localDate}</div>
