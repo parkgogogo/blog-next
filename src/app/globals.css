@@ -347,9 +347,18 @@ body {
   top: 0;
   bottom: 0;
   height: 100%;
-  background: var(--accent-warm);
-  transition: width 420ms ease;
+  transition:
+    width 180ms ease,
+    left 180ms ease;
   z-index: 0;
+}
+
+.daily-progress-bar--mastered {
+  background: var(--accent-warm);
+}
+
+.daily-progress-bar--learning {
+  background: color-mix(in srgb, var(--accent-warm) 55%, white);
 }
 
 .daily-progress-text {
