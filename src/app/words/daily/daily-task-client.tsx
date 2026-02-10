@@ -6,9 +6,7 @@ import { WordCardSheet } from "@/app/words/[slug]/components/word-card-sheet";
 import { streamSseText } from "@/lib/ai/streaming";
 import {
   completeDailyTaskAction,
-  getDailyWordBundleAction,
   recordMemoryEventAction,
-  translateContextLinesAction,
 } from "@/app/words/daily/actions";
 import {
   enqueuePendingMemoryEvent,
@@ -16,6 +14,7 @@ import {
   type DailyMemoryEventPayload,
 } from "@/lib/memory/pending-events";
 import { MemoryAudioPreloader } from "@/lib/audio/memory-audio-preloader";
+import { streamDailyWordCard } from "@/lib/words/card-sse-client";
 
 type DailyTaskCard = {
   id: string;
@@ -45,6 +44,7 @@ type BundleCache = Record<
   {
     brief: string;
     detail: string;
+    contextLines: string[];
   }
 >;
 
@@ -127,9 +127,6 @@ export const DailyTaskClient = ({
   const [sheetWordId, setSheetWordId] = useState<string | null>(null);
   const [sheetWordText, setSheetWordText] = useState("");
   const [sheetContextLines, setSheetContextLines] = useState<string[]>([]);
-  const [sheetContextTranslations, setSheetContextTranslations] = useState<
-    string[]
-  >([]);
   const [sheetContextLoading, setSheetContextLoading] = useState(false);
   const [sheetMode, setSheetMode] = useState<"brief" | "detail">("brief");
   const [sheetBrief, setSheetBrief] = useState("");
@@ -150,14 +147,13 @@ export const DailyTaskClient = ({
   const sentencePlaybackRequestIdRef = useRef(0);
   const sheetAudioPlaybackRequestIdRef = useRef(0);
   const bundleCacheRef = useRef<BundleCache>({});
-  const contextCacheRef = useRef<
-    Record<string, { linesKey: string; translations: string[] }>
+  const wordCardPreloadInFlightRef = useRef<
+    Partial<Record<string, Promise<void>>>
   >({});
-  const bundleInFlightRef = useRef<
-    Record<string, Promise<{ brief: string; detail: string }>>
-  >({});
-  const contextInFlightRef = useRef<Record<string, Promise<string[]>>>({});
   const sentenceTranslationCacheRef = useRef<Record<string, string>>({});
+  const sentenceTranslationPreloadInFlightRef = useRef<
+    Partial<Record<string, Promise<void>>>
+  >({});
   const sentenceTranslationControllerRef = useRef<AbortController | null>(null);
   const sentenceTranslationRequestIdRef = useRef(0);
   const pendingReviewRef = useRef<Set<string>>(new Set());
@@ -671,78 +667,116 @@ export const DailyTaskClient = ({
     setLoopNotice(null);
   };
 
-  const loadBundle = useCallback(
-    async (wordId: string, wordText: string, sourceText: string) => {
-      const cached = bundleCacheRef.current[wordId];
-      if (cached) return cached;
-
-      if (!bundleInFlightRef.current[wordId]) {
-        bundleInFlightRef.current[wordId] = getDailyWordBundleAction({
-          word: wordText,
-          sourceText,
-        })
-          .then((bundle) => ({
-            brief: bundle.brief ?? "",
-            detail: bundle.detail ?? "",
-          }))
-          .finally(() => {
-            delete bundleInFlightRef.current[wordId];
-          });
-      }
-
-      const resolved = await bundleInFlightRef.current[wordId];
-      bundleCacheRef.current[wordId] = resolved;
-      return resolved;
-    },
-    [],
-  );
-
-  const loadContextTranslations = useCallback(async (wordId: string, lines: string[]) => {
-    const linesKey = lines.join("\n");
-    const cacheKey = `${wordId}::${linesKey}`;
-    const cached = contextCacheRef.current[wordId];
-    if (cached && cached.linesKey === linesKey) {
-      return cached.translations;
-    }
-
-    if (!contextInFlightRef.current[cacheKey]) {
-      contextInFlightRef.current[cacheKey] = translateContextLinesAction({
-        lines,
-      })
-        .then((translations) => translations)
-        .finally(() => {
-          delete contextInFlightRef.current[cacheKey];
-        });
-    }
-
-    const translations = await contextInFlightRef.current[cacheKey];
-    contextCacheRef.current[wordId] = { linesKey, translations };
-    return translations;
-  }, []);
-
   const prefetchWordData = useCallback(
     (wordId: string, wordText: string) => {
       if (!wordId || !wordText) return;
-      if (bundleCacheRef.current[wordId]) return;
-      const contextLines =
-        wordContexts[wordId]?.contextLines?.map((line) => line.trim()) ?? [];
-      const cleanedContextLines = contextLines.filter(Boolean);
-      const primaryContextLine = cleanedContextLines[0]?.trim() || wordText;
-
-      void loadBundle(wordId, wordText, primaryContextLine).catch(
-        () => undefined,
-      );
-      if (cleanedContextLines.length > 0) {
-        void loadContextTranslations(wordId, cleanedContextLines).catch(
-          () => undefined,
-        );
-      }
       const audioSrc = `/api/speech/${wordText}`;
       audioPreloaderRef.current?.register(audioSrc);
       void audioPreloaderRef.current?.preload(audioSrc).catch(() => undefined);
     },
-    [loadBundle, loadContextTranslations, wordContexts],
+    [],
   );
+
+  const getFallbackContextLines = useCallback(
+    (wordId: string, wordText: string) => {
+      const contextLines =
+        wordContexts[wordId]?.contextLines?.map((line) => line.trim()) ?? [];
+      const cleanedContextLines = contextLines.filter(Boolean);
+      return cleanedContextLines.length > 0 ? cleanedContextLines : [wordText];
+    },
+    [wordContexts],
+  );
+
+  const preloadWordCardBundle = useCallback(
+    (wordId: string, wordText: string) => {
+      if (!wordId || !wordText) return;
+      if (bundleCacheRef.current[wordId]) return;
+      if (wordCardPreloadInFlightRef.current[wordId]) return;
+
+      let briefText = "";
+      let detailText = "";
+      let resolvedContextLines = getFallbackContextLines(wordId, wordText);
+
+      const applyMetaContextLines = (
+        meta: { primaryContext?: string; historyContexts?: string[] } | null,
+      ) => {
+        const merged = [meta?.primaryContext, ...(meta?.historyContexts ?? [])].filter(
+          (line): line is string =>
+            typeof line === "string" && line.trim().length > 0,
+        );
+        if (merged.length > 0) {
+          resolvedContextLines = merged;
+        }
+      };
+
+      const request = Promise.all([
+        streamDailyWordCard({
+          wordId,
+          mode: "brief",
+          onDelta: (delta) => {
+            briefText += delta;
+          },
+        }),
+        streamDailyWordCard({
+          wordId,
+          mode: "detail",
+          onDelta: (delta) => {
+            detailText += delta;
+          },
+        }),
+      ])
+        .then(([briefResult, detailResult]) => {
+          briefText = briefResult.content || briefText || "暂无内容";
+          detailText = detailResult.content || detailText || "暂无内容";
+          applyMetaContextLines(briefResult.meta);
+          applyMetaContextLines(detailResult.meta);
+          bundleCacheRef.current[wordId] = {
+            brief: briefText,
+            detail: detailText,
+            contextLines: resolvedContextLines,
+          };
+        })
+        .catch(() => undefined)
+        .finally(() => {
+          delete wordCardPreloadInFlightRef.current[wordId];
+        });
+
+      wordCardPreloadInFlightRef.current[wordId] = request;
+    },
+    [getFallbackContextLines],
+  );
+
+  const preloadSentenceTranslation = useCallback((targetCard: DailyTaskCard) => {
+    const cardId = targetCard.id;
+    if (!cardId) return;
+    if (sentenceTranslationCacheRef.current[cardId]) return;
+    if (sentenceTranslationPreloadInFlightRef.current[cardId]) return;
+
+    const request = (async () => {
+      const response = await fetch("/api/words/translate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ text: targetCard.sentence }),
+      });
+      if (!response.ok) {
+        throw new Error(`Translation preload failed: ${response.status}`);
+      }
+      const payload = (await response.json()) as { content?: unknown };
+      const content =
+        typeof payload.content === "string" ? payload.content.trim() : "";
+      if (content) {
+        sentenceTranslationCacheRef.current[cardId] = content;
+      }
+    })()
+      .catch(() => undefined)
+      .finally(() => {
+        delete sentenceTranslationPreloadInFlightRef.current[cardId];
+      });
+
+    sentenceTranslationPreloadInFlightRef.current[cardId] = request;
+  }, []);
 
   useEffect(() => {
     if (!card) return;
@@ -752,12 +786,14 @@ export const DailyTaskClient = ({
             card.word_ids.forEach((wordId, index) => {
               const wordText = card.words[index] || "";
               prefetchWordData(wordId, wordText);
+              preloadWordCardBundle(wordId, wordText);
             });
           })
         : window.setTimeout(() => {
             card.word_ids.forEach((wordId, index) => {
               const wordText = card.words[index] || "";
               prefetchWordData(wordId, wordText);
+              preloadWordCardBundle(wordId, wordText);
             });
           }, 100);
 
@@ -768,7 +804,27 @@ export const DailyTaskClient = ({
         clearTimeout(handle as number);
       }
     };
-  }, [card, prefetchWordData]);
+  }, [card, prefetchWordData, preloadWordCardBundle]);
+
+  useEffect(() => {
+    if (!card) return;
+    const handle =
+      typeof requestIdleCallback === "function"
+        ? requestIdleCallback(() => {
+            preloadSentenceTranslation(card);
+          })
+        : window.setTimeout(() => {
+            preloadSentenceTranslation(card);
+          }, 120);
+
+    return () => {
+      if (typeof cancelIdleCallback === "function") {
+        cancelIdleCallback(handle as number);
+      } else {
+        clearTimeout(handle as number);
+      }
+    };
+  }, [card, preloadSentenceTranslation]);
 
   const handleOpenSheet = (wordId: string, wordText: string) => {
     if (isProcessing) return;
@@ -798,13 +854,12 @@ export const DailyTaskClient = ({
       })();
     }
 
-    const contextLines =
-      wordContexts[wordId]?.contextLines?.map((line) => line.trim()) ?? [];
-    const cleanedContextLines = contextLines.filter(Boolean);
-    setSheetContextLines(cleanedContextLines);
-    setSheetContextTranslations([]);
-    setSheetContextLoading(cleanedContextLines.length > 0);
+    const fallbackContextLines = getFallbackContextLines(wordId, wordText);
+    setSheetContextLines(fallbackContextLines);
+    setSheetContextLoading(false);
     setSheetMode("brief");
+    setSheetBrief("");
+    setSheetDetail("");
     setSheetBriefLoading(true);
     setSheetDetailLoading(true);
 
@@ -818,48 +873,93 @@ export const DailyTaskClient = ({
     if (cached) {
       setSheetBrief(cached.brief);
       setSheetDetail(cached.detail);
+      if (cached.contextLines.length > 0) {
+        setSheetContextLines(cached.contextLines);
+      }
       setSheetBriefLoading(false);
       setSheetDetailLoading(false);
+      return;
     }
 
-    const primaryContextLine = cleanedContextLines[0]?.trim() || wordText;
+    let streamedBrief = "";
+    let streamedDetail = "";
+    let resolvedContextLines = fallbackContextLines;
 
-    if (cleanedContextLines.length > 0) {
-      void loadContextTranslations(wordId, cleanedContextLines)
-        .then((translations) => {
-          if (sheetRequestIdRef.current !== requestId) return;
-          setSheetContextTranslations(translations);
-        })
-        .catch(() => {
-          if (sheetRequestIdRef.current !== requestId) return;
-          setSheetContextTranslations([]);
-        })
-        .finally(() => {
-          if (sheetRequestIdRef.current !== requestId) return;
-          setSheetContextLoading(false);
-        });
-    } else {
-      setSheetContextLoading(false);
-    }
+    const applyMetaContextLines = (
+      meta: { primaryContext?: string; historyContexts?: string[] } | null,
+    ) => {
+      const merged = [meta?.primaryContext, ...(meta?.historyContexts ?? [])].filter(
+        (line): line is string => typeof line === "string" && line.trim().length > 0,
+      );
+      if (merged.length > 0) {
+        resolvedContextLines = merged;
+        if (sheetRequestIdRef.current === requestId) {
+          setSheetContextLines(merged);
+        }
+      }
+    };
 
-    if (!cached) {
-      void loadBundle(wordId, wordText, primaryContextLine)
-        .then((bundle) => {
-          if (sheetRequestIdRef.current !== requestId) return;
-          setSheetBrief(bundle.brief);
-          setSheetDetail(bundle.detail);
-        })
-        .catch(() => {
-          if (sheetRequestIdRef.current !== requestId) return;
-          setSheetBrief("请求失败");
-          setSheetDetail("请求失败");
-        })
-        .finally(() => {
-          if (sheetRequestIdRef.current !== requestId) return;
-          setSheetBriefLoading(false);
-          setSheetDetailLoading(false);
-        });
-    }
+    const syncBundleCache = () => {
+      bundleCacheRef.current[wordId] = {
+        brief: streamedBrief || "暂无内容",
+        detail: streamedDetail || "暂无内容",
+        contextLines: resolvedContextLines,
+      };
+    };
+
+    void streamDailyWordCard({
+      wordId,
+      mode: "brief",
+      onDelta: (delta) => {
+        streamedBrief += delta;
+        if (sheetRequestIdRef.current !== requestId) return;
+        setSheetBriefLoading(false);
+        setSheetBrief(streamedBrief);
+      },
+    })
+      .then((result) => {
+        streamedBrief = result.content || streamedBrief || "暂无内容";
+        applyMetaContextLines(result.meta);
+        if (sheetRequestIdRef.current !== requestId) return;
+        setSheetBrief(streamedBrief);
+      })
+      .catch(() => {
+        streamedBrief = "请求失败";
+        if (sheetRequestIdRef.current !== requestId) return;
+        setSheetBrief(streamedBrief);
+      })
+      .finally(() => {
+        if (sheetRequestIdRef.current !== requestId) return;
+        setSheetBriefLoading(false);
+        syncBundleCache();
+      });
+
+    void streamDailyWordCard({
+      wordId,
+      mode: "detail",
+      onDelta: (delta) => {
+        streamedDetail += delta;
+        if (sheetRequestIdRef.current !== requestId) return;
+        setSheetDetailLoading(false);
+        setSheetDetail(streamedDetail);
+      },
+    })
+      .then((result) => {
+        streamedDetail = result.content || streamedDetail || "暂无内容";
+        applyMetaContextLines(result.meta);
+        if (sheetRequestIdRef.current !== requestId) return;
+        setSheetDetail(streamedDetail);
+      })
+      .catch(() => {
+        streamedDetail = "请求失败";
+        if (sheetRequestIdRef.current !== requestId) return;
+        setSheetDetail(streamedDetail);
+      })
+      .finally(() => {
+        if (sheetRequestIdRef.current !== requestId) return;
+        setSheetDetailLoading(false);
+        syncBundleCache();
+      });
   };
 
   const handleCloseSheet = () => {
@@ -890,7 +990,8 @@ export const DailyTaskClient = ({
       signal: controller.signal,
     });
     let assembled = "";
-    return streamSseText({
+    let doneText = "";
+    const streamed = await streamSseText({
       response,
       onDelta: (delta) => {
         assembled += delta;
@@ -898,7 +999,19 @@ export const DailyTaskClient = ({
           setSentenceTranslation(assembled);
         }
       },
+      onEvent: ({ event, data }) => {
+        if (event !== "done") return;
+        try {
+          const payload = JSON.parse(data) as { text?: unknown };
+          if (typeof payload.text === "string") {
+            doneText = payload.text;
+          }
+        } catch {
+          // Ignore non-JSON done payload.
+        }
+      },
     });
+    return doneText.trim() || streamed.trim();
   };
 
   const handleToggleSentenceTranslation = async () => {
@@ -907,6 +1020,7 @@ export const DailyTaskClient = ({
     if (sentenceTranslationOpen) {
       sentenceTranslationControllerRef.current?.abort();
       sentenceTranslationControllerRef.current = null;
+      sentenceTranslationRequestIdRef.current += 1;
       setSentenceTranslationOpen(false);
       setSentenceTranslationLoading(false);
       return;
@@ -916,11 +1030,25 @@ export const DailyTaskClient = ({
       setSentenceTranslationOpen(true);
       return;
     }
+
+    const requestId = sentenceTranslationRequestIdRef.current + 1;
+    sentenceTranslationRequestIdRef.current = requestId;
     setSentenceTranslationOpen(true);
     setSentenceTranslation("");
     setSentenceTranslationLoading(true);
-    const requestId = sentenceTranslationRequestIdRef.current + 1;
-    sentenceTranslationRequestIdRef.current = requestId;
+
+    const preloadInFlight = sentenceTranslationPreloadInFlightRef.current[card.id];
+    if (preloadInFlight) {
+      await preloadInFlight;
+      if (sentenceTranslationRequestIdRef.current !== requestId) return;
+      const preloaded = sentenceTranslationCacheRef.current[card.id];
+      if (preloaded) {
+        setSentenceTranslation(preloaded);
+        setSentenceTranslationLoading(false);
+        return;
+      }
+    }
+
     try {
       const translation = await streamSentenceTranslation(
         card.sentence,
@@ -1138,10 +1266,7 @@ export const DailyTaskClient = ({
         open={sheetOpen}
         onClose={handleCloseSheet}
         wordText={sheetWordText}
-        contextLines={sheetContextLines.map((line, index) => ({
-          line,
-          translation: sheetContextTranslations[index],
-        }))}
+        contextLines={sheetContextLines.map((line) => ({ line }))}
         contextLoading={sheetContextLoading}
         activeMode={sheetMode}
         onModeChange={setSheetMode}

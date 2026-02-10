@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useRef } from "react";
 import { Volume2 } from "lucide-react";
-import Markdown from "react-markdown";
+import { WordCardMarkdown } from "@/app/words/[slug]/components/word-card-markdown";
 
 export type WordCardMode = "brief" | "detail";
 
@@ -40,8 +40,6 @@ const tabBaseClass =
 export const WordCardPanel = ({
   wordText,
   phon,
-  contextLine,
-  contextLoading = false,
   activeMode,
   onModeChange,
   brief,
@@ -58,14 +56,6 @@ export const WordCardPanel = ({
   const resolvedAudioSrc = audio?.src;
   const canPlayAudio = Boolean(resolvedAudioSrc);
 
-  const contextLines = useMemo(() => {
-    if (!contextLine) return [];
-    return contextLine
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .filter(Boolean);
-  }, [contextLine]);
-
   const handlePlay = () => {
     if (!canPlayAudio) return;
     audio?.onPlay?.();
@@ -76,20 +66,18 @@ export const WordCardPanel = ({
   };
 
   return (
-    <div className={`space-y-4 text-[color:var(--foreground)] ${className}`}>
-      <div className="sticky top-0 z-10 space-y-3 bg-[color:var(--background)]">
+    <div className={`word-card-shell ${className}`}>
+      <div className="word-card-top sticky top-0 z-10">
         {showTitle && (
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <h3 className="text-xl font-semibold text-foreground">
-                {wordText}
-              </h3>
+              <h3 className="word-card-title">{wordText}</h3>
               {canPlayAudio && (
                 <button
                   type="button"
                   onClick={handlePlay}
                   disabled={audio?.loading}
-                  className="inline-flex items-center text-foreground disabled:opacity-50"
+                  className="word-card-audio"
                   aria-label="Play pronunciation"
                 >
                   <Volume2 size={20} />
@@ -98,28 +86,9 @@ export const WordCardPanel = ({
             </div>
             {phon && (
               <div
-                className="text-sm text-[color:var(--text-muted)]"
+                className="word-card-phon"
                 dangerouslySetInnerHTML={{ __html: phon }}
               />
-            )}
-          </div>
-        )}
-
-        {(contextLoading || contextLines.length > 0) && (
-          <div className="markdown-body border-b border-dashed border-[color:var(--border-subtle)] pb-3">
-            {contextLoading ? (
-              <div className="text-sm text-[color:var(--text-muted)]">
-                上下文解析中…
-              </div>
-            ) : (
-              contextLines.map((line, index) => (
-                <div
-                  key={`${line}-${index}`}
-                  className="text-sm text-[color:var(--text-muted)]"
-                >
-                  <Markdown>{`> ${line}`}</Markdown>
-                </div>
-              ))
             )}
           </div>
         )}
@@ -152,15 +121,11 @@ export const WordCardPanel = ({
         </div>
       </div>
 
-      <div
-        className={`min-h-[88px] text-[color:var(--foreground)] ${contentPaddingClass}`}
-      >
+      <div className={`word-card-content min-h-[88px] ${contentPaddingClass}`}>
         {activeContent.loading ? (
-          <span className="text-sm text-[color:var(--text-muted)]">
-            生成中…
-          </span>
+          <span className="word-card-loading">生成中…</span>
         ) : (
-          <Markdown>{activeContent.content || ""}</Markdown>
+          <WordCardMarkdown content={activeContent.content} targetWord={wordText} />
         )}
       </div>
       {activeContent.onRegenerate && (
@@ -169,7 +134,7 @@ export const WordCardPanel = ({
             type="button"
             onClick={activeContent.onRegenerate}
             disabled={activeContent.loading}
-            className="text-xs uppercase tracking-[0.18em] story-muted-action disabled:opacity-50"
+            className="word-card-regenerate"
           >
             {activeContent.loading ? "GENERATING..." : "REGENERATE"}
           </button>

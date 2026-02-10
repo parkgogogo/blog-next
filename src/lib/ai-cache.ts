@@ -13,6 +13,8 @@ export type AIGenerationType =
   | "free_word_card"
   | "context_snippet"
   | "word_card_bundle"
+  | "word_card_plugin_v2"
+  | "word_card_daily_v2"
   | "passage_translation"
   | "sentence_translation"
   | "memory_sentence"
