@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ILuluWord } from "@/lib/words/types";
-import { Loader } from "lucide-react";
-import { getWordCardBundleAction } from "@/app/words/[slug]/actions";
+import { streamPluginWordCard } from "@/lib/words/card-sse-client";
 import {
   WordCardPanel,
   type WordCardMode,
@@ -14,7 +13,6 @@ const stripHtml = (text: string) =>
   text.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
 
 export const ContextLine: React.FC<{ word: ILuluWord }> = ({ word }) => {
-  const [loading, setLoading] = useState<boolean>(false);
   const [brief, setBrief] = useState<string>("");
   const [detail, setDetail] = useState<string>("");
   const [expand, setExpand] = useState<boolean>(false);
@@ -25,6 +23,7 @@ export const ContextLine: React.FC<{ word: ILuluWord }> = ({ word }) => {
   const [contextLine, setContextLine] = useState<string>("");
   const [contextLoading, setContextLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const requestIdRef = useRef(0);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 767px)");
@@ -39,25 +38,64 @@ export const ContextLine: React.FC<{ word: ILuluWord }> = ({ word }) => {
   };
 
   const requestBundle = async (options?: { force?: boolean }) => {
-    const sourceText = stripHtml(word.context.line) || word.word;
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
+    const sourceSentence = stripHtml(word.context.line) || word.word;
+    setExpand(true);
     setBriefLoading(true);
     setDetailLoading(true);
-    setContextLoading(true);
+    setContextLoading(false);
+    setContextLine(sourceSentence);
+    setBrief("");
+    setDetail("");
+
+    let briefText = "";
+    let detailText = "";
+
     try {
-      const result = await getWordCardBundleAction(word.uuid, sourceText, {
-        force: options?.force,
-      });
-      setContextLine(result.context || sourceText);
-      setBrief(result.brief);
-      setDetail(result.detail);
-      setExpand(true);
+      const [briefResult, detailResult] = await Promise.all([
+        streamPluginWordCard({
+          word: word.uuid,
+          sourceSentence,
+          mode: "brief",
+          force: options?.force,
+          onDelta: (delta) => {
+            briefText += delta;
+            if (requestIdRef.current !== requestId) return;
+            setBriefLoading(false);
+            setBrief(briefText);
+          },
+        }),
+        streamPluginWordCard({
+          word: word.uuid,
+          sourceSentence,
+          mode: "detail",
+          force: options?.force,
+          onDelta: (delta) => {
+            detailText += delta;
+            if (requestIdRef.current !== requestId) return;
+            setDetailLoading(false);
+            setDetail(detailText);
+          },
+        }),
+      ]);
+
+      if (requestIdRef.current !== requestId) return;
+      const resolvedContext =
+        briefResult.meta?.primaryContext ||
+        detailResult.meta?.primaryContext ||
+        sourceSentence;
+      setContextLine(resolvedContext);
+      setBrief(briefResult.content || briefText || "暂无内容");
+      setDetail(detailResult.content || detailText || "暂无内容");
     } catch {
+      if (requestIdRef.current !== requestId) return;
       setBrief("请求失败");
       setDetail("请求失败");
     } finally {
+      if (requestIdRef.current !== requestId) return;
       setBriefLoading(false);
       setDetailLoading(false);
-      setContextLoading(false);
     }
   };
 
@@ -66,13 +104,8 @@ export const ContextLine: React.FC<{ word: ILuluWord }> = ({ word }) => {
       setExpand((current) => !current);
       return;
     }
-    setLoading(true);
     setActiveMode("brief");
-    try {
-      await requestBundle();
-    } finally {
-      setLoading(false);
-    }
+    await requestBundle();
   };
 
   const handleRegenerate = async () => {
@@ -96,14 +129,11 @@ export const ContextLine: React.FC<{ word: ILuluWord }> = ({ word }) => {
           dangerouslySetInnerHTML={{ __html: word.context.line }}
         />
       </div>
-      {loading && (
-        <Loader className="animate-spin mt-2 text-blue-500" size={16}></Loader>
-      )}
       <div>
-        {!loading && (detail || brief) && expand && (
+        {expand && (
           <>
             {!isMobile && (
-              <div className="mt-5 text-gray-500 space-y-3">
+              <div className="mt-5 space-y-3">
                 <WordCardPanel
                   wordText={word.uuid}
                   contextLine={contextLine}
@@ -113,17 +143,13 @@ export const ContextLine: React.FC<{ word: ILuluWord }> = ({ word }) => {
                   brief={{
                     label: "简解",
                     content: brief,
-                    loading:
-                      briefLoading ||
-                      (activeMode === "brief" && (loading || regenerating)),
+                    loading: briefLoading || (activeMode === "brief" && regenerating),
                     onRegenerate: handleRegenerate,
                   }}
                   detail={{
                     label: "详解",
                     content: detail,
-                    loading:
-                      detailLoading ||
-                      (activeMode === "detail" && (loading || regenerating)),
+                    loading: detailLoading || (activeMode === "detail" && regenerating),
                     onRegenerate: handleRegenerate,
                   }}
                   showTitle={false}

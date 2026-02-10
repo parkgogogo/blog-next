@@ -1,14 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { AI_TEXT_BASE_URL, AI_TEXT_MODEL, AI_TEXT_TOKEN } from "@/lib/ai";
+import { ai_streamText } from "@/lib/ai";
+import { streamSseText } from "@/lib/ai/streaming";
 import { enforceRateLimit, requireSupabaseAuth } from "@/lib/middleware/security";
+import { sentenceTranslationRequestSchema } from "@/lib/schemas/words";
+import { createSseResponse } from "@/lib/sse/server";
 import { SENTENCE_TRANSLATE_PROMPT } from "@/lib/words/constants";
 import { translateSentence } from "@/lib/words/ai-service";
-import { sentenceTranslationRequestSchema } from "@/lib/schemas/words";
-
-const buildUpstreamUrl = (baseUrl: string) => {
-  const normalized = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
-  return new URL("chat/completions", normalized).toString();
-};
 
 export async function POST(request: NextRequest) {
   const auth = await requireSupabaseAuth(request);
@@ -31,10 +28,6 @@ export async function POST(request: NextRequest) {
       ? (payload as Record<string, unknown>)
       : {};
   const streamRequested = payloadObject.stream === true;
-  console.log("[words/translate] request mode", {
-    streamRequested,
-    hasText: typeof payloadObject.text === "string" && payloadObject.text.length > 0,
-  });
 
   const parsedPayload = sentenceTranslationRequestSchema.safeParse(payload);
   if (!parsedPayload.success) {
@@ -45,75 +38,29 @@ export async function POST(request: NextRequest) {
   }
 
   if (streamRequested) {
-    const baseUrl = AI_TEXT_BASE_URL;
-    const token = AI_TEXT_TOKEN;
+    return createSseResponse({
+      signal: request.signal,
+      handler: async (writer) => {
+        writer.meta({
+          type: "sentence_translation",
+        });
 
-    if (!baseUrl || !token) {
-      return NextResponse.json(
-        {
-          error:
-            "AI_TEXT_BASE_URL or AI_TEXT_TOKEN is not configured (or fallback AI_BASE_URL and AI_TOKEN)",
-        },
-        { status: 500 },
-      );
-    }
+        const upstream = await ai_streamText({
+          system: SENTENCE_TRANSLATE_PROMPT,
+          prompt: `sentence: ${parsedPayload.data.text}`,
+          signal: request.signal,
+        });
 
-    const upstream = await fetch(buildUpstreamUrl(baseUrl), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "text/event-stream",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        model: AI_TEXT_MODEL,
-        stream: true,
-        messages: [
-          { role: "system", content: SENTENCE_TRANSLATE_PROMPT },
-          {
-            role: "user",
-            content: `sentence: ${parsedPayload.data.text}`,
+        const text = await streamSseText({
+          response: upstream,
+          onDelta: (delta) => {
+            writer.chunk({ delta });
           },
-        ],
-      }),
-    });
+        });
 
-    if (!upstream.ok) {
-      const errorText = await upstream.text();
-      return new NextResponse(errorText, {
-        status: upstream.status,
-        headers: {
-          "Content-Type": upstream.headers.get("content-type") || "text/plain",
-        },
-      });
-    }
-    const upstreamContentType = upstream.headers.get("content-type") || "";
-    if (!upstreamContentType.includes("text/event-stream")) {
-      const body = await upstream.text();
-      console.log("[words/translate] upstream returned non-stream body", {
-        contentType: upstreamContentType,
-        preview: body.slice(0, 300),
-      });
-      return NextResponse.json(
-        {
-          error: "Upstream did not return event-stream",
-          contentType: upstreamContentType,
-        },
-        { status: 502 },
-      );
-    }
-    console.log("[words/translate] upstream stream ready", {
-      status: upstream.status,
-      contentType: upstreamContentType,
-    });
-
-    return new Response(upstream.body, {
-      status: upstream.status,
-      headers: {
-        "Content-Type": "text/event-stream; charset=utf-8",
-        "Cache-Control": "no-cache, no-transform",
-        Connection: "keep-alive",
-        "X-Accel-Buffering": "no",
+        writer.done({
+          text,
+        });
       },
     });
   }

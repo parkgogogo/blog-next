@@ -87,6 +87,29 @@ export const wordCardBundleRequestSchema = z
   })
   .passthrough();
 
+export const wordCardModeSchema = z.enum(["brief", "detail"]);
+
+export const wordCardPluginV2RequestSchema = z
+  .object({
+    word: nonEmptyTrimmedStringSchema,
+    sourceSentence: nonEmptyTrimmedStringSchema,
+    mode: wordCardModeSchema,
+    stream: optionalBooleanSchema,
+    maxChars: optionalFiniteNumberSchema,
+    force: optionalBooleanSchema,
+  })
+  .passthrough();
+
+export const wordCardDailyV2RequestSchema = z
+  .object({
+    wordId: nonEmptyTrimmedStringSchema,
+    mode: wordCardModeSchema,
+    stream: optionalBooleanSchema,
+    maxChars: optionalFiniteNumberSchema,
+    force: optionalBooleanSchema,
+  })
+  .passthrough();
+
 export const addWordEntryRequestSchema = z
   .object({
     word: nonEmptyTrimmedStringSchema,

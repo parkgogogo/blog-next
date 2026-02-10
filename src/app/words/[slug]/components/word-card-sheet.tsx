@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useRef } from "react";
 import { Volume2, X } from "lucide-react";
 import { MobileSheet } from "@/components/MobileSheet";
-import Markdown from "react-markdown";
 import { type WordCardMode } from "@/app/words/[slug]/components/word-card-panel";
+import { WordCardMarkdown } from "@/app/words/[slug]/components/word-card-markdown";
 
 const tabBaseClass =
   "px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.2em] rounded-full transition";
@@ -46,9 +46,6 @@ export const WordCardSheet = ({
   onClose,
   wordText,
   phon,
-  contextLine,
-  contextLines,
-  contextLoading = false,
   activeMode,
   onModeChange,
   brief,
@@ -64,14 +61,6 @@ export const WordCardSheet = ({
   const resolvedAudioSrc = audio?.src;
   const canPlayAudio = Boolean(resolvedAudioSrc);
   const previousOpenRef = useRef(open);
-  const resolvedContextLines =
-    contextLines && contextLines.length > 0
-      ? contextLines
-      : contextLine
-        ? [{ line: contextLine }]
-        : [];
-  const contextListLoading =
-    contextLoading && resolvedContextLines.length === 0;
 
   const handlePlay = useCallback(() => {
     if (!canPlayAudio) return;
@@ -102,12 +91,13 @@ export const WordCardSheet = ({
       onClose={onClose}
       ariaLabel="Close word card"
       panelClassName="story-card"
+      heightClassName="h-[45vh]"
       bodyClassName="px-5 pb-6 pt-4 text-[color:var(--foreground)] scrollbar-hide"
       header={
-        <div className="space-y-3">
-          <div className="flex items-start justify-between gap-3">
+        <div className="word-card-top">
+          <div className="flex items-center justify-between gap-3 mb-2 pl-2">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm font-semibold tracking-wide text-[color:var(--text-muted)]">
+              <span className="word-card-title word-card-title--compact">
                 {wordText}
               </span>
               {canPlayAudio && (
@@ -115,7 +105,7 @@ export const WordCardSheet = ({
                   type="button"
                   onClick={handlePlay}
                   disabled={audio?.loading}
-                  className="inline-flex items-center text-[color:var(--text-muted)] hover:text-[color:var(--foreground)] disabled:opacity-50"
+                  className="word-card-audio"
                   aria-label="Play pronunciation"
                 >
                   <Volume2 size={14} />
@@ -126,18 +116,18 @@ export const WordCardSheet = ({
               type="button"
               aria-label="Close"
               onClick={onClose}
-              className="text-[color:var(--text-muted)] hover:text-[color:var(--foreground)]"
+              className="word-card-close"
             >
               <X size={18} />
             </button>
           </div>
           {phon && (
             <div
-              className="text-xs text-[color:var(--text-muted)]"
+              className="word-card-phon"
               dangerouslySetInnerHTML={{ __html: phon }}
             />
           )}
-          <div className="inline-flex items-center gap-1 rounded-full border border-[color:var(--border-subtle)] p-1 text-[color:var(--text-muted)]">
+          <div className="inline-flex items-center gap-1 rounded-full border border-[color:var(--border-subtle)] p-1 text-[color:var(--text-muted)] w-fit">
             <button
               type="button"
               onClick={() => briefAvailable && onModeChange("brief")}
@@ -171,59 +161,22 @@ export const WordCardSheet = ({
             type="button"
             onClick={activeContent.onRegenerate}
             disabled={activeContent.loading}
-            className="text-xs uppercase tracking-[0.18em] story-muted-action disabled:opacity-50"
+            className="word-card-regenerate"
           >
             {activeContent.loading ? "GENERATING..." : "REGENERATE"}
           </button>
         ) : null
       }
     >
-      <div className="min-h-[160px] space-y-6 text-[color:var(--foreground)]">
-        <section className="word-sheet-section">
-          <div className="word-sheet-section-title">词义</div>
-          <div className="word-sheet-section-body">
-            {activeContent.loading ? (
-              <span className="text-sm text-[color:var(--text-muted)]">
-                生成中…
-              </span>
-            ) : (
-              <Markdown>{activeContent.content || ""}</Markdown>
-            )}
-          </div>
-        </section>
-        <section className="word-sheet-section">
-          <div className="word-sheet-section-title">
-            语境记录
-            {resolvedContextLines.length > 0
-              ? ` (${resolvedContextLines.length})`
-              : ""}
-          </div>
-          {resolvedContextLines.length === 0 ? (
-            <div className="text-sm text-[color:var(--text-muted)]">
-              {contextListLoading ? "语境解析中…" : "暂无语境记录"}
-            </div>
-          ) : (
-            <div className="word-sheet-context-list">
-              {resolvedContextLines.map((item, index) => (
-                <div
-                  key={`${item.line}-${index}`}
-                  className="word-sheet-context-item"
-                >
-                  <div className="word-sheet-context-line">{item.line}</div>
-                  {item.translation ? (
-                    <div className="word-sheet-context-translation">
-                      {item.translation}
-                    </div>
-                  ) : contextLoading ? (
-                    <div className="word-sheet-context-translation word-sheet-context-translation--loading">
-                      翻译中…
-                    </div>
-                  ) : null}
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
+      <div className="word-card-content min-h-[160px]">
+        {activeContent.loading ? (
+          <span className="word-card-loading">生成中…</span>
+        ) : (
+          <WordCardMarkdown
+            content={activeContent.content}
+            targetWord={wordText}
+          />
+        )}
       </div>
       {canPlayAudio && <audio ref={audioRef} src={resolvedAudioSrc} />}
     </MobileSheet>
