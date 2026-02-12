@@ -143,7 +143,11 @@
     width: 100%;
     height: auto;
     display: block;
-    --bg: transparent !important;
+
+    /* beautiful-mermaid themes rely on --bg for color-mix derivations.
+       Forcing transparent here makes node fills/edges look washed out.
+       Use the page background for consistent contrast. */
+    --bg: var(--background) !important;
     --fg: #27272a !important;
     --line: #52525b !important;
     --accent: #2563eb !important;
@@ -233,7 +237,7 @@
 
     .mermaid-diagram svg,
     .mermaid-lightbox-content svg {
-      --bg: transparent !important;
+      --bg: var(--background) !important;
       --fg: #e4e4e7 !important;
       --line: #a1a1aa !important;
       --accent: #93c5fd !important;

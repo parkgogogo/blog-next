@@ -132,7 +132,9 @@ export default async function MarkdownRenderer({
                 const svg = await renderMermaid(normalizedMermaidText, {
                   ...THEMES["zinc-light"],
                   font: "Inter",
-                  transparent: true,
+                  // Keep theme background so node fills/lines have stable contrast.
+                  // A transparent bg breaks some color-mix derivations.
+                  transparent: false,
                 });
                 return <MermaidZoomable svg={svg} />;
               } catch {
