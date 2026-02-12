@@ -33,7 +33,7 @@ export default async function BlogPostPage({
       currentSlug={slug}
       content={post.content}
     >
-      <div className="max-w-4xl mx-auto px-6 md:px-8 py-6">
+      <div className="max-w-4xl mx-auto px-6 md:px-8 pt-6 pb-14 md:pb-20">
         <article className="bg-transparent">
           <div className="px-0 py-0">
             {/* Post Header */}
