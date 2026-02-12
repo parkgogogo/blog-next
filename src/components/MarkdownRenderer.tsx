@@ -126,8 +126,10 @@ export default async function MarkdownRenderer({
               const mermaidText = (extractText(node) || extractText(children))
                 .replace(/^\n+|\n+$/g, "")
                 .trim();
+              const normalizedMermaidText = mermaidText.replace(/\\n/g, " ");
+
               try {
-                const svg = await renderMermaid(mermaidText, {
+                const svg = await renderMermaid(normalizedMermaidText, {
                   ...THEMES["zinc-light"],
                   font: "Inter",
                   transparent: true,

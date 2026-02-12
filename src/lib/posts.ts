@@ -199,9 +199,37 @@ export const PostService = (() => {
     return posts;
   };
 
+  const getRawMarkdownBySlug = async (slug: string): Promise<string | null> => {
+    check();
+    const posts = await getAllPosts();
+    const post = posts.find((item) => item.slug === slug);
+
+    if (!post) {
+      return null;
+    }
+
+    try {
+      const filePath = `${post.categoryPath}/${post.slug}.md`;
+      const { data: fileContent } = await octokit.rest.repos.getContent({
+        owner: GITHUB_OWNER,
+        repo: GITHUB_REPO,
+        path: filePath,
+      });
+
+      if ("content" in fileContent) {
+        return Buffer.from(fileContent.content, "base64").toString("utf-8");
+      }
+    } catch (error) {
+      console.error(`Error fetching raw markdown for ${slug}:`, error);
+    }
+
+    return null;
+  };
+
   return {
     getCategory: getRootCategory,
     getSlugs,
     getAllPosts,
+    getRawMarkdownBySlug,
   };
 })();
