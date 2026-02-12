@@ -108,6 +108,25 @@
     width: 100%;
     height: auto;
     display: block;
+    --bg: transparent !important;
+    --fg: #27272a !important;
+    --line: #52525b !important;
+    --accent: #2563eb !important;
+    --muted: #71717a !important;
+    --surface: #f4f4f5 !important;
+    --border: #d4d4d8 !important;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .mermaid-diagram svg {
+      --bg: transparent !important;
+      --fg: #e4e4e7 !important;
+      --line: #a1a1aa !important;
+      --accent: #93c5fd !important;
+      --muted: #a1a1aa !important;
+      --surface: #1f1f23 !important;
+      --border: #3f3f46 !important;
+    }
   }
 
   @media (max-width: 768px) {
