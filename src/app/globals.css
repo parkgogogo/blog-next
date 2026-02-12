@@ -348,6 +348,13 @@
   --text-muted: #6b7280;
   --border-subtle: #e5e7eb;
   --accent-warm: #ea580c;
+
+  /* Yet Another React Lightbox theme (light) */
+  --yarl__color_backdrop: rgba(253, 253, 247, 0.94);
+  --yarl__container_background_color: rgba(253, 253, 247, 0.94);
+  --yarl__color_button: rgba(39, 39, 42, 0.88);
+  --yarl__color_button_active: rgba(17, 24, 39, 1);
+  --yarl__button_filter: none;
 }
 
 a {
@@ -368,6 +375,12 @@ a {
     --foreground: #ededed;
     --text-muted: #9ca3af;
     --border-subtle: #374151;
+
+    /* Yet Another React Lightbox theme (dark) */
+    --yarl__color_backdrop: rgba(10, 10, 12, 0.82);
+    --yarl__container_background_color: rgba(17, 17, 22, 0.96);
+    --yarl__color_button: rgba(228, 228, 231, 0.88);
+    --yarl__color_button_active: rgba(255, 255, 255, 1);
   }
 }
 
