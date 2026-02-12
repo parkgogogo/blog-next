@@ -65,6 +65,9 @@ dependencies:
   react-markdown:
     specifier: ^10.1.0
     version: 10.1.0(@types/react@19.2.9)(react@19.1.0)
+  react-zoom-pan-pinch:
+    specifier: ^3.7.0
+    version: 3.7.0(react-dom@19.1.0)(react@19.1.0)
   rehype-starry-night:
     specifier: ^2.2.0
     version: 2.2.0
@@ -4572,6 +4575,17 @@ packages:
       vfile: 6.0.3
     transitivePeerDependencies:
       - supports-color
+    dev: false
+
+  /react-zoom-pan-pinch@3.7.0(react-dom@19.1.0)(react@19.1.0):
+    resolution: {integrity: sha512-UmReVZ0TxlKzxSbYiAj+LeGRW8s8LraAFTXRAxzMYnNRgGPsxCudwZKVkjvGmjtx7SW/hZamt69NUmGf4xrkXA==}
+    engines: {node: '>=8', npm: '>=5'}
+    peerDependencies:
+      react: '*'
+      react-dom: '*'
+    dependencies:
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
     dev: false
 
   /react@19.1.0:

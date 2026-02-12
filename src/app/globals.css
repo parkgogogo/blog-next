@@ -180,11 +180,23 @@
     cursor: grab;
   }
 
+  .mermaid-lightbox-wrapper {
+    width: 100%;
+    height: 100%;
+    cursor: grab;
+  }
+
+  .mermaid-lightbox-wrapper:active {
+    cursor: grabbing;
+  }
+
   .mermaid-lightbox-content {
     transform-origin: center center;
-    max-width: min(1200px, 96vw);
-    width: 100%;
     will-change: transform;
+  }
+
+  .mermaid-lightbox-content > div {
+    width: min(1200px, 96vw);
   }
 
   @media (prefers-color-scheme: dark) {
