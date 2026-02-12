@@ -6,6 +6,7 @@ import { convertAttachmentUrls } from "@/lib/attachment";
 import type { ReactNode } from "react";
 import Image from "next/image";
 import { format } from "date-fns";
+import { renderMermaid, THEMES } from "beautiful-mermaid";
 
 interface MarkdownRendererProps {
   content: string;
@@ -57,7 +58,7 @@ function processChildren(children: ReactNode): ReactNode {
     : processHashtagsInText(children);
 }
 
-export default function MarkdownRenderer({
+export default async function MarkdownRenderer({
   content,
   date,
 }: MarkdownRendererProps) {
@@ -86,6 +87,35 @@ export default function MarkdownRenderer({
           ),
           p: ({ children }) => <p>{processChildren(children)}</p>,
           li: ({ children }) => <li>{processChildren(children)}</li>,
+          code: async ({ className, children, ...props }) => {
+            const language = className?.replace("language-", "");
+            if (language === "mermaid") {
+              const mermaidText = String(children).replace(/\n$/, "");
+              try {
+                const svg = await renderMermaid(mermaidText, {
+                  ...THEMES["github-light"],
+                  font: "Inter",
+                });
+                return (
+                  <div
+                    className="my-6 overflow-x-auto mermaid-diagram"
+                    dangerouslySetInnerHTML={{ __html: svg }}
+                  />
+                );
+              } catch {
+                return (
+                  <pre className="my-4 rounded bg-red-50 p-3 text-sm text-red-700 overflow-x-auto">
+                    Mermaid render failed.\n{mermaidText}
+                  </pre>
+                );
+              }
+            }
+            return (
+              <code className={className} {...props}>
+                {children}
+              </code>
+            );
+          },
           img: ({ src, alt }) => {
             return (
               <div className="flex flex-col items-center my-4">
