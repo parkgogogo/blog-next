@@ -23,6 +23,12 @@
     }
   }
 
+  .mermaid-diagram svg {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
   /* Hashtag styles */
   .hashtag {
     display: inline-flex;
