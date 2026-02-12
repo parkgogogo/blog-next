@@ -5,8 +5,6 @@
 @import "./code.css" layer(components);
 @import "tailwindcss/utilities.css" layer(utilities);
 @import "tailwind-scrollbar-hide/v4";
-@import "yet-another-react-lightbox/styles.css";
-@import "yet-another-react-lightbox/plugins/zoom.css";
 
 /* 覆盖 prefight */
 @layer components {
