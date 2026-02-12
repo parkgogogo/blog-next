@@ -16,8 +16,23 @@ export default function MermaidZoomable({ svg }: MermaidZoomableProps) {
   const [open, setOpen] = useState(false);
   const [scale, setScale] = useState(1);
   const [translate, setTranslate] = useState({ x: 0, y: 0 });
+  const scaleRef = useRef(1);
+  const translateRef = useRef({ x: 0, y: 0 });
   const dragRef = useRef<{ x: number; y: number; active: boolean } | null>(null);
-  const pinchRef = useRef<{ distance: number; scale: number } | null>(null);
+  const touchRef = useRef<
+    | {
+        mode: "pan";
+        startX: number;
+        startY: number;
+        startTranslate: { x: number; y: number };
+      }
+    | {
+        mode: "pinch";
+        startDistance: number;
+        startScale: number;
+      }
+    | null
+  >(null);
 
   const transform = useMemo(
     () => `translate(${translate.x}px, ${translate.y}px) scale(${scale})`,
@@ -28,6 +43,14 @@ export default function MermaidZoomable({ svg }: MermaidZoomableProps) {
     setScale(1);
     setTranslate({ x: 0, y: 0 });
   };
+
+  useEffect(() => {
+    scaleRef.current = scale;
+  }, [scale]);
+
+  useEffect(() => {
+    translateRef.current = translate;
+  }, [translate]);
 
   useEffect(() => {
     if (!open) return;
@@ -96,24 +119,79 @@ export default function MermaidZoomable({ svg }: MermaidZoomableProps) {
               if (dragRef.current) dragRef.current.active = false;
             }}
             onTouchStart={(event) => {
-              if (event.touches.length !== 2) return;
-              const a = event.touches.item(0);
-              const b = event.touches.item(1);
-              if (!a || !b) return;
-              const distance = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
-              pinchRef.current = { distance, scale };
+              if (event.touches.length === 2) {
+                event.preventDefault();
+                const a = event.touches.item(0);
+                const b = event.touches.item(1);
+                if (!a || !b) return;
+                const startDistance = Math.hypot(
+                  a.clientX - b.clientX,
+                  a.clientY - b.clientY,
+                );
+                touchRef.current = {
+                  mode: "pinch",
+                  startDistance,
+                  startScale: scaleRef.current,
+                };
+                return;
+              }
+
+              if (event.touches.length === 1) {
+                const finger = event.touches.item(0);
+                if (!finger) return;
+                touchRef.current = {
+                  mode: "pan",
+                  startX: finger.clientX,
+                  startY: finger.clientY,
+                  startTranslate: { ...translateRef.current },
+                };
+              }
             }}
             onTouchMove={(event) => {
-              if (event.touches.length !== 2 || !pinchRef.current) return;
-              const a = event.touches.item(0);
-              const b = event.touches.item(1);
-              if (!a || !b) return;
-              const nextDistance = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
-              const ratio = nextDistance / pinchRef.current.distance;
-              setScale(clamp(pinchRef.current.scale * ratio, MIN_SCALE, MAX_SCALE));
+              if (!touchRef.current) return;
+
+              if (touchRef.current.mode === "pinch" && event.touches.length === 2) {
+                event.preventDefault();
+                const a = event.touches.item(0);
+                const b = event.touches.item(1);
+                if (!a || !b) return;
+                const nextDistance = Math.hypot(
+                  a.clientX - b.clientX,
+                  a.clientY - b.clientY,
+                );
+                const ratio = nextDistance / touchRef.current.startDistance;
+                setScale(clamp(touchRef.current.startScale * ratio, MIN_SCALE, MAX_SCALE));
+                return;
+              }
+
+              if (touchRef.current.mode === "pan" && event.touches.length === 1) {
+                event.preventDefault();
+                const finger = event.touches.item(0);
+                if (!finger) return;
+                const dx = finger.clientX - touchRef.current.startX;
+                const dy = finger.clientY - touchRef.current.startY;
+                setTranslate({
+                  x: touchRef.current.startTranslate.x + dx,
+                  y: touchRef.current.startTranslate.y + dy,
+                });
+              }
             }}
-            onTouchEnd={() => {
-              pinchRef.current = null;
+            onTouchEnd={(event) => {
+              if (event.touches.length === 0) {
+                touchRef.current = null;
+                return;
+              }
+
+              if (event.touches.length === 1) {
+                const finger = event.touches.item(0);
+                if (!finger) return;
+                touchRef.current = {
+                  mode: "pan",
+                  startX: finger.clientX,
+                  startY: finger.clientY,
+                  startTranslate: { ...translateRef.current },
+                };
+              }
             }}
           >
             <div
