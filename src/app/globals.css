@@ -184,6 +184,9 @@
     width: 100%;
     height: 100%;
     cursor: grab;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .mermaid-lightbox-wrapper:active {
@@ -193,10 +196,21 @@
   .mermaid-lightbox-content {
     transform-origin: center center;
     will-change: transform;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .mermaid-lightbox-content > div {
     width: min(1200px, 96vw);
+    max-height: 82vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mermaid-lightbox-content > div > svg {
+    max-height: 82vh;
   }
 
   @media (prefers-color-scheme: dark) {
