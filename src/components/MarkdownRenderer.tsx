@@ -7,6 +7,7 @@ import type { ReactNode } from "react";
 import Image from "next/image";
 import { format } from "date-fns";
 import { renderMermaid, THEMES } from "beautiful-mermaid";
+import MermaidZoomable from "./MermaidZoomable";
 
 interface MarkdownRendererProps {
   content: string;
@@ -131,12 +132,7 @@ export default async function MarkdownRenderer({
                   font: "Inter",
                   transparent: true,
                 });
-                return (
-                  <div
-                    className="my-6 overflow-x-auto mermaid-diagram"
-                    dangerouslySetInnerHTML={{ __html: svg }}
-                  />
-                );
+                return <MermaidZoomable svg={svg} />;
               } catch {
                 return (
                   <pre className="my-4 rounded bg-red-50 p-3 text-sm text-red-700 overflow-x-auto">

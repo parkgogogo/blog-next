@@ -104,7 +104,31 @@
     margin-block: 1.2em;
   }
 
-  .mermaid-diagram svg {
+  .mermaid-zoomable-trigger {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    padding: 0;
+    text-align: left;
+    cursor: zoom-in;
+    position: relative;
+  }
+
+  .mermaid-zoomable-hint {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    font-size: 0.72rem;
+    color: #71717a;
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid #e4e4e7;
+    border-radius: 999px;
+    padding: 0.15rem 0.5rem;
+    z-index: 2;
+  }
+
+  .mermaid-diagram svg,
+  .mermaid-lightbox-content svg {
     width: 100%;
     height: auto;
     display: block;
@@ -117,8 +141,61 @@
     --border: #d4d4d8 !important;
   }
 
+  .mermaid-lightbox {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 10, 12, 0.7);
+    z-index: 60;
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+    gap: 0.75rem;
+  }
+
+  .mermaid-lightbox-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
+
+  .mermaid-lightbox-toolbar button {
+    border: 1px solid #d4d4d8;
+    background: #ffffff;
+    color: #27272a;
+    border-radius: 8px;
+    padding: 0.35rem 0.65rem;
+    font-size: 0.82rem;
+    cursor: pointer;
+  }
+
+  .mermaid-lightbox-stage {
+    flex: 1;
+    overflow: hidden;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.96);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    touch-action: none;
+    cursor: grab;
+  }
+
+  .mermaid-lightbox-content {
+    transform-origin: center center;
+    max-width: min(1200px, 96vw);
+    width: 100%;
+    will-change: transform;
+  }
+
   @media (prefers-color-scheme: dark) {
-    .mermaid-diagram svg {
+    .mermaid-zoomable-hint {
+      color: #d4d4d8;
+      background: rgba(24, 24, 27, 0.85);
+      border-color: #3f3f46;
+    }
+
+    .mermaid-diagram svg,
+    .mermaid-lightbox-content svg {
       --bg: transparent !important;
       --fg: #e4e4e7 !important;
       --line: #a1a1aa !important;
@@ -126,6 +203,16 @@
       --muted: #a1a1aa !important;
       --surface: #1f1f23 !important;
       --border: #3f3f46 !important;
+    }
+
+    .mermaid-lightbox-stage {
+      background: rgba(17, 17, 22, 0.96);
+    }
+
+    .mermaid-lightbox-toolbar button {
+      border-color: #3f3f46;
+      background: #18181b;
+      color: #e4e4e7;
     }
   }
 
