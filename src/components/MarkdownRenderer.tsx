@@ -58,6 +58,38 @@ function processChildren(children: ReactNode): ReactNode {
     : processHashtagsInText(children);
 }
 
+function extractText(value: unknown): string {
+  if (typeof value === "string") return value;
+  if (typeof value === "number") return String(value);
+  if (!value) return "";
+
+  if (Array.isArray(value)) {
+    return value.map((item) => extractText(item)).join("");
+  }
+
+  if (typeof value === "object") {
+    const maybeNode = value as {
+      value?: unknown;
+      children?: unknown;
+      props?: { children?: unknown };
+    };
+
+    if (typeof maybeNode.value === "string") {
+      return maybeNode.value;
+    }
+
+    if (maybeNode.children !== undefined) {
+      return extractText(maybeNode.children);
+    }
+
+    if (maybeNode.props?.children !== undefined) {
+      return extractText(maybeNode.props.children);
+    }
+  }
+
+  return "";
+}
+
 export default async function MarkdownRenderer({
   content,
   date,
@@ -87,10 +119,12 @@ export default async function MarkdownRenderer({
           ),
           p: ({ children }) => <p>{processChildren(children)}</p>,
           li: ({ children }) => <li>{processChildren(children)}</li>,
-          code: async ({ className, children, ...props }) => {
+          code: async ({ className, children, node, ...props }) => {
             const language = className?.replace("language-", "");
             if (language === "mermaid") {
-              const mermaidText = String(children).replace(/\n$/, "");
+              const mermaidText = (extractText(node) || extractText(children))
+                .replace(/^\n+|\n+$/g, "")
+                .trim();
               try {
                 const svg = await renderMermaid(mermaidText, {
                   ...THEMES["github-light"],
