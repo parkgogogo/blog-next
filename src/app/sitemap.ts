@@ -1,7 +1,10 @@
 import type { MetadataRoute } from "next";
 import { PostService } from "@/lib/posts";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.parkgogogo.me";
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  process.env.SITE_URL ||
+  "https://www.parkgogogo.me";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const posts = await PostService.getAllPosts();
