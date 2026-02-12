@@ -126,7 +126,7 @@ export default async function MarkdownRenderer({
               const mermaidText = (extractText(node) || extractText(children))
                 .replace(/^\n+|\n+$/g, "")
                 .trim();
-              const normalizedMermaidText = mermaidText.replace(/\\n/g, "<br/>");
+              const normalizedMermaidText = mermaidText.replace(/\\n/g, "\n");
 
               try {
                 const svg = await renderMermaid(normalizedMermaidText, {
