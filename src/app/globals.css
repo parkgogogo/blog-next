@@ -127,6 +127,17 @@
     z-index: 2;
   }
 
+  .yarl__container {
+    backdrop-filter: blur(2px);
+  }
+
+  .yarl__slide_image {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+    padding: 8px;
+  }
+
   .mermaid-diagram svg,
   .mermaid-lightbox-content svg {
     width: 100%;
@@ -229,6 +240,11 @@
       --muted: #a1a1aa !important;
       --surface: #1f1f23 !important;
       --border: #3f3f46 !important;
+    }
+
+    .yarl__slide_image {
+      background: #18181b;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
     }
 
     .mermaid-lightbox-stage {
@@ -350,9 +366,9 @@
   --accent-warm: #ea580c;
 
   /* Yet Another React Lightbox theme (light) */
-  --yarl__color_backdrop: rgba(253, 253, 247, 0.94);
-  --yarl__container_background_color: rgba(253, 253, 247, 0.94);
-  --yarl__color_button: rgba(39, 39, 42, 0.88);
+  --yarl__color_backdrop: rgba(253, 253, 247, 0.98);
+  --yarl__container_background_color: rgba(253, 253, 247, 0.98);
+  --yarl__color_button: rgba(39, 39, 42, 0.9);
   --yarl__color_button_active: rgba(17, 24, 39, 1);
   --yarl__button_filter: none;
 }
