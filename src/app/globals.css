@@ -18,6 +18,10 @@
   }
 
   .markdown-body {
+    font-size: 1rem;
+    line-height: 1.85;
+    letter-spacing: 0.01em;
+
     img {
       box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
     }
@@ -25,6 +29,43 @@
 
   .markdown-body hr {
     display: none;
+  }
+
+  .markdown-body p {
+    margin-block: 0;
+  }
+
+  .markdown-body p + p,
+  .markdown-body p + ul,
+  .markdown-body p + ol,
+  .markdown-body ul + p,
+  .markdown-body ol + p,
+  .markdown-body blockquote + p,
+  .markdown-body p + blockquote,
+  .markdown-body pre + p,
+  .markdown-body p + pre,
+  .markdown-body pre + pre {
+    margin-top: 0.95em;
+  }
+
+  .markdown-body ul,
+  .markdown-body ol {
+    margin-block: 0.75em;
+    padding-left: 1.35em;
+  }
+
+  .markdown-body li + li {
+    margin-top: 0.42em;
+  }
+
+  .markdown-body blockquote {
+    margin-block: 1.1em;
+  }
+
+  .markdown-body pre {
+    margin-block: 1.2em;
+    border-radius: 10px;
+    padding: 0.9rem 1rem;
   }
 
   .markdown-body h1,
@@ -36,32 +77,81 @@
     border-bottom: none !important;
     padding-bottom: 0 !important;
     line-height: 1.35;
-    margin-top: 1.25em;
+    margin-top: 1.55em;
     margin-bottom: 0.55em;
+    letter-spacing: -0.01em;
   }
 
   .markdown-body h1 {
-    font-size: 1.45rem;
+    font-size: 1.62rem;
   }
 
   .markdown-body h2 {
-    font-size: 1.28rem;
+    font-size: 1.38rem;
   }
 
   .markdown-body h3 {
-    font-size: 1.14rem;
+    font-size: 1.2rem;
   }
 
   .markdown-body h4,
   .markdown-body h5,
   .markdown-body h6 {
-    font-size: 1.05rem;
+    font-size: 1.08rem;
+  }
+
+  .mermaid-diagram {
+    margin-block: 1.2em;
   }
 
   .mermaid-diagram svg {
     width: 100%;
     height: auto;
     display: block;
+  }
+
+  @media (max-width: 768px) {
+    .markdown-body {
+      font-size: 1rem;
+      line-height: 1.82;
+    }
+
+    .markdown-body h1 {
+      font-size: 1.5rem;
+    }
+
+    .markdown-body h2 {
+      font-size: 1.3rem;
+    }
+
+    .markdown-body h3 {
+      font-size: 1.16rem;
+    }
+
+    .markdown-body h4,
+    .markdown-body h5,
+    .markdown-body h6 {
+      font-size: 1.05rem;
+    }
+
+    .markdown-body h1,
+    .markdown-body h2,
+    .markdown-body h3,
+    .markdown-body h4,
+    .markdown-body h5,
+    .markdown-body h6 {
+      margin-top: 1.45em;
+      margin-bottom: 0.5em;
+    }
+
+    .markdown-body ul,
+    .markdown-body ol {
+      padding-left: 1.2em;
+    }
+
+    .markdown-body pre {
+      padding: 0.75rem 0.85rem;
+    }
   }
 
   /* Hashtag styles */
