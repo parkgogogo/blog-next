@@ -128,7 +128,7 @@
   }
 
   .yarl__container {
-    backdrop-filter: blur(2px);
+    backdrop-filter: none;
   }
 
   .yarl__slide_image {
@@ -366,8 +366,8 @@
   --accent-warm: #ea580c;
 
   /* Yet Another React Lightbox theme (light) */
-  --yarl__color_backdrop: rgba(253, 253, 247, 0.98);
-  --yarl__container_background_color: rgba(253, 253, 247, 0.98);
+  --yarl__color_backdrop: #ffffff;
+  --yarl__container_background_color: #ffffff;
   --yarl__color_button: rgba(39, 39, 42, 0.9);
   --yarl__color_button_active: rgba(17, 24, 39, 1);
   --yarl__button_filter: none;
