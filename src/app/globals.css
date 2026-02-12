@@ -23,6 +23,41 @@
     }
   }
 
+  .markdown-body hr {
+    display: none;
+  }
+
+  .markdown-body h1,
+  .markdown-body h2,
+  .markdown-body h3,
+  .markdown-body h4,
+  .markdown-body h5,
+  .markdown-body h6 {
+    border-bottom: none !important;
+    padding-bottom: 0 !important;
+    line-height: 1.35;
+    margin-top: 1.25em;
+    margin-bottom: 0.55em;
+  }
+
+  .markdown-body h1 {
+    font-size: 1.45rem;
+  }
+
+  .markdown-body h2 {
+    font-size: 1.28rem;
+  }
+
+  .markdown-body h3 {
+    font-size: 1.14rem;
+  }
+
+  .markdown-body h4,
+  .markdown-body h5,
+  .markdown-body h6 {
+    font-size: 1.05rem;
+  }
+
   .mermaid-diagram svg {
     width: 100%;
     height: auto;
