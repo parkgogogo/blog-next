@@ -127,8 +127,9 @@ export default async function MarkdownRenderer({
                 .trim();
               try {
                 const svg = await renderMermaid(mermaidText, {
-                  ...THEMES["github-light"],
+                  ...THEMES["zinc-light"],
                   font: "Inter",
+                  transparent: true,
                 });
                 return (
                   <div
