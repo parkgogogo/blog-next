@@ -99,10 +99,15 @@ async function processMarkdownFile(
 
       const slug = file.name.replace(".md", "");
       const category = categoryPath.split("/").pop() || "uncategorized";
+      const normalizedSlugTitle = slug.replace(/_/g, " ");
+      const normalizedFrontmatterTitle =
+        typeof frontmatter.title === "string"
+          ? frontmatter.title.replace(/_/g, " ")
+          : undefined;
 
       return {
         slug,
-        title: frontmatter.title || slug,
+        title: normalizedFrontmatterTitle || normalizedSlugTitle,
         date: await getFileCreationDate(file.path),
         content: markdown,
         excerpt: frontmatter.excerpt || markdown.slice(0, 200) + "...",

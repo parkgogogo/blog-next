@@ -47,7 +47,7 @@ export default async function BlogPostPage({
         <div className="max-w-4xl mx-auto px-6 md:px-8 pt-6 pb-14 md:pb-20">
           <article className="bg-transparent">
             <header className="mb-6 md:mb-8">
-              <h1 className="text-2xl md:text-3xl font-medium font-display text-foreground mb-2 leading-tight tracking-tight mt-0">
+              <h1 className="text-2xl md:text-3xl font-medium font-display text-foreground mb-2 leading-tight tracking-tight mt-0 break-words">
                 {post.title}.md
               </h1>
               <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -75,7 +75,7 @@ export default async function BlogPostPage({
           <div className="px-0 py-0">
             {/* Post Header */}
             <header className="mb-8 md:mb-12">
-              <h1 className="text-3xl font-medium font-display text-foreground mb-4 leading-tight tracking-tight mt-0">
+              <h1 className="text-3xl font-medium font-display text-foreground mb-4 leading-tight tracking-tight mt-0 break-words">
                 {post.title}
               </h1>
 
