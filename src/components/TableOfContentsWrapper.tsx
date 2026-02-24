@@ -1,21 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { TableOfContentsItem } from "@/types/blog";
 
-interface TableOfContentsWrapperProps {
-  content: string;
-}
-
-export default function TableOfContentsWrapper({
-  content,
-}: TableOfContentsWrapperProps) {
+export default function TableOfContentsWrapper() {
+  const pathname = usePathname();
   const [tocItems, setTocItems] = useState<TableOfContentsItem[]>([]);
   const [activeId, setActiveId] = useState<string>("");
 
   useEffect(() => {
     // Only run on client side
     if (typeof window === "undefined") return;
+    setTocItems([]);
+    setActiveId("");
 
     // Wait for the content to be rendered in the DOM
     const timer = setTimeout(() => {
@@ -50,7 +48,7 @@ export default function TableOfContentsWrapper({
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [content]);
+  }, [pathname]);
 
   useEffect(() => {
     if (tocItems.length === 0) return;
