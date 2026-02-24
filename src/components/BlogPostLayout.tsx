@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, ReactNode } from "react";
+import { ReactNode, useMemo, useState } from "react";
+import { usePathname } from "next/navigation";
 import CategorySidebarServer from "@/components/CategorySidebarServer";
 import MobileCategorySidebar from "@/components/MobileCategorySidebar";
 import TableOfContentsWrapper from "@/components/TableOfContentsWrapper";
@@ -9,18 +10,24 @@ import { Category } from "@/types/blog";
 interface BlogPostLayoutProps {
   children: ReactNode;
   categories: Category;
-  currentSlug: string;
-  content: string;
 }
 
 export default function BlogPostLayout({
   children,
   categories,
-  currentSlug,
-  content,
 }: BlogPostLayoutProps) {
+  const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isTocOpen, setIsTocOpen] = useState(false);
+  const currentSlug = useMemo(() => {
+    if (!pathname.startsWith("/blog/")) {
+      return undefined;
+    }
+    const decodedSlug = decodeURIComponent(pathname.slice("/blog/".length));
+    return decodedSlug.endsWith(".md")
+      ? decodedSlug.slice(0, -3)
+      : decodedSlug;
+  }, [pathname]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -71,7 +78,7 @@ export default function BlogPostLayout({
               onClick={() => setIsTocOpen(false)}
             ></div>
             <div className="relative w-64 h-full bg-background ml-auto">
-              <TableOfContentsWrapper content={content} />
+              <TableOfContentsWrapper />
             </div>
           </div>
         )}
@@ -90,7 +97,7 @@ export default function BlogPostLayout({
 
         {/* Desktop Right Sidebar - Table of Contents */}
         <div className="hidden lg:block w-64 flex-shrink-0">
-          <TableOfContentsWrapper content={content} />
+          <TableOfContentsWrapper />
         </div>
       </div>
     </div>
