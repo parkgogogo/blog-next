@@ -22,6 +22,11 @@ export const AI_SPEECH_BASE_URL =
 export const AI_SPEECH_TOKEN =
   process.env.AI_SPEECH_TOKEN?.trim() || process.env.AI_TOKEN?.trim() || "";
 
+const buildTextUpstreamUrl = (baseUrl: string) => {
+  const normalized = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
+  return new URL("chat/completions", normalized).toString();
+};
+
 const getTextModel = () => {
   if (!AI_TEXT_BASE_URL || !AI_TEXT_TOKEN) {
     throw new Error(
@@ -99,6 +104,72 @@ export const ai_generateText = async (options: {
   ]);
 
   return text;
+};
+
+type AITextMessage = {
+  role: "system" | "user" | "assistant";
+  content: string;
+};
+
+export const ai_streamMessages = async (options: {
+  messages: AITextMessage[];
+  signal?: AbortSignal;
+}) => {
+  const baseUrl = AI_TEXT_BASE_URL;
+  const token = AI_TEXT_TOKEN;
+
+  if (!baseUrl || !token) {
+    throw new Error(
+      "AI_TEXT_BASE_URL or AI_TEXT_TOKEN is not configured (or fallback AI_BASE_URL and AI_TOKEN)",
+    );
+  }
+
+  const upstream = await fetch(buildTextUpstreamUrl(baseUrl), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "text/event-stream",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      model: AI_TEXT_MODEL,
+      stream: true,
+      messages: options.messages,
+    }),
+    signal: options.signal,
+  });
+
+  if (!upstream.ok) {
+    const errorText = await upstream.text();
+    throw new Error(errorText || `Streaming request failed: ${upstream.status}`);
+  }
+
+  const contentType = upstream.headers.get("content-type") || "";
+  if (!contentType.includes("text/event-stream")) {
+    const body = await upstream.text();
+    throw new Error(
+      `Upstream did not return event-stream (${contentType || "unknown"}): ${body.slice(
+        0,
+        300,
+      )}`,
+    );
+  }
+
+  return upstream;
+};
+
+export const ai_streamText = async (options: {
+  system: string;
+  prompt: string;
+  signal?: AbortSignal;
+}) => {
+  return ai_streamMessages({
+    messages: [
+      { role: "system", content: options.system },
+      { role: "user", content: options.prompt },
+    ],
+    signal: options.signal,
+  });
 };
 
 export const ai_generateObject = async <T extends Record<string, unknown>>(

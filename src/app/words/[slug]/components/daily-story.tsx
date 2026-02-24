@@ -5,7 +5,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { ILuluWord } from "@/lib/words/types";
 import {
   generateSpeech,
-  getWordCardBundleAction,
   translatePassageAction,
 } from "@/app/words/[slug]/actions";
 import {
@@ -13,6 +12,7 @@ import {
   type WordCardMode,
 } from "@/app/words/[slug]/components/word-card-panel";
 import { WordCardSheet } from "@/app/words/[slug]/components/word-card-sheet";
+import { streamPluginWordCard } from "@/lib/words/card-sse-client";
 
 interface DailyStoryProps {
   story: string;
@@ -81,6 +81,20 @@ const splitEnglishWords = (text: string) => {
 
 const stripHtml = (text: string) =>
   text.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
+
+const resolveSourceSentence = (story: string, wordText: string) => {
+  const plainStory = stripHtml(story.replace(/\[\[([^\]]+)\]\]/g, "$1"));
+  const escapedWord = wordText.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const wordPattern = new RegExp(`\\b${escapedWord}\\b`, "i");
+  const sentenceCandidates = (plainStory.match(/[^.!?]+[.!?]?/g) ?? [])
+    .map((item) => item.trim())
+    .filter(Boolean);
+  const matched = sentenceCandidates.find((sentence) => wordPattern.test(sentence));
+
+  if (matched) return matched;
+  if (wordPattern.test(plainStory)) return plainStory;
+  return wordText;
+};
 
 const STOP_WORDS = new Set([
   "a",
@@ -157,12 +171,37 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
 
   const requestBundle = async (
     wordText: string,
-    options?: { force?: boolean },
+    options?: {
+      force?: boolean;
+      onBriefDelta?: (delta: string) => void;
+      onDetailDelta?: (delta: string) => void;
+    },
   ) => {
-    return getWordCardBundleAction(wordText, story, {
-      force: options?.force,
-      maxChars: MAX_CONTEXT_LENGTH,
-    });
+    const sourceSentence = resolveSourceSentence(story, wordText);
+    const [briefResult, detailResult] = await Promise.all([
+      streamPluginWordCard({
+        word: wordText,
+        sourceSentence,
+        mode: "brief",
+        force: options?.force,
+        maxChars: MAX_CONTEXT_LENGTH,
+        onDelta: options?.onBriefDelta,
+      }),
+      streamPluginWordCard({
+        word: wordText,
+        sourceSentence,
+        mode: "detail",
+        force: options?.force,
+        maxChars: MAX_CONTEXT_LENGTH,
+        onDelta: options?.onDetailDelta,
+      }),
+    ]);
+
+    return {
+      context: briefResult.meta?.primaryContext || sourceSentence,
+      brief: briefResult.content || "暂无内容",
+      detail: detailResult.content || "暂无内容",
+    };
   };
 
   const handleSelect = async (
@@ -199,7 +238,32 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
     });
 
     try {
-      const contentPromise = requestBundle(wordText);
+      let briefText = "";
+      let detailText = "";
+      const contentPromise = requestBundle(wordText, {
+        onBriefDelta: (delta) => {
+          briefText += delta;
+          setPopover((current) => {
+            if (!current || current.wordText !== wordText) return current;
+            return {
+              ...current,
+              briefLoading: false,
+              briefContent: briefText,
+            };
+          });
+        },
+        onDetailDelta: (delta) => {
+          detailText += delta;
+          setPopover((current) => {
+            if (!current || current.wordText !== wordText) return current;
+            return {
+              ...current,
+              detailLoading: false,
+              detailContent: detailText,
+            };
+          });
+        },
+      });
       const audioPromise = word
         ? Promise.resolve(`/api/speech/${wordText}`)
         : generateSpeech(wordText).then(
@@ -267,7 +331,33 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
     });
 
     try {
-      const bundle = await requestBundle(wordText, { force: true });
+      let briefText = "";
+      let detailText = "";
+      const bundle = await requestBundle(wordText, {
+        force: true,
+        onBriefDelta: (delta) => {
+          briefText += delta;
+          setPopover((current) => {
+            if (!current || current.wordText !== wordText) return current;
+            return {
+              ...current,
+              briefLoading: false,
+              briefContent: briefText,
+            };
+          });
+        },
+        onDetailDelta: (delta) => {
+          detailText += delta;
+          setPopover((current) => {
+            if (!current || current.wordText !== wordText) return current;
+            return {
+              ...current,
+              detailLoading: false,
+              detailContent: detailText,
+            };
+          });
+        },
+      });
       setPopover((current) => {
         if (!current || current.wordText !== wordText) return current;
         return {
@@ -491,7 +581,7 @@ export const DailyStory = ({ story, words }: DailyStoryProps) => {
                 width: 300,
               }}
             >
-              <div className="story-card rounded-2xl p-5 shadow-lg">
+              <div className="story-card word-card-popover rounded-2xl p-5">
                 <WordCardPanel
                   wordText={popover.wordText}
                   phon={popover.word?.phon}

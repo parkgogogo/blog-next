@@ -23,7 +23,10 @@ export default function BlogPostLayout({
     if (!pathname.startsWith("/blog/")) {
       return undefined;
     }
-    return decodeURIComponent(pathname.replace("/blog/", ""));
+    const decodedSlug = decodeURIComponent(pathname.slice("/blog/".length));
+    return decodedSlug.endsWith(".md")
+      ? decodedSlug.slice(0, -3)
+      : decodedSlug;
   }, [pathname]);
 
   return (

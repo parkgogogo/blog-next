@@ -8,7 +8,6 @@ import {
   getFreeExplanation,
   getFreeWordCard,
   getContextSnippet,
-  getWordCardBundle,
   translatePassage,
 } from "@/lib/words/ai-service";
 
@@ -66,12 +65,4 @@ export const getContextSnippetAction = async (
   options?: { force?: boolean; maxChars?: number },
 ) => {
   return await getContextSnippet(word, sourceText, options);
-};
-
-export const getWordCardBundleAction = async (
-  word: string,
-  sourceText: string,
-  options?: { force?: boolean; maxChars?: number },
-) => {
-  return await getWordCardBundle(word, sourceText, options);
 };

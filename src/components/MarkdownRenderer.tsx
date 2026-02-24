@@ -6,6 +6,8 @@ import { convertAttachmentUrls } from "@/lib/attachment";
 import type { ReactNode } from "react";
 import Image from "next/image";
 import { format } from "date-fns";
+import { renderMermaid, THEMES } from "beautiful-mermaid";
+import MermaidZoomable from "./MermaidZoomable";
 
 interface MarkdownRendererProps {
   content: string;
@@ -57,7 +59,39 @@ function processChildren(children: ReactNode): ReactNode {
     : processHashtagsInText(children);
 }
 
-export default function MarkdownRenderer({
+function extractText(value: unknown): string {
+  if (typeof value === "string") return value;
+  if (typeof value === "number") return String(value);
+  if (!value) return "";
+
+  if (Array.isArray(value)) {
+    return value.map((item) => extractText(item)).join("");
+  }
+
+  if (typeof value === "object") {
+    const maybeNode = value as {
+      value?: unknown;
+      children?: unknown;
+      props?: { children?: unknown };
+    };
+
+    if (typeof maybeNode.value === "string") {
+      return maybeNode.value;
+    }
+
+    if (maybeNode.children !== undefined) {
+      return extractText(maybeNode.children);
+    }
+
+    if (maybeNode.props?.children !== undefined) {
+      return extractText(maybeNode.props.children);
+    }
+  }
+
+  return "";
+}
+
+export default async function MarkdownRenderer({
   content,
   date,
 }: MarkdownRendererProps) {
@@ -86,6 +120,37 @@ export default function MarkdownRenderer({
           ),
           p: ({ children }) => <p>{processChildren(children)}</p>,
           li: ({ children }) => <li>{processChildren(children)}</li>,
+          code: async ({ className, children, node, ...props }) => {
+            const language = className?.replace("language-", "");
+            if (language === "mermaid") {
+              const mermaidText = (extractText(node) || extractText(children))
+                .replace(/^\n+|\n+$/g, "")
+                .trim();
+              const normalizedMermaidText = mermaidText.replace(/\\n/g, " ");
+
+              try {
+                const svg = await renderMermaid(normalizedMermaidText, {
+                  ...THEMES["zinc-light"],
+                  font: "Inter",
+                  // Keep theme background so node fills/lines have stable contrast.
+                  // A transparent bg breaks some color-mix derivations.
+                  transparent: false,
+                });
+                return <MermaidZoomable svg={svg} />;
+              } catch {
+                return (
+                  <pre className="my-4 rounded bg-red-50 p-3 text-sm text-red-700 overflow-x-auto">
+                    Mermaid render failed.\n{mermaidText}
+                  </pre>
+                );
+              }
+            }
+            return (
+              <code className={className} {...props}>
+                {children}
+              </code>
+            );
+          },
           img: ({ src, alt }) => {
             return (
               <div className="flex flex-col items-center my-4">

@@ -3,7 +3,6 @@
 import { applyMemoryEvent } from "@/lib/memory";
 import { completeDailyTask, type DailyTaskResult, generateDailyTask } from "@/lib/memory/task";
 import { createSpeechToken } from "@/lib/middleware/security";
-import { getWordCardBundle, translateSentence } from "@/lib/words/ai-service";
 import { getSupabaseClient } from "@/lib/supabase";
 import { requireAuth } from "@/lib/auth/server";
 
@@ -38,32 +37,6 @@ export const recordMemoryEventAction = async (payload: {
 export const completeDailyTaskAction = async (date: string) => {
   const auth = await requireAuth();
   return completeDailyTask(date, { accessToken: auth.accessToken });
-};
-
-export const getDailyWordBundleAction = async (payload: {
-  word: string;
-  sourceText: string;
-  force?: boolean;
-  maxChars?: number;
-}) => {
-  await requireAuth();
-  return getWordCardBundle(payload.word, payload.sourceText, {
-    force: payload.force,
-    maxChars: payload.maxChars,
-    contextMode: "none",
-  });
-};
-
-export const translateContextLinesAction = async (payload: {
-  lines: string[];
-}) => {
-  await requireAuth();
-  const lines = (payload.lines ?? []).map((line) => line.trim()).filter(Boolean);
-  if (lines.length === 0) return [];
-  const translations = await Promise.all(
-    lines.map((line) => translateSentence(line)),
-  );
-  return translations;
 };
 
 const loadDailyTask = async (

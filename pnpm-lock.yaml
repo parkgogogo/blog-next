@@ -35,6 +35,9 @@ dependencies:
   ai:
     specifier: ^5.0.123
     version: 5.0.123(zod@3.25.76)
+  beautiful-mermaid:
+    specifier: ^0.1.3
+    version: 0.1.3
   date-fns:
     specifier: ^4.1.0
     version: 4.1.0
@@ -62,6 +65,9 @@ dependencies:
   react-markdown:
     specifier: ^10.1.0
     version: 10.1.0(@types/react@19.2.9)(react@19.1.0)
+  react-zoom-pan-pinch:
+    specifier: ^3.7.0
+    version: 3.7.0(react-dom@19.1.0)(react@19.1.0)
   rehype-starry-night:
     specifier: ^2.2.0
     version: 2.2.0
@@ -77,6 +83,9 @@ dependencies:
   tailwind-scrollbar-hide:
     specifier: ^4.0.0
     version: 4.0.0(tailwindcss@4.1.18)
+  yet-another-react-lightbox:
+    specifier: ^3.29.0
+    version: 3.29.0(@types/react-dom@19.2.3)(@types/react@19.2.9)(react-dom@19.1.0)(react@19.1.0)
   zod:
     specifier: ^3.25.76
     version: 3.25.76
@@ -175,6 +184,17 @@ packages:
     resolution: {integrity: sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw==}
     engines: {node: '>=10'}
     dev: true
+
+  /@dagrejs/dagre@1.1.8:
+    resolution: {integrity: sha512-5SEDlndt4W/LaVzPYJW+bSmSEZc9EzTf8rJ20WCKvjS5EAZAN0b+x0Yww7VMT4R3Wootkg+X9bUfUxazYw6Blw==}
+    dependencies:
+      '@dagrejs/graphlib': 2.2.4
+    dev: false
+
+  /@dagrejs/graphlib@2.2.4:
+    resolution: {integrity: sha512-mepCf/e9+SKYy1d02/UkvSy6+6MoyXhVxP8lLDfA7BPE1X1d4dR0sZznmbM8/XVJ1GPM+Svnx7Xj6ZweByWUkw==}
+    engines: {node: '>17.0.0'}
+    dev: false
 
   /@emnapi/core@1.8.1:
     resolution: {integrity: sha512-AvT9QFpxK0Zd8J0jopedNm+w/2fIzvtPKPjqyw9jwvBaReTTqPBk9Hixaz7KbjimP+QNz605/XnjFcDAL2pqBg==}
@@ -1552,7 +1572,6 @@ packages:
       '@types/react': ^19.2.0
     dependencies:
       '@types/react': 19.2.9
-    dev: true
 
   /@types/react@19.2.9:
     resolution: {integrity: sha512-Lpo8kgb/igvMIPeNV2rsYKTgaORYdO1XGVZ4Qz3akwOj0ySGYMPlQWa8BaLn0G63D1aSaAQ5ldR06wCpChQCjA==}
@@ -2139,6 +2158,12 @@ packages:
   /balanced-match@1.0.2:
     resolution: {integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==}
     dev: true
+
+  /beautiful-mermaid@0.1.3:
+    resolution: {integrity: sha512-lVEHCnlVLtVRbO03T+D9kY5BZlkpvFU6F18LEu2N2VLB0eo5evG1FJWg3SvREErKY+zZ7j9f+cNsgtiOhYI2Nw==}
+    dependencies:
+      '@dagrejs/dagre': 1.1.8
+    dev: false
 
   /before-after-hook@3.0.2:
     resolution: {integrity: sha512-Nik3Sc0ncrMK4UUdXQmAnRtzmNQTAAXmXIopizwZ1W1t8QmfJj+zL4OA2I7XPTPW5z5TDqv4hRo/JzouDJnX3A==}
@@ -4554,6 +4579,17 @@ packages:
       - supports-color
     dev: false
 
+  /react-zoom-pan-pinch@3.7.0(react-dom@19.1.0)(react@19.1.0):
+    resolution: {integrity: sha512-UmReVZ0TxlKzxSbYiAj+LeGRW8s8LraAFTXRAxzMYnNRgGPsxCudwZKVkjvGmjtx7SW/hZamt69NUmGf4xrkXA==}
+    engines: {node: '>=8', npm: '>=5'}
+    peerDependencies:
+      react: '*'
+      react-dom: '*'
+    dependencies:
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
+    dev: false
+
   /react@19.1.0:
     resolution: {integrity: sha512-FS+XFBNvn3GTAWq26joslQgWNoFu08F4kl0J4CgdNKADkdSGXQyTCnKteIAJy96Br6YbpEU1LSzV5dYtjMkMDg==}
     engines: {node: '>=0.10.0'}
@@ -5575,6 +5611,26 @@ packages:
 
   /xml@1.0.1:
     resolution: {integrity: sha512-huCv9IH9Tcf95zuYCsQraZtWnJvBtLVE0QHMOs8bWyZAFZNDcYjsPq1nEx8jKA9y+Beo9v+7OBPRisQTjinQMw==}
+    dev: false
+
+  /yet-another-react-lightbox@3.29.0(@types/react-dom@19.2.3)(@types/react@19.2.9)(react-dom@19.1.0)(react@19.1.0):
+    resolution: {integrity: sha512-OdjQ7w4Bsl5QHrv+QI6GIFNLYT9WvYLLzeAtLcUPYUaGcA5k1XbQDjyof4CzxLP1XxXsurxBOiFrto1v6zjvrw==}
+    engines: {node: '>=14'}
+    peerDependencies:
+      '@types/react': ^16 || ^17 || ^18 || ^19
+      '@types/react-dom': ^16 || ^17 || ^18 || ^19
+      react: ^16.8.0 || ^17 || ^18 || ^19
+      react-dom: ^16.8.0 || ^17 || ^18 || ^19
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      '@types/react-dom':
+        optional: true
+    dependencies:
+      '@types/react': 19.2.9
+      '@types/react-dom': 19.2.3(@types/react@19.2.9)
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
     dev: false
 
   /yocto-queue@0.1.0:
