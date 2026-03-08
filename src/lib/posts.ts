@@ -1,6 +1,10 @@
 import { Octokit } from "@octokit/rest";
 import matter from "gray-matter";
 import { BlogPost, Category } from "@/types/blog";
+import {
+  getGitHubRepoCandidates,
+  withGitHubRepoFallback,
+} from "@/lib/github-repo";
 
 interface GitHubContentItem {
   type: "file" | "dir" | "submodule" | "symlink";
@@ -13,8 +17,8 @@ const octokit = new Octokit({
 });
 
 const GITHUB_OWNER = process.env.GITHUB_OWNER || "your-username";
-const GITHUB_REPO = process.env.GITHUB_REPO || "your-blog-repo";
 const POSTS_PATH = process.env.POSTS_PATH || "posts";
+const GITHUB_REPOS = getGitHubRepoCandidates(process.env.GITHUB_REPO);
 
 /**
  * 计算阅读时间
@@ -36,12 +40,16 @@ function calculateReadingTime(content: string): number {
 async function getFileCreationDate(filePath: string): Promise<string> {
   try {
     // 获取该文件的所有提交（按时间从新到旧）
-    const commits = await octokit.paginate(octokit.rest.repos.listCommits, {
-      owner: GITHUB_OWNER,
-      repo: GITHUB_REPO,
-      path: filePath,
-      per_page: 100,
-    });
+    const { data: commits } = await withGitHubRepoFallback(
+      GITHUB_REPOS,
+      async (repo) =>
+        await octokit.paginate(octokit.rest.repos.listCommits, {
+          owner: GITHUB_OWNER,
+          repo,
+          path: filePath,
+          per_page: 100,
+        }),
+    );
 
     if (!Array.isArray(commits) || commits.length === 0) {
       return new Date().toISOString();
@@ -63,11 +71,18 @@ async function getDirectoryContents(
   path: string
 ): Promise<GitHubContentItem[]> {
   try {
-    const { data: contents } = await octokit.rest.repos.getContent({
-      owner: GITHUB_OWNER,
-      repo: GITHUB_REPO,
-      path: path,
-    });
+    const { data: contents } = await withGitHubRepoFallback(
+      GITHUB_REPOS,
+      async (repo) => {
+        const response = await octokit.rest.repos.getContent({
+          owner: GITHUB_OWNER,
+          repo,
+          path,
+        });
+
+        return response.data;
+      },
+    );
 
     if (!Array.isArray(contents)) {
       return [];
@@ -85,11 +100,18 @@ async function processMarkdownFile(
   categoryPath: string
 ): Promise<BlogPost | null> {
   try {
-    const { data: fileContent } = await octokit.rest.repos.getContent({
-      owner: GITHUB_OWNER,
-      repo: GITHUB_REPO,
-      path: file.path,
-    });
+    const { data: fileContent } = await withGitHubRepoFallback(
+      GITHUB_REPOS,
+      async (repo) => {
+        const response = await octokit.rest.repos.getContent({
+          owner: GITHUB_OWNER,
+          repo,
+          path: file.path,
+        });
+
+        return response.data;
+      },
+    );
 
     if ("content" in fileContent) {
       const content = Buffer.from(fileContent.content, "base64").toString(
@@ -215,11 +237,18 @@ export const PostService = (() => {
 
     try {
       const filePath = `${post.categoryPath}/${post.slug}.md`;
-      const { data: fileContent } = await octokit.rest.repos.getContent({
-        owner: GITHUB_OWNER,
-        repo: GITHUB_REPO,
-        path: filePath,
-      });
+      const { data: fileContent } = await withGitHubRepoFallback(
+        GITHUB_REPOS,
+        async (repo) => {
+          const response = await octokit.rest.repos.getContent({
+            owner: GITHUB_OWNER,
+            repo,
+            path: filePath,
+          });
+
+          return response.data;
+        },
+      );
 
       if ("content" in fileContent) {
         return Buffer.from(fileContent.content, "base64").toString("utf-8");

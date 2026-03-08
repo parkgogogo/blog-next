@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Octokit } from "@octokit/rest";
 import { z } from "zod";
+import {
+  getGitHubRepoCandidates,
+  withGitHubRepoFallback,
+} from "@/lib/github-repo";
 
 const octokitErrorSchema = z
   .object({
@@ -20,9 +24,10 @@ export async function GET(
     const githubOwner = process.env.GITHUB_OWNER;
     const githubRepo = process.env.GITHUB_REPO;
     const attachmentPath = process.env.ATTACHMENT_PATH || "attachment";
+    const githubRepos = getGitHubRepoCandidates(githubRepo);
 
     // Validate required environment variables
-    if (!githubToken || !githubOwner || !githubRepo) {
+    if (!githubToken || !githubOwner) {
       return NextResponse.json(
         { error: "Missing required GitHub configuration" },
         { status: 500 }
@@ -40,10 +45,14 @@ export async function GET(
 
     try {
       // Fetch file from GitHub using Octokit
-      const { data } = await octokit.rest.repos.getContent({
-        owner: githubOwner,
-        repo: githubRepo,
-        path: fullPath,
+      const { data } = await withGitHubRepoFallback(githubRepos, async (repo) => {
+        const response = await octokit.rest.repos.getContent({
+          owner: githubOwner,
+          repo,
+          path: fullPath,
+        });
+
+        return response.data;
       });
 
       // GitHub API returns base64 encoded content for files
