@@ -91,6 +91,14 @@ function extractText(value: unknown): string {
   return "";
 }
 
+function isOptimizedMarkdownImage(src: string): boolean {
+  if (!src.startsWith("/api/attachment/")) {
+    return false;
+  }
+
+  return /\.(avif|gif|jpe?g|png|webp)$/i.test(src);
+}
+
 export default async function MarkdownRenderer({
   content,
   date,
@@ -152,12 +160,30 @@ export default async function MarkdownRenderer({
             );
           },
           img: ({ src, alt }) => {
+            const imageSrc = typeof src === "string" ? src : "";
+
+            if (!imageSrc || !isOptimizedMarkdownImage(imageSrc)) {
+              return (
+                <div className="flex flex-col items-center my-4">
+                  {/* Markdown image sources are uncontrolled; prefer native img for compatibility. */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    className="rounded-xl max-w-full h-auto"
+                    loading="lazy"
+                    src={imageSrc}
+                    alt={alt || "blog's image"}
+                  />
+                  <div className="italic text-sm mt-2 font-serif">{alt}</div>
+                </div>
+              );
+            }
+
             return (
               <div className="flex flex-col items-center my-4">
                 <Image
                   className="rounded-xl"
                   loading="lazy"
-                  src={src as string}
+                  src={imageSrc}
                   alt={alt || "blog's image"}
                   width={650}
                   height={350}
