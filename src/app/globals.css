@@ -1185,11 +1185,11 @@ body {
 }
 
 .animate-fade-in-up {
-  animation: fade-in-up 0.8s ease-out forwards;
+  animation: fade-in-up 0.8s ease-out both;
 }
 
 .animate-fade-in-up-slow {
-  animation: fade-in-up 1.1s ease-out 0.16s forwards;
+  animation: fade-in-up 1.1s ease-out 0.16s both;
 }
 
 .animate-shooting-star {
