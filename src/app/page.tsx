@@ -1,3 +1,4 @@
+import { FadeInSection } from "@/components/FadeInSection";
 import { Logo } from "@/components/Logo";
 import { Github } from "lucide-react";
 import Link from "next/link";
@@ -36,7 +37,7 @@ export default function HomePage() {
       </header>
       <main className="flex-grow flex items-center justify-center">
         <div className="max-w-2xl w-full px-8 space-y-12 lg:-translate-y-1/4">
-          <section className="animate-fade-in-up">
+          <FadeInSection>
             <h1 className="text-5xl font-bold font-display">
               Hey, I&apos;m <span className="text-accent-warm">Park</span>!
             </h1>
@@ -78,7 +79,7 @@ export default function HomePage() {
                 />
               </svg>
             </div>
-          </section>
+          </FadeInSection>
           {/* <section
             className="animate-fade-in-up"
             style={{ animationDelay: "0.2s" }}
@@ -108,10 +109,7 @@ export default function HomePage() {
               </a>
             </div>
           </section> */}
-          <section
-            className="animate-fade-in-up"
-            style={{ animationDelay: "0.4s" }}
-          >
+          <FadeInSection delay="0.4s">
             <h2 className="text-lg font-semibold">Contact</h2>
             <p className="mt-2 text-muted-foreground">
               You can reach me out anytime at{" "}
@@ -122,7 +120,7 @@ export default function HomePage() {
                 gyuannn1100@gmail.com
               </a>
             </p>
-          </section>
+          </FadeInSection>
         </div>
       </main>
     </div>
