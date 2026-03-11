@@ -116,11 +116,11 @@ export default async function MarkdownRenderer({
         components={{
           header: ({ children }) => (
             <div>
-              <h1 className="text-3xl font-medium font-display text-foreground mb-4 leading-tight tracking-tight mt-0">
+              <h1 className="text-3xl font-medium font-display text-[color:var(--foreground-strong)] mb-4 leading-tight tracking-tight mt-0">
                 {processChildren(children)}
               </h1>
               {date && (
-                <div className="flex flex-row items-center gap-2 text-gray-500 dark:text-gray-400">
+                <div className="flex flex-row items-center gap-2 text-[color:var(--text-muted)]">
                   <time>{format(new Date(date), "d MMM, yyyy")}</time>
                 </div>
               )}
@@ -173,7 +173,9 @@ export default async function MarkdownRenderer({
                     src={imageSrc}
                     alt={alt || "blog's image"}
                   />
-                  <div className="italic text-sm mt-2 font-serif">{alt}</div>
+                  <div className="mt-2 text-sm italic font-serif text-[color:var(--text-muted)]">
+                    {alt}
+                  </div>
                 </div>
               );
             }
@@ -189,7 +191,9 @@ export default async function MarkdownRenderer({
                   height={350}
                   quality={80}
                 />
-                <div className="italic text-sm mt-2 font-serif">{alt}</div>
+                <div className="mt-2 text-sm italic font-serif text-[color:var(--text-muted)]">
+                  {alt}
+                </div>
               </div>
             );
           },

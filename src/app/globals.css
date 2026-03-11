@@ -21,10 +21,26 @@
     font-size: 1rem;
     line-height: 1.85;
     letter-spacing: 0.01em;
+    color: var(--foreground);
 
     img {
       box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
     }
+  }
+
+  .markdown-body a {
+    color: var(--foreground-strong);
+    text-decoration: none;
+    border-bottom: 1px solid color-mix(in srgb, var(--foreground) 28%, transparent);
+    transition: border-color 0.2s ease;
+  }
+
+  .markdown-body a:hover {
+    border-bottom-color: var(--foreground);
+  }
+
+  .markdown-body strong {
+    color: var(--foreground-strong);
   }
 
   .markdown-body hr {
@@ -60,6 +76,9 @@
 
   .markdown-body blockquote {
     margin-block: 1.1em;
+    color: var(--text-muted);
+    border-left: 3px solid color-mix(in srgb, var(--foreground) 18%, transparent);
+    padding-left: 1rem;
   }
 
   .markdown-body pre {
@@ -84,20 +103,37 @@
 
   .markdown-body h1 {
     font-size: 1.62rem;
+    color: var(--foreground-strong);
   }
 
   .markdown-body h2 {
     font-size: 1.38rem;
+    color: var(--foreground-strong);
   }
 
   .markdown-body h3 {
     font-size: 1.2rem;
+    color: var(--foreground);
+    opacity: 0.82;
   }
 
   .markdown-body h4,
   .markdown-body h5,
   .markdown-body h6 {
     font-size: 1.08rem;
+    color: var(--foreground);
+    opacity: 0.82;
+  }
+
+  .markdown-body code:not(pre code) {
+    color: var(--foreground-strong);
+    background: color-mix(in srgb, var(--foreground) 6%, transparent);
+    border-radius: 0.375rem;
+    padding: 0.14em 0.36em;
+  }
+
+  .markdown-body figcaption {
+    color: var(--text-muted);
   }
 
   .mermaid-diagram {
@@ -364,8 +400,9 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #1a1a1a;
-  --text-muted: #6b7280;
+  --foreground: #3f3f46;
+  --foreground-strong: #18181b;
+  --text-muted: #71717a;
   --border-subtle: #e5e7eb;
   --accent-warm: #ea580c;
 
@@ -392,9 +429,10 @@ a {
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #000000;
-    --foreground: #ededed;
-    --text-muted: #9ca3af;
-    --border-subtle: #374151;
+    --foreground: #c4c4c8;
+    --foreground-strong: #f5f5f5;
+    --text-muted: #8f8f95;
+    --border-subtle: #27272a;
 
     /* Yet Another React Lightbox theme (dark) */
     --yarl__color_backdrop: #000000;
