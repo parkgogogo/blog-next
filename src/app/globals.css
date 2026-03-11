@@ -231,7 +231,7 @@
   @media (prefers-color-scheme: dark) {
     .mermaid-zoomable-hint {
       color: #d4d4d8;
-      background: rgba(24, 24, 27, 0.85);
+      background: rgba(0, 0, 0, 0.92);
       border-color: #3f3f46;
     }
 
@@ -247,17 +247,17 @@
     }
 
     .yarl__slide_image {
-      background: #18181b;
+      background: #000000;
       box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
     }
 
     .mermaid-lightbox-stage {
-      background: rgba(17, 17, 22, 0.96);
+      background: #000000;
     }
 
     .mermaid-lightbox-toolbar button {
       border-color: #3f3f46;
-      background: #18181b;
+      background: #000000;
       color: #e4e4e7;
     }
   }
@@ -363,7 +363,7 @@
 }
 
 :root {
-  --background: #fdfdf7;
+  --background: #ffffff;
   --foreground: #1a1a1a;
   --text-muted: #6b7280;
   --border-subtle: #e5e7eb;
@@ -391,14 +391,14 @@ a {
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: oklch(13% 0.028 261.692);
+    --background: #000000;
     --foreground: #ededed;
     --text-muted: #9ca3af;
     --border-subtle: #374151;
 
     /* Yet Another React Lightbox theme (dark) */
-    --yarl__color_backdrop: rgba(10, 10, 12, 0.82);
-    --yarl__container_background_color: rgba(17, 17, 22, 0.96);
+    --yarl__color_backdrop: #000000;
+    --yarl__container_background_color: #000000;
     --yarl__color_button: rgba(228, 228, 231, 0.88);
     --yarl__color_button_active: rgba(255, 255, 255, 1);
   }
