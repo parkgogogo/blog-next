@@ -42,6 +42,7 @@ describe("BlogPostPage", () => {
     const html = renderToStaticMarkup(element);
 
     expect(html).toContain("Hello World");
+    expect(html).toContain("max-w-[650px]");
     expect(html).toContain("text-[color:var(--foreground-strong)]");
     expect(html).toContain("text-[color:var(--text-muted)]");
     expect(html).toContain(
