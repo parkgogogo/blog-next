@@ -26,6 +26,7 @@ package-lock.json
 # misc
 .DS_Store
 *.pem
+/docs/plans/
 
 # debug
 npm-debug.log*
