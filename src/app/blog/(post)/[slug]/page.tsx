@@ -3,10 +3,7 @@ import { format } from "date-fns";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 import { PostService } from "@/lib/posts";
 
-export async function generateStaticParams() {
-  const slugs = await PostService.getSlugs();
-  return slugs.map((slug) => ({ slug: slug }));
-}
+export const revalidate = 300;
 
 export default async function BlogPostPage({
   params,
@@ -17,10 +14,7 @@ export default async function BlogPostPage({
   const decodedSlug = decodeURIComponent(rawSlug);
   const isRawMarkdownMode = decodedSlug.endsWith(".md");
   const slug = isRawMarkdownMode ? decodedSlug.slice(0, -3) : decodedSlug;
-
-  const post = (await PostService.getAllPosts()).find(
-    (item) => item.slug === slug
-  );
+  const post = await PostService.getPostBySlug(slug);
 
   if (!post) {
     notFound();
@@ -89,7 +83,7 @@ export default async function BlogPostPage({
 
           {/* Post Content */}
           <div className="mt-6 md:mt-8">
-            <MarkdownRenderer content={post.content} date={post.date} />
+            <MarkdownRenderer content={post.content} />
           </div>
         </div>
       </article>

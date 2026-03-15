@@ -5,13 +5,11 @@ import { all } from "@wooorm/starry-night";
 import { convertAttachmentUrls } from "@/lib/attachment";
 import type { ReactNode } from "react";
 import Image from "next/image";
-import { format } from "date-fns";
 import { renderMermaid, THEMES } from "beautiful-mermaid";
 import MermaidZoomable from "./MermaidZoomable";
 
 interface MarkdownRendererProps {
   content: string;
-  date?: string;
 }
 
 // Process text nodes to render hashtags as styled components
@@ -101,7 +99,6 @@ function isOptimizedMarkdownImage(src: string): boolean {
 
 export default async function MarkdownRenderer({
   content,
-  date,
 }: MarkdownRendererProps) {
   // Convert attachment URLs to API URLs
   const processedContent = convertAttachmentUrls(content);
@@ -114,17 +111,20 @@ export default async function MarkdownRenderer({
           (options) => rehypeStarryNight({ ...options, grammars: all }),
         ]}
         components={{
-          header: ({ children }) => (
-            <div>
-              <h1 className="text-3xl font-medium font-display text-[color:var(--foreground-strong)] mb-4 leading-tight tracking-tight mt-0">
-                {processChildren(children)}
-              </h1>
-              {date && (
-                <div className="flex flex-row items-center gap-2 text-[color:var(--text-muted)]">
-                  <time>{format(new Date(date), "d MMM, yyyy")}</time>
-                </div>
-              )}
-            </div>
+          h1: ({ children }) => (
+            <h1 className="text-3xl font-medium font-display text-[color:var(--foreground-strong)] mb-4 leading-tight tracking-tight mt-0">
+              {processChildren(children)}
+            </h1>
+          ),
+          h2: ({ children }) => (
+            <h2 className="text-2xl font-medium font-display text-[color:var(--foreground-strong)] mt-10 mb-4 leading-tight tracking-tight">
+              {processChildren(children)}
+            </h2>
+          ),
+          h3: ({ children }) => (
+            <h3 className="text-xl font-medium font-display text-[color:var(--foreground-strong)] mt-8 mb-3 leading-tight tracking-tight">
+              {processChildren(children)}
+            </h3>
           ),
           p: ({ children }) => <p>{processChildren(children)}</p>,
           li: ({ children }) => <li>{processChildren(children)}</li>,

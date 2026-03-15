@@ -15,9 +15,9 @@ vi.mock("@/components/MarkdownRenderer", () => ({
 
 vi.mock("@/lib/posts", () => ({
   PostService: {
-    getSlugs: vi.fn(async () => ["hello-world"]),
-    getAllPosts: vi.fn(async () => [
-      {
+    getPostBySlug: vi.fn(async (slug: string) =>
+      slug === "hello-world"
+        ? {
         slug: "hello-world",
         title: "Hello World",
         date: "2026-03-01T00:00:00.000Z",
@@ -26,8 +26,9 @@ vi.mock("@/lib/posts", () => ({
         readingTime: 6,
         category: "notes",
         categoryPath: "notes",
-      },
-    ]),
+      }
+        : null
+    ),
     getRawMarkdownBySlug: vi.fn(async () => "# Hello World"),
   },
 }));
@@ -35,17 +36,25 @@ vi.mock("@/lib/posts", () => ({
 import BlogPostPage from "./page";
 
 describe("BlogPostPage", () => {
-  it("uses softer body text with stronger title contrast on article pages", async () => {
+  it("renders article metadata and markdown content", async () => {
     const element = await BlogPostPage({
       params: Promise.resolve({ slug: "hello-world" }),
     });
     const html = renderToStaticMarkup(element);
 
     expect(html).toContain("Hello World");
-    expect(html).toContain("text-[color:var(--foreground-strong)]");
-    expect(html).toContain("text-[color:var(--text-muted)]");
-    expect(html).toContain(
-      "border-[color:var(--border-subtle)] bg-[color:var(--background)] text-[color:var(--text-muted)]"
-    );
+    expect(html).toContain("1 Mar, 2026");
+    expect(html).toContain("6 min read");
+    expect(html).toContain("data-testid=\"markdown-renderer\"");
+  });
+
+  it("renders raw markdown mode without re-fetching the post list", async () => {
+    const element = await BlogPostPage({
+      params: Promise.resolve({ slug: "hello-world.md" }),
+    });
+    const html = renderToStaticMarkup(element);
+
+    expect(html).toContain("Hello World.md");
+    expect(html).toContain("# Hello World");
   });
 });
