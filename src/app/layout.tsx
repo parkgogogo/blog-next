@@ -1,5 +1,11 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Inter, Outfit } from "next/font/google";
+import {
+  Geist,
+  Geist_Mono,
+  Inter,
+  Noto_Serif_SC,
+  Outfit,
+} from "next/font/google";
 import "yet-another-react-lightbox/styles.css";
 import "./globals.css";
 
@@ -23,6 +29,13 @@ const outfit = Outfit({
   variable: "--font-outfit",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
+});
+
+const notoSerifSc = Noto_Serif_SC({
+  variable: "--font-noto-serif-sc",
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -49,7 +62,7 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${outfit.variable} antialiased scrollbar-hide`}
+        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${outfit.variable} ${notoSerifSc.variable} antialiased scrollbar-hide`}
       >
         {children}
       </body>
