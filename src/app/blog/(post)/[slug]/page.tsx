@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
+import { format } from "date-fns";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
-import { formatDateLabel } from "@/lib/date";
 import { PostService } from "@/lib/posts";
 
 export const revalidate = 300;
@@ -15,7 +15,6 @@ export default async function BlogPostPage({
   const isRawMarkdownMode = decodedSlug.endsWith(".md");
   const slug = isRawMarkdownMode ? decodedSlug.slice(0, -3) : decodedSlug;
   const post = await PostService.getPostBySlug(slug);
-  const formattedDate = formatDateLabel(post?.date);
 
   if (!post) {
     notFound();
@@ -59,10 +58,10 @@ export default async function BlogPostPage({
             </h1>
 
             <div className="flex flex-row items-center gap-2 text-[color:var(--text-muted)]">
-              {formattedDate && <time>{formattedDate}</time>}
+              <time>{format(new Date(post.date), "d MMM, yyyy")}</time>
               {post.readingTime !== undefined && post.readingTime > 0 && (
                 <>
-                  {formattedDate && <span>·</span>}
+                  <span>·</span>
                   <span>{post.readingTime} min read</span>
                 </>
               )}

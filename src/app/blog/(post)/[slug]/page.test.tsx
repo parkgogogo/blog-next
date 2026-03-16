@@ -18,26 +18,15 @@ vi.mock("@/lib/posts", () => ({
     getPostBySlug: vi.fn(async (slug: string) =>
       slug === "hello-world"
         ? {
-            slug: "hello-world",
-            title: "Hello World",
-            date: "2026-03-01T00:00:00.000Z",
-            content: "Markdown body",
-            tags: ["design"],
-            readingTime: 6,
-            category: "notes",
-            categoryPath: "notes",
-          }
-        : slug === "bad-date"
-          ? {
-              slug: "bad-date",
-              title: "Bad Date",
-              date: "not-a-real-date",
-              content: "Markdown body",
-              tags: [],
-              readingTime: 3,
-              category: "notes",
-              categoryPath: "notes",
-            }
+        slug: "hello-world",
+        title: "Hello World",
+        date: "2026-03-01T00:00:00.000Z",
+        content: "Markdown body",
+        tags: ["design"],
+        readingTime: 6,
+        category: "notes",
+        categoryPath: "notes",
+      }
         : null
     ),
     getRawMarkdownBySlug: vi.fn(async () => "# Hello World"),
@@ -67,16 +56,5 @@ describe("BlogPostPage", () => {
 
     expect(html).toContain("Hello World.md");
     expect(html).toContain("# Hello World");
-  });
-
-  it("does not crash when the post date is invalid", async () => {
-    const element = await BlogPostPage({
-      params: Promise.resolve({ slug: "bad-date" }),
-    });
-    const html = renderToStaticMarkup(element);
-
-    expect(html).toContain("Bad Date");
-    expect(html).toContain("3 min read");
-    expect(html).not.toContain("Invalid time value");
   });
 });

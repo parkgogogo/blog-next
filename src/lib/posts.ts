@@ -2,7 +2,6 @@ import { unstable_cache } from "next/cache";
 import { Octokit } from "@octokit/rest";
 import matter from "gray-matter";
 import { BlogPost, Category } from "@/types/blog";
-import { getDateSortTime, normalizeDateString } from "@/lib/date";
 
 interface GitHubContentItem {
   type: "file" | "dir" | "submodule" | "symlink";
@@ -68,7 +67,19 @@ function createEmptyIndex(): PostIndex {
 function resolvePostDate(frontmatter: Record<string, unknown>): string {
   const candidate =
     frontmatter.date ?? frontmatter.createdAt ?? frontmatter.updatedAt;
-  return normalizeDateString(candidate);
+
+  if (
+    typeof candidate === "string" ||
+    typeof candidate === "number" ||
+    candidate instanceof Date
+  ) {
+    const normalizedDate = new Date(candidate);
+    if (!Number.isNaN(normalizedDate.getTime())) {
+      return normalizedDate.toISOString();
+    }
+  }
+
+  return new Date().toISOString();
 }
 
 async function getDirectoryContents(
@@ -174,7 +185,7 @@ async function processCategory(categoryPath: string): Promise<Category> {
   };
 
   category.posts.sort(
-    (a, b) => getDateSortTime(b.date) - getDateSortTime(a.date)
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
   );
   (category.subcategories || []).sort((a, b) => a.name.localeCompare(b.name));
 
@@ -201,7 +212,7 @@ function collectPostIndex(category: Category): PostIndex {
   };
 
   visit(category);
-  posts.sort((a, b) => getDateSortTime(b.date) - getDateSortTime(a.date));
+  posts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   return {
     category,

@@ -1,6 +1,6 @@
 import Link from "next/link";
+import { format } from "date-fns";
 import { BlogPost, Category } from "@/types/blog";
-import { formatDateLabel, getDateSortTime } from "@/lib/date";
 import { PostService } from "@/lib/posts";
 
 export const revalidate = 300;
@@ -17,8 +17,8 @@ function CategorySection({ category }: { category: Category }) {
   };
 
   const allPosts = getAllPosts(category).sort((a, b) => {
-    const ta = getDateSortTime(a.date);
-    const tb = getDateSortTime(b.date);
+    const ta = new Date(a.date).getTime();
+    const tb = new Date(b.date).getTime();
     return tb - ta;
   });
 
@@ -28,33 +28,29 @@ function CategorySection({ category }: { category: Category }) {
 
   return (
     <div className="space-y-12 animate-fade-in-up-slow">
-      {allPosts.map((post) => {
-        const formattedDate = formatDateLabel(post.date);
-
-        return (
-          <article key={post.slug} className="group">
-            <Link href={`/blog/${post.slug}`}>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 dark:group-hover:text-gray-300 group-hover:text-gray-600 transition-colors mb-2 sm:mb-0 sm:mr-4">
-                  {post.title}
-                </h3>
-                <p className="line-clamp-2 text-gray-600 dark:text-gray-300 mt-3">
-                  {post.excerpt}
-                </p>
-                <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mt-2">
-                  {formattedDate && <time>{formattedDate}</time>}
-                  {post.readingTime !== undefined && post.readingTime > 0 && (
-                    <>
-                      {formattedDate && <span>·</span>}
-                      <span>{post.readingTime} min read</span>
-                    </>
-                  )}
-                </div>
+      {allPosts.map((post) => (
+        <article key={post.slug} className="group">
+          <Link href={`/blog/${post.slug}`}>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 dark:group-hover:text-gray-300 group-hover:text-gray-600 transition-colors mb-2 sm:mb-0 sm:mr-4">
+                {post.title}
+              </h3>
+              <p className="line-clamp-2 text-gray-600 dark:text-gray-300 mt-3">
+                {post.excerpt}
+              </p>
+              <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mt-2">
+                <time>{format(new Date(post.date), "d MMM, yyyy")}</time>
+                {post.readingTime !== undefined && post.readingTime > 0 && (
+                  <>
+                    <span>·</span>
+                    <span>{post.readingTime} min read</span>
+                  </>
+                )}
               </div>
-            </Link>
-          </article>
-        );
-      })}
+            </div>
+          </Link>
+        </article>
+      ))}
     </div>
   );
 }
