@@ -6,11 +6,17 @@ import { convertAttachmentUrls } from "@/lib/attachment";
 import type { ReactNode } from "react";
 import Image from "next/image";
 import { renderMermaid, THEMES } from "beautiful-mermaid";
+import path from "node:path";
+import { pathToFileURL } from "node:url";
 import MermaidZoomable from "./MermaidZoomable";
 
 interface MarkdownRendererProps {
   content: string;
 }
+
+const onigurumaWasmUrl = pathToFileURL(
+  path.join(process.cwd(), "src/lib/vendor/onig.wasm")
+);
 
 // Process text nodes to render hashtags as styled components
 function processHashtagsInText(child: ReactNode): ReactNode {
@@ -108,7 +114,12 @@ export default async function MarkdownRenderer({
       <MarkdownAsync
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[
-          (options) => rehypeStarryNight({ ...options, grammars: all }),
+          (options) =>
+            rehypeStarryNight({
+              ...options,
+              grammars: all,
+              getOnigurumaUrlFs: async () => onigurumaWasmUrl,
+            }),
         ]}
         components={{
           h1: ({ children }) => (
