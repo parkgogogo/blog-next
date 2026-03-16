@@ -83,9 +83,6 @@ dependencies:
   tailwind-scrollbar-hide:
     specifier: ^4.0.0
     version: 4.0.0(tailwindcss@4.1.18)
-  vscode-oniguruma:
-    specifier: ^2.0.1
-    version: 2.0.1
   yet-another-react-lightbox:
     specifier: ^3.29.0
     version: 3.29.0(@types/react-dom@19.2.3)(@types/react@19.2.9)(react-dom@19.1.0)(react@19.1.0)
