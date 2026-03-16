@@ -1,4 +1,5 @@
 import { PostService } from "@/lib/posts";
+import { parseDateValue } from "@/lib/date";
 import RSS from "rss";
 
 export const dynamic = "force-static";
@@ -25,15 +26,18 @@ export async function GET() {
     const posts = await PostService.getAllPosts();
     // Fetch each post and add it to the feed
     for (const post of posts) {
-      feed.item({
+      const parsedDate = parseDateValue(post.date);
+      const item: RSS.ItemOptions = {
         title: post.title,
         description: post.excerpt ?? "",
         url: `${siteUrl}/blog/${encodeURIComponent(post.slug)}`,
         guid: `${siteUrl}/blog/${post.slug}`,
-        date: post.date,
+        date: parsedDate || new Date(),
         // include full content as CDATA so HTML/markdown won't break the feed
         custom_elements: [{ "content:encoded": { _cdata: post.content } }],
-      });
+      };
+
+      feed.item(item);
     }
 
     const xml = feed.xml({ indent: true });

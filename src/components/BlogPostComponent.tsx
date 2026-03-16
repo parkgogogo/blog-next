@@ -1,5 +1,5 @@
-import { format } from "date-fns";
 import { BlogPost } from "@/types/blog";
+import { formatDateLabel } from "@/lib/date";
 import MarkdownRenderer from "./MarkdownRenderer";
 
 interface BlogPostComponentProps {
@@ -11,13 +11,15 @@ export default function BlogPostComponent({
   post,
   showFullContent = false,
 }: BlogPostComponentProps) {
-  const formattedDate = format(new Date(post.date), "MMMM d, yyyy");
+  const formattedDate = formatDateLabel(post.date, "MMMM d, yyyy");
 
   return (
     <article className="bg-white shadow-lg rounded-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
       <div className="p-6">
         <div className="flex items-center justify-between mb-4">
-          <time className="text-sm text-gray-500">{formattedDate}</time>
+          {formattedDate && (
+            <time className="text-sm text-gray-500">{formattedDate}</time>
+          )}
           {post.tags && post.tags.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {post.tags.map((tag, index) => (

@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { parseDateValue } from "@/lib/date";
 import { PostService } from "@/lib/posts";
 
 const SITE_URL =
@@ -26,7 +27,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const postRoutes: MetadataRoute.Sitemap = posts.map((post) => ({
     url: `${SITE_URL}/blog/${encodeURIComponent(post.slug)}`,
-    lastModified: post.date ? new Date(post.date) : new Date(),
+    lastModified: parseDateValue(post.date) || new Date(),
     changeFrequency: "monthly",
     priority: 0.6,
   }));
