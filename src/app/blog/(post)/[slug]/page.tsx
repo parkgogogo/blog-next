@@ -28,7 +28,7 @@ export default async function BlogPostPage({
     }
 
     return (
-      <div className="max-w-4xl mx-auto px-6 md:px-8 pt-6 pb-14 md:pb-20 animate-fade-in-up-slow">
+      <div className="blog-post-shell max-w-4xl mx-auto px-6 md:px-8 pt-6 pb-14 md:pb-20 animate-fade-in-up-slow">
         <article className="bg-transparent">
           <header className="mb-6 md:mb-8">
             <h1 className="text-2xl md:text-3xl font-medium font-display text-[color:var(--foreground-strong)] mb-2 leading-tight tracking-tight mt-0 break-words">
@@ -48,7 +48,7 @@ export default async function BlogPostPage({
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-6 md:px-8 pt-6 pb-14 md:pb-20 animate-fade-in-up-slow">
+    <div className="blog-post-shell max-w-4xl mx-auto px-6 md:px-8 pt-6 pb-14 md:pb-20 animate-fade-in-up-slow">
       <article className="bg-transparent">
         <div className="px-0 py-0">
           {/* Post Header */}

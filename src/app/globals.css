@@ -18,14 +18,51 @@
   }
 
   .markdown-body {
+    font-family:
+      var(--font-reading),
+      "Source Han Serif SC",
+      "Noto Serif CJK SC",
+      "Songti SC",
+      serif;
     font-size: 1rem;
-    line-height: 1.85;
-    letter-spacing: 0.01em;
+    line-height: 1.92;
+    letter-spacing: 0.015em;
     color: var(--foreground);
+    text-wrap: pretty;
 
     img {
       box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
     }
+  }
+
+  .blog-list-shell article h3,
+  .blog-post-shell > article h1,
+  .markdown-body h1,
+  .markdown-body h2,
+  .markdown-body h3,
+  .markdown-body h4,
+  .markdown-body h5,
+  .markdown-body h6 {
+    font-family: var(--font-display);
+  }
+
+  .blog-list-shell article p,
+  .blog-post-shell .markdown-body p,
+  .blog-post-shell .markdown-body li,
+  .blog-post-shell .markdown-body blockquote {
+    font-family:
+      var(--font-reading),
+      "Source Han Serif SC",
+      "Noto Serif CJK SC",
+      "Songti SC",
+      serif;
+  }
+
+  .blog-list-shell article p {
+    font-size: 1rem;
+    line-height: 1.88;
+    letter-spacing: 0.014em;
+    color: color-mix(in srgb, var(--foreground) 92%, transparent);
   }
 
   .markdown-body a {
@@ -104,11 +141,13 @@
   .markdown-body h1 {
     font-size: 1.62rem;
     color: var(--foreground-strong);
+    letter-spacing: -0.02em;
   }
 
   .markdown-body h2 {
     font-size: 1.38rem;
     color: var(--foreground-strong);
+    letter-spacing: -0.018em;
   }
 
   .markdown-body h3 {
@@ -130,6 +169,7 @@
     background: color-mix(in srgb, var(--foreground) 6%, transparent);
     border-radius: 0.375rem;
     padding: 0.14em 0.36em;
+    font-family: var(--font-mono);
   }
 
   .markdown-body figcaption {
@@ -323,7 +363,12 @@
     }
 
     .markdown-body {
-      font-size: 1rem;
+      font-size: 0.98rem;
+      line-height: 1.86;
+    }
+
+    .blog-list-shell article p {
+      font-size: 0.97rem;
       line-height: 1.82;
     }
 
@@ -424,6 +469,12 @@ a {
   --font-sans: var(--font-inter), system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
   --font-display: var(--font-outfit), var(--font-inter), system-ui, sans-serif;
+  --font-reading:
+    var(--font-noto-serif-sc),
+    "Source Han Serif SC",
+    "Noto Serif CJK SC",
+    "Songti SC",
+    serif;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -445,7 +496,7 @@ a {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Inter, system-ui, sans-serif;
+  font-family: var(--font-inter), system-ui, sans-serif;
   line-height: 1.6;
   font-weight: 400;
 }
