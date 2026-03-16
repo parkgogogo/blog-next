@@ -39,6 +39,7 @@
     "remark-gfm": "^4.0.1",
     "rss": "^1.2.2",
     "tailwind-scrollbar-hide": "^4.0.0",
+    "vscode-oniguruma": "^2.0.1",
     "yet-another-react-lightbox": "^3.29.0",
     "zod": "^3.25.76"
   },
