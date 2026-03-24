@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { regenerateStoryAction } from "@/app/words/[slug]/story/actions";
+import { getBrowserSupabaseClient } from "@/lib/supabase/browser";
 
 export const StoryActions = ({ slug }: { slug: string }) => {
   const [isPending, startTransition] = useTransition();
@@ -10,7 +11,13 @@ export const StoryActions = ({ slug }: { slug: string }) => {
 
   const handleRegenerate = () => {
     startTransition(async () => {
-      await regenerateStoryAction(slug);
+      const supabase = getBrowserSupabaseClient();
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) {
+        throw new Error("Not authenticated");
+      }
+      await regenerateStoryAction(slug, accessToken);
       router.refresh();
     });
   };

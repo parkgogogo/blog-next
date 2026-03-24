@@ -4,6 +4,15 @@ import { Suspense, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { getBrowserSupabaseClient } from "@/lib/supabase/browser";
 
+const isValidNextPath = (path: string): boolean => {
+  // 只允许以 / 开头的相对路径
+  // 拒绝包含 :// (协议) 或 javascript: (javascript 伪协议) 的值
+  if (!path.startsWith("/")) return false;
+  if (path.includes("://")) return false;
+  if (path.toLowerCase().startsWith("javascript:")) return false;
+  return true;
+};
+
 type OAuthProvider = "github";
 
 const providers: Array<{ id: OAuthProvider; label: string }> = [
@@ -13,10 +22,10 @@ const providers: Array<{ id: OAuthProvider; label: string }> = [
 const LoginContent = () => {
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState<OAuthProvider | null>(null);
-  const nextPath = useMemo(
-    () => searchParams.get("next") || "/words",
-    [searchParams],
-  );
+  const nextPath = useMemo(() => {
+    const rawNext = searchParams.get("next") || "/words";
+    return isValidNextPath(rawNext) ? rawNext : "/words";
+  }, [searchParams]);
 
   const handleLogin = async (provider: OAuthProvider) => {
     setLoading(provider);

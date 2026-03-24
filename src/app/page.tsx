@@ -114,7 +114,7 @@ export default function HomePage() {
             <p className="mt-2 text-muted-foreground">
               You can reach me out anytime at{" "}
               <a
-                href="mailto:g.park@family.park"
+                href="mailto:gyuannn1100@gmail.com"
                 className="text-accent-warm underline"
               >
                 gyuannn1100@gmail.com

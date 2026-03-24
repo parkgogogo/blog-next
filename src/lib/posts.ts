@@ -23,7 +23,7 @@ const octokit = new Octokit({
 const GITHUB_OWNER = process.env.GITHUB_OWNER || "your-username";
 const GITHUB_REPO = process.env.GITHUB_REPO || "your-blog-repo";
 const POSTS_PATH = process.env.POSTS_PATH || "posts";
-const POSTS_REVALIDATE_SECONDS = 300;
+const POSTS_REVALIDATE_SECONDS = false;
 
 /**
  * 计算阅读时间

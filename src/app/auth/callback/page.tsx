@@ -4,6 +4,15 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getBrowserSupabaseClient } from "@/lib/supabase/browser";
 
+const isValidNextPath = (path: string): boolean => {
+  // 只允许以 / 开头的相对路径
+  // 拒绝包含 :// (协议) 或 javascript: (javascript 伪协议) 的值
+  if (!path.startsWith("/")) return false;
+  if (path.includes("://")) return false;
+  if (path.toLowerCase().startsWith("javascript:")) return false;
+  return true;
+};
+
 const CallbackContent = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -43,7 +52,8 @@ const CallbackContent = () => {
     const run = async () => {
       const code = searchParams.get("code");
       const errorDescription = searchParams.get("error_description");
-      const nextPath = searchParams.get("next") || "/words";
+      const rawNextPath = searchParams.get("next") || "/words";
+      const nextPath = isValidNextPath(rawNextPath) ? rawNextPath : "/words";
       const hash = window.location.hash.startsWith("#")
         ? window.location.hash.slice(1)
         : window.location.hash;

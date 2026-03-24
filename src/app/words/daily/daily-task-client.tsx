@@ -426,17 +426,8 @@ export const DailyTaskClient = ({
   }, []);
 
   useEffect(() => {
-    const prefix = "daily-task-state:";
-    for (let i = 0; i < localStorage.length; i += 1) {
-      const key = localStorage.key(i);
-      if (!key || key === storageKey || !key.startsWith(prefix)) continue;
-      localStorage.removeItem(key);
-    }
-  }, [storageKey]);
-
-  useEffect(() => {
     if (totalCards === 0) return;
-    const raw = localStorage.getItem(storageKey);
+    const raw = sessionStorage.getItem(storageKey);
     if (!raw) return;
     try {
       const parsed = JSON.parse(raw) as {
@@ -494,7 +485,7 @@ export const DailyTaskClient = ({
       loopCount,
       completed,
     };
-    localStorage.setItem(storageKey, JSON.stringify(payload));
+    sessionStorage.setItem(storageKey, JSON.stringify(payload));
   }, [
     index,
     phase,
