@@ -5,6 +5,14 @@ import { PostService } from "@/lib/posts";
 
 export const revalidate = false;
 
+export async function generateStaticParams() {
+  const slugs = await PostService.getSlugs();
+
+  return slugs.map((slug) => ({
+    slug,
+  }));
+}
+
 export default async function BlogPostPage({
   params,
 }: {
