@@ -3,7 +3,7 @@ import { format } from "date-fns";
 import { BlogPost, Category } from "@/types/blog";
 import { PostService } from "@/lib/posts";
 
-export const revalidate = 300;
+export const revalidate = false;
 
 function CategorySection({ category }: { category: Category }) {
   const getAllPosts = (cat: Category): BlogPost[] => {
