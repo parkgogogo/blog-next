@@ -18,7 +18,7 @@ export async function GET(
 
   const { text } = await params;
 
-  const wordsList = await WordsService.getAllWordUuids();
+  const wordsList = await WordsService.getAllWordUuids({ accessToken: auth.accessToken });
   if (!wordsList.includes(text)) {
     return NextResponse.error();
   }

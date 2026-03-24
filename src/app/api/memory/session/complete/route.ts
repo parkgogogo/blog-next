@@ -42,15 +42,23 @@ export async function POST(request: NextRequest) {
       throw new Error(itemsError.message);
     }
 
-    await supabase
+    const { error: sessionUpdateError } = await supabase
       .from("word_memory_sessions")
       .update({ status: "completed", completed_at: new Date().toISOString() })
       .eq("id", sessionId);
 
-    await supabase
+    if (sessionUpdateError) {
+      throw new Error(`Failed to update session: ${sessionUpdateError.message}`);
+    }
+
+    const { error: itemsUpdateError } = await supabase
       .from("word_memory_session_items")
       .update({ completed: true, completed_at: new Date().toISOString() })
       .eq("session_id", sessionId);
+
+    if (itemsUpdateError) {
+      throw new Error(`Failed to update session items: ${itemsUpdateError.message}`);
+    }
 
     const toReward = (items ?? []).filter((item) => !item.opened_card);
     await Promise.all(

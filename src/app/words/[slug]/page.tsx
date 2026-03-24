@@ -13,16 +13,9 @@ export default async function DailyWordsPage({
   const dailyWords = await WordsService.getWordsByDate(slug, {
     accessToken: auth.accessToken,
   });
-  const nextSlug = await (async () => {
-    const slugs = (
-      await WordsService.getWordsGroupKeys({
-        accessToken: auth.accessToken,
-      })
-    ).filter((item) => item !== slug);
-    return slugs.length
-      ? slugs[crypto.getRandomValues(new Uint32Array(1))[0] % slugs.length]
-      : null;
-  })();
+  const nextSlug = await WordsService.getNextWordsGroupKey(slug, {
+    accessToken: auth.accessToken,
+  });
 
   return (
     <DailyWordsSection

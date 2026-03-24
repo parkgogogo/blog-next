@@ -96,13 +96,21 @@ export async function GET(
 
       const contentType = getContentType(data.name);
 
+      // 对于 HTML 和 SVG 文件，强制作为附件下载而不是内联渲染
+      // 防止同源脚本执行攻击
+      const isDangerousInlineType =
+        contentType === "text/html" || contentType === "image/svg+xml";
+      const contentDisposition = isDangerousInlineType
+        ? `attachment; filename="${data.name}"`
+        : `inline; filename="${data.name}"`;
+
       // Return the file with appropriate headers
       return new NextResponse(new Uint8Array(fileContent), {
         status: 200,
         headers: {
           "Content-Type": contentType,
           "Cache-Control": "public, max-age=3600, s-maxage=31536000",
-          "Content-Disposition": `inline; filename="${data.name}"`,
+          "Content-Disposition": contentDisposition,
           "Content-Length": fileContent.length.toString(),
         },
       });

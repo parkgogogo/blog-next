@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useMemo, useState } from "react";
 import Lightbox from "yet-another-react-lightbox";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
@@ -52,7 +53,14 @@ export default function MermaidZoomable({ svg }: MermaidZoomableProps) {
         aria-label="放大查看 Mermaid 图"
       >
         <span className="mermaid-zoomable-hint">点击放大</span>
-        <span dangerouslySetInnerHTML={{ __html: svg }} />
+        <Image
+          unoptimized
+          src={src}
+          alt="diagram"
+          width={dimensions.width}
+          height={dimensions.height}
+          style={{ maxWidth: "100%", height: "auto" }}
+        />
       </button>
 
       <Lightbox

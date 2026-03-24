@@ -126,6 +126,47 @@ export const listWordEntriesByDate = async (
   });
 };
 
+export const listAllWordEntries = async (
+  options?: { accessToken?: string | null },
+): Promise<Map<string, WordEntryRecord[]>> => {
+  const supabase = getSupabaseClient({ accessToken: options?.accessToken });
+  const { data, error } = await supabase
+    .from(ENTRIES_TABLE)
+    .select(
+      "id, created_at, source_text, source_link, context_line, context, words ( text, language )",
+    )
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const entriesByDate = new Map<string, WordEntryRecord[]>();
+
+  for (const entry of data ?? []) {
+    const createdAt = entry.created_at as string;
+    const dateSlug = format(new Date(createdAt), "yyyy-MM-dd");
+    const wordRow = entry.words as { text?: string; language?: string } | null;
+
+    const record: WordEntryRecord = {
+      id: entry.id as string,
+      wordText: wordRow?.text ?? "",
+      language: wordRow?.language ?? "en",
+      sourceText: (entry.source_text as string | null) ?? null,
+      sourceLink: (entry.source_link as string | null) ?? null,
+      contextLine: (entry.context_line as string | null) ?? null,
+      context: (entry.context as string) ?? "",
+      createdAt,
+    };
+
+    const existing = entriesByDate.get(dateSlug) ?? [];
+    existing.push(record);
+    entriesByDate.set(dateSlug, existing);
+  }
+
+  return entriesByDate;
+};
+
 export const listWordEntryDates = async (
   options?: { accessToken?: string | null },
 ): Promise<string[]> => {

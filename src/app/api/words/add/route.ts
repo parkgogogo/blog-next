@@ -3,6 +3,15 @@ import { enforceRateLimit, requireSupabaseAuth } from "@/lib/middleware/security
 import { insertWordEntry } from "@/lib/words/storage";
 import { addWordEntryRequestSchema } from "@/lib/schemas/words";
 
+const escapeHtml = (text: string): string => {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;");
+};
+
 export async function POST(request: NextRequest) {
   const auth = await requireSupabaseAuth(request);
   if (!auth.ok) {
@@ -32,15 +41,16 @@ export async function POST(request: NextRequest) {
     parsedPayload.data;
   const resolvedLanguage = language ?? "en";
   const resolvedProvider = provider ?? "manual";
+  const escapedContextLine = escapeHtml(contextLine);
 
   const entry = await insertWordEntry(
     {
       word,
       language: resolvedLanguage,
-      context: contextLine,
+      context: escapedContextLine,
       brief: "",
       detail: "",
-      contextLine,
+      contextLine: escapedContextLine,
       sourceLink: sourceLink || null,
       provider: resolvedProvider,
       providerPayload: null,
@@ -52,6 +62,6 @@ export async function POST(request: NextRequest) {
     type: "word_entry",
     id: entry.id,
     word,
-    context: contextLine,
+    context: escapedContextLine,
   });
 }

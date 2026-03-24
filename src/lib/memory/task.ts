@@ -137,15 +137,34 @@ export const generateDailyTask = async (
   }
 
   let taskId = existingTask?.id as string | undefined;
+  const originalTaskStatus = existingTask?.status as string | undefined;
+  const originalTaskCardCount = existingTask?.card_count as number | undefined;
+  const originalTaskCompletedAt = existingTask?.completed_at as string | null | undefined;
+
   if (existingTask && force) {
-    await supabase
+    const { error: deleteError } = await supabase
       .from("word_memory_cards")
       .delete()
       .eq("task_id", existingTask.id);
-    await supabase
+    if (deleteError) {
+      throw new Error(`Failed to delete existing cards: ${deleteError.message}`);
+    }
+    const { error: updateError } = await supabase
       .from("word_memory_daily_tasks")
       .update({ status: "running", card_count: 0, completed_at: null })
       .eq("id", existingTask.id);
+    if (updateError) {
+      // Attempt rollback: restore previous status
+      await supabase
+        .from("word_memory_daily_tasks")
+        .update({
+          status: originalTaskStatus,
+          card_count: originalTaskCardCount,
+          completed_at: originalTaskCompletedAt,
+        })
+        .eq("id", existingTask.id);
+      throw new Error(`Failed to update task status: ${updateError.message}`);
+    }
   }
 
   if (!taskId) {
@@ -214,44 +233,68 @@ export const generateDailyTask = async (
   );
   const cards: DailyTaskResult["cards"] = [];
 
-  for (const planned of plannedCards) {
-    const resolved = planned.words
-      .map((word) => itemByWord.get(word.toLowerCase()))
-      .filter(Boolean) as MemoryFeedItemLite[];
-    if (resolved.length === 0) continue;
+  const insertedCardIds: string[] = [];
+  try {
+    for (const planned of plannedCards) {
+      const resolved = planned.words
+        .map((word) => itemByWord.get(word.toLowerCase()))
+        .filter(Boolean) as MemoryFeedItemLite[];
+      if (resolved.length === 0) continue;
 
-    const primary = resolved[0];
-    const extras = resolved.slice(1, 3);
-    const words = [primary.word_text, ...extras.map((extra) => extra.word_text)];
-    const sentence = planned.sentence;
-    const charCount = sentence.length;
-    const wordIds = [primary.word_id, ...extras.map((extra) => extra.word_id)];
+      const primary = resolved[0];
+      const extras = resolved.slice(1, 3);
+      const words = [primary.word_text, ...extras.map((extra) => extra.word_text)];
+      const sentence = planned.sentence;
+      const charCount = sentence.length;
+      const wordIds = [primary.word_id, ...extras.map((extra) => extra.word_id)];
 
-    const { data: cardRow, error: cardError } = await supabase
-      .from("word_memory_cards")
-      .insert({
-        task_id: taskId,
-        primary_word_id: primary.word_id,
-        extra_word_ids: extras.map((extra) => extra.word_id),
+      const { data: cardRow, error: cardError } = await supabase
+        .from("word_memory_cards")
+        .insert({
+          task_id: taskId,
+          primary_word_id: primary.word_id,
+          extra_word_ids: extras.map((extra) => extra.word_id),
+          sentence,
+          word_count: words.length,
+          char_count: charCount,
+        })
+        .select("*")
+        .single();
+
+      if (cardError) {
+        throw new Error(`Failed to insert card: ${cardError.message}`);
+      }
+
+      insertedCardIds.push(cardRow.id as string);
+      cards.push({
+        id: cardRow.id as string,
         sentence,
+        word_ids: wordIds,
+        words,
         word_count: words.length,
         char_count: charCount,
-      })
-      .select("*")
-      .single();
-
-    if (cardError) {
-      throw new Error(cardError.message);
+      });
     }
-
-    cards.push({
-      id: cardRow.id as string,
-      sentence,
-      word_ids: wordIds,
-      words,
-      word_count: words.length,
-      char_count: charCount,
-    });
+  } catch (error) {
+    // Rollback: delete any cards that were successfully inserted
+    if (insertedCardIds.length > 0) {
+      await supabase.from("word_memory_cards").delete().in("id", insertedCardIds);
+    }
+    // Rollback: restore task to previous state
+    if (existingTask && force) {
+      await supabase
+        .from("word_memory_daily_tasks")
+        .update({
+          status: originalTaskStatus,
+          card_count: originalTaskCardCount,
+          completed_at: originalTaskCompletedAt,
+        })
+        .eq("id", existingTask.id);
+    } else if (!existingTask && taskId) {
+      // If we created a new task, delete it
+      await supabase.from("word_memory_daily_tasks").delete().eq("id", taskId);
+    }
+    throw error;
   }
 
   if (cards.length === 0) {
