@@ -3,7 +3,7 @@ import { format } from "date-fns";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 import { PostService } from "@/lib/posts";
 
-export const revalidate = 300;
+export const revalidate = false;
 
 export default async function BlogPostPage({
   params,
