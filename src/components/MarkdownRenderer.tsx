@@ -18,7 +18,6 @@ const onigurumaWasmUrl = pathToFileURL(
   path.join(process.cwd(), "src/lib/vendor/onig.wasm")
 );
 
-// Process text nodes to render hashtags as styled components
 function processHashtagsInText(child: ReactNode): ReactNode {
   if (typeof child === "string") {
     const hashtagRegex = /#([a-zA-Z0-9_\u4e00-\u9fff]+)/g;
@@ -27,26 +26,23 @@ function processHashtagsInText(child: ReactNode): ReactNode {
     let match;
 
     while ((match = hashtagRegex.exec(child)) !== null) {
-      // Add text before hashtag
       if (match.index > lastIndex) {
         parts.push(child.slice(lastIndex, match.index));
       }
 
-      // Add hashtag component
       parts.push(
         <span
           key={`hashtag-${match.index}`}
           className="hashtag"
           data-hashtag={match[1]}
         >
-          🏷 {match[0]}
-        </span>,
+          {match[0]}
+        </span>
       );
 
       lastIndex = match.index + match[0].length;
     }
 
-    // Add remaining text
     if (lastIndex < child.length) {
       parts.push(child.slice(lastIndex));
     }
@@ -56,7 +52,6 @@ function processHashtagsInText(child: ReactNode): ReactNode {
   return child;
 }
 
-// Process children array to handle hashtags
 function processChildren(children: ReactNode): ReactNode {
   return Array.isArray(children)
     ? children.map(processHashtagsInText).flat()
@@ -106,11 +101,10 @@ function isOptimizedMarkdownImage(src: string): boolean {
 export default async function MarkdownRenderer({
   content,
 }: MarkdownRendererProps) {
-  // Convert attachment URLs to API URLs
   const processedContent = convertAttachmentUrls(content);
 
   return (
-    <div className="markdown-body">
+    <div className="markdown-body prose max-w-none">
       <MarkdownAsync
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[
@@ -123,17 +117,17 @@ export default async function MarkdownRenderer({
         ]}
         components={{
           h1: ({ children }) => (
-            <h1 className="text-3xl font-medium font-display text-[color:var(--foreground-strong)] mb-4 leading-tight tracking-tight mt-0">
+            <h1 className="mb-4 mt-0 text-[30px] font-semibold leading-[42px] text-[color:var(--foreground-strong)]">
               {processChildren(children)}
             </h1>
           ),
           h2: ({ children }) => (
-            <h2 className="text-2xl font-medium font-display text-[color:var(--foreground-strong)] mt-10 mb-4 leading-tight tracking-tight">
+            <h2 className="mb-4 mt-10 text-2xl font-semibold leading-8 text-[color:var(--foreground-strong)]">
               {processChildren(children)}
             </h2>
           ),
           h3: ({ children }) => (
-            <h3 className="text-xl font-medium font-display text-[color:var(--foreground-strong)] mt-8 mb-3 leading-tight tracking-tight">
+            <h3 className="mb-3 mt-8 text-xl font-semibold leading-7 text-[color:var(--foreground-strong)]">
               {processChildren(children)}
             </h3>
           ),
@@ -152,13 +146,12 @@ export default async function MarkdownRenderer({
                   ...THEMES["zinc-light"],
                   font: "Inter",
                   // Keep theme background so node fills/lines have stable contrast.
-                  // A transparent bg breaks some color-mix derivations.
                   transparent: false,
                 });
                 return <MermaidZoomable svg={svg} />;
               } catch {
                 return (
-                  <pre className="my-4 rounded bg-red-50 p-3 text-sm text-red-700 overflow-x-auto">
+                  <pre className="my-4 overflow-x-auto rounded bg-red-50 p-3 text-sm text-red-700">
                     Mermaid render failed.\n{mermaidText}
                   </pre>
                 );
@@ -175,26 +168,28 @@ export default async function MarkdownRenderer({
 
             if (!imageSrc || !isOptimizedMarkdownImage(imageSrc)) {
               return (
-                <div className="flex flex-col items-center my-4">
+                <div className="my-4 flex flex-col items-center">
                   {/* Markdown image sources are uncontrolled; prefer native img for compatibility. */}
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    className="rounded-xl max-w-full h-auto"
+                    className="h-auto max-w-full rounded-lg border border-[color:var(--border-default)] bg-[color:var(--surface-muted)]"
                     loading="lazy"
                     src={imageSrc}
                     alt={alt || "blog's image"}
                   />
-                  <div className="mt-2 text-sm italic font-serif text-[color:var(--text-muted)]">
-                    {alt}
-                  </div>
+                  {alt && (
+                    <div className="mt-2 text-sm leading-5 text-[color:var(--text-muted)]">
+                      {alt}
+                    </div>
+                  )}
                 </div>
               );
             }
 
             return (
-              <div className="flex flex-col items-center my-4">
+              <div className="my-4 flex flex-col items-center">
                 <Image
-                  className="rounded-xl"
+                  className="h-auto max-w-full rounded-lg border border-[color:var(--border-default)] bg-[color:var(--surface-muted)]"
                   loading="lazy"
                   src={imageSrc}
                   alt={alt || "blog's image"}
@@ -202,9 +197,11 @@ export default async function MarkdownRenderer({
                   height={350}
                   quality={80}
                 />
-                <div className="mt-2 text-sm italic font-serif text-[color:var(--text-muted)]">
-                  {alt}
-                </div>
+                {alt && (
+                  <div className="mt-2 text-sm leading-5 text-[color:var(--text-muted)]">
+                    {alt}
+                  </div>
+                )}
               </div>
             );
           },

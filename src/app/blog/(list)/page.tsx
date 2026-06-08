@@ -1,9 +1,24 @@
 import Link from "next/link";
+import Image from "next/image";
 import { format } from "date-fns";
 import { BlogPost, Category } from "@/types/blog";
 import { PostService } from "@/lib/posts";
 
 export const revalidate = false;
+
+function getDisplayExcerpt(post: BlogPost): string {
+  const source = post.excerpt || post.content;
+
+  return source
+    .replace(/```[\s\S]*?```/g, " ")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/!\[[^\]]*]\([^)]*\)/g, " ")
+    .replace(/\[([^\]]+)]\([^)]*\)/g, "$1")
+    .replace(/^#{1,6}\s+/gm, "")
+    .replace(/[#*_>~-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
 
 function CategorySection({ category }: { category: Category }) {
   const getAllPosts = (cat: Category): BlogPost[] => {
@@ -27,18 +42,21 @@ function CategorySection({ category }: { category: Category }) {
   }
 
   return (
-    <div className="space-y-12 animate-fade-in-up-slow">
+    <div className="divide-y divide-[color:var(--border-default)]">
       {allPosts.map((post) => (
         <article key={post.slug} className="group">
-          <Link href={`/blog/${post.slug}`}>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 dark:group-hover:text-gray-300 group-hover:text-gray-600 transition-colors mb-2 sm:mb-0 sm:mr-4">
+          <Link
+            href={`/blog/${post.slug}`}
+            className="block py-5 transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--link-primary)]"
+          >
+            <div className="flex flex-col gap-2">
+              <h3 className="text-base font-semibold leading-6 text-[color:var(--foreground-strong)] transition-colors duration-150 group-hover:text-[color:var(--link-primary)]">
                 {post.title}
               </h3>
-              <p className="line-clamp-2 text-gray-600 dark:text-gray-300 mt-3">
-                {post.excerpt}
+              <p className="line-clamp-2 text-sm leading-5 text-[color:var(--text-muted)]">
+                {getDisplayExcerpt(post)}
               </p>
-              <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mt-2">
+              <div className="flex items-center gap-2 text-sm leading-5 text-[color:var(--text-tertiary)]">
                 <time>{format(new Date(post.date), "d MMM, yyyy")}</time>
                 {post.readingTime !== undefined && post.readingTime > 0 && (
                   <>
@@ -56,46 +74,62 @@ function CategorySection({ category }: { category: Category }) {
 }
 
 export default async function BlogPage() {
-  // 使用 lib/posts 中的函数直接获取数据
   const categories = await PostService.getCategory();
 
   return (
-    <div className="blog-list-shell max-w-4xl mx-auto px-6 pb-20">
-      {/* Header */}
-      <header className="mb-16">
-        <h1 className="text-3xl md:text-4xl font-semibold text-gray-900 dark:text-gray-200 mb-3">
-          Blogs
+    <div className="mx-auto w-full max-w-[72rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-12">
+      <header className="mb-1 max-w-3xl">
+        <h1 className="h-[42px]" aria-label="Blog">
+          <Image
+            src="/blog-title-light.png"
+            alt=""
+            width={143}
+            height={84}
+            priority
+            className="blog-title-image blog-title-image--light"
+          />
+          <Image
+            src="/blog-title-dark.png"
+            alt=""
+            width={143}
+            height={84}
+            priority
+            className="blog-title-image blog-title-image--dark"
+          />
         </h1>
+        <div className="mt-3 h-6" aria-label="随手记点东西">
+          <Image
+            src="/blog-subtitle-light.png"
+            alt="随手记点东西"
+            width={223}
+            height={48}
+            priority
+            className="blog-subtitle-image blog-subtitle-image--light"
+          />
+          <Image
+            src="/blog-subtitle-dark.png"
+            alt=""
+            width={223}
+            height={48}
+            priority
+            className="blog-subtitle-image blog-subtitle-image--dark"
+          />
+        </div>
       </header>
 
-      {/* Content */}
-      <div className="space-y-12">
+      <div className="max-w-3xl">
         <CategorySection category={categories} />
       </div>
 
-      {/* No content state */}
       {categories.posts.length === 0 &&
         (!categories.subcategories ||
           categories.subcategories.length === 0) && (
-          <div className="text-center py-20">
-            <div className="max-w-md mx-auto">
-              <svg
-                className="mx-auto h-12 w-12 text-gray-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-              <h3 className="mt-2 text-sm font-medium text-gray-900">
+          <div className="py-16">
+            <div className="max-w-md rounded-[10px] border border-[color:var(--border-default)] bg-[color:var(--surface-muted)] p-5">
+              <h3 className="text-sm font-semibold leading-5 text-[color:var(--foreground-strong)]">
                 No content found
               </h3>
-              <p className="mt-1 text-sm text-gray-500">
+              <p className="mt-2 text-sm leading-5 text-[color:var(--text-muted)]">
                 Get started by creating your first markdown file in your
                 repository.
               </p>

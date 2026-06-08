@@ -1,10 +1,25 @@
 import { format } from "date-fns";
+import Link from "next/link";
 import { BlogPost } from "@/types/blog";
 import MarkdownRenderer from "./MarkdownRenderer";
 
 interface BlogPostComponentProps {
   post: BlogPost;
   showFullContent?: boolean;
+}
+
+function getDisplayExcerpt(post: BlogPost): string {
+  const source = post.excerpt || post.content;
+
+  return source
+    .replace(/```[\s\S]*?```/g, " ")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/!\[[^\]]*]\([^)]*\)/g, " ")
+    .replace(/\[([^\]]+)]\([^)]*\)/g, "$1")
+    .replace(/^#{1,6}\s+/gm, "")
+    .replace(/[#*_>~-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 export default function BlogPostComponent({
@@ -14,16 +29,18 @@ export default function BlogPostComponent({
   const formattedDate = format(new Date(post.date), "MMMM d, yyyy");
 
   return (
-    <article className="bg-white shadow-lg rounded-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <time className="text-sm text-gray-500">{formattedDate}</time>
+    <article className="rounded-[10px] border border-[color:var(--border-default)] bg-[color:var(--background)] transition-colors duration-150 hover:bg-[color:var(--surface-muted)]">
+      <div className="p-4">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <time className="text-sm leading-5 text-[color:var(--text-tertiary)]">
+            {formattedDate}
+          </time>
           {post.tags && post.tags.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {post.tags.map((tag, index) => (
                 <span
                   key={index}
-                  className="inline-block bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full"
+                  className="inline-flex rounded-md border border-[color:var(--border-default)] bg-[color:var(--surface-muted)] px-2.5 py-1 text-xs font-medium leading-[18px] text-[color:var(--text-muted)]"
                 >
                   {tag}
                 </span>
@@ -32,7 +49,7 @@ export default function BlogPostComponent({
           )}
         </div>
 
-        <h2 className="text-2xl font-bold text-gray-900 mb-4 hover:text-blue-600 transition-colors">
+        <h2 className="mb-4 text-base font-semibold leading-6 text-[color:var(--foreground-strong)]">
           {post.title}
         </h2>
 
@@ -40,17 +57,17 @@ export default function BlogPostComponent({
           <MarkdownRenderer content={post.content} />
         ) : (
           <div className="mb-4">
-            <p className="text-gray-700 text-base leading-relaxed">
-              {post.excerpt}
+            <p className="text-sm leading-5 text-[color:var(--text-muted)]">
+              {getDisplayExcerpt(post)}
             </p>
           </div>
         )}
 
         {!showFullContent && (
-          <div className="flex justify-between items-center mt-4">
-            <a
+          <div className="mt-4 flex items-center justify-between">
+            <Link
               href={`/blog/${post.slug}`}
-              className="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium transition-colors"
+              className="inline-flex items-center text-sm font-medium leading-5 text-[color:var(--link-primary)] transition-colors duration-150 hover:text-[color:var(--link-primary-hover)]"
             >
               Read more
               <svg
@@ -66,7 +83,7 @@ export default function BlogPostComponent({
                   d="M9 5l7 7-7 7"
                 />
               </svg>
-            </a>
+            </Link>
           </div>
         )}
       </div>

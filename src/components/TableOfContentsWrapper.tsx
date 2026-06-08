@@ -92,21 +92,23 @@ export default function TableOfContentsWrapper() {
 
   if (tocItems.length === 0) {
     return (
-      <div className="w-64 bg-background h-screen overflow-y-auto sticky top-0">
-        <div className="p-6">
-          <h3 className="text-xs font-medium text-muted uppercase tracking-wider mb-4 font-display">
+      <div className="sticky top-16 h-[calc(100vh-4rem)] w-60 overflow-y-auto bg-[color:var(--background)]">
+        <div className="p-4">
+          <h3 className="mb-4 px-3 text-sm font-semibold leading-5 text-[color:var(--foreground-strong)]">
             On This Page
           </h3>
-          <div className="text-sm text-muted">No headings found</div>
+          <div className="px-3 text-sm leading-5 text-[color:var(--text-tertiary)]">
+            No headings found
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="w-64 bg-background h-screen overflow-y-auto sticky top-0">
-      <div className="p-6">
-        <h3 className="text-xs font-medium text-muted uppercase tracking-wider mb-4 font-display">
+    <div className="sticky top-16 h-[calc(100vh-4rem)] w-60 overflow-y-auto bg-[color:var(--background)]">
+      <div className="p-4">
+        <h3 className="mb-4 px-3 text-sm font-semibold leading-5 text-[color:var(--foreground-strong)]">
           On This Page
         </h3>
 
@@ -121,12 +123,12 @@ export default function TableOfContentsWrapper() {
                 key={item.id}
                 onClick={() => scrollToHeading(item.id)}
                 className={`
-                  block w-full text-left px-3 py-2 text-sm rounded-md transition-all duration-200
+                  block w-full rounded-md px-3 py-2 text-left text-sm leading-5 transition-colors duration-150
                   ${indentClass}
                   ${
                     isActive
-                      ? "text-accent-warm bg-orange-50 border-r-2 border-accent-warm font-medium"
-                      : "text-muted hover:text-foreground hover:bg-gray-50"
+                      ? "bg-[color:var(--surface-active)] font-medium text-[color:var(--foreground-strong)]"
+                      : "text-[color:var(--text-muted)] hover:bg-[color:var(--surface-tertiary)] hover:text-[color:var(--foreground-strong)]"
                   }
                 `}
               >
