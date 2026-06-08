@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { format } from "date-fns";
+import Link from "next/link";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 import { PostService } from "@/lib/posts";
 
@@ -36,18 +37,24 @@ export default async function BlogPostPage({
     }
 
     return (
-      <div className="blog-post-shell max-w-4xl mx-auto px-6 md:px-8 pt-6 pb-14 md:pb-20 animate-fade-in-up-slow">
-        <article className="bg-transparent">
+      <div className="mx-auto w-full max-w-[72rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-12">
+        <article className="max-w-3xl bg-transparent">
           <header className="mb-6 md:mb-8">
-            <h1 className="text-2xl md:text-3xl font-medium font-display text-[color:var(--foreground-strong)] mb-2 leading-tight tracking-tight mt-0 break-words">
+            <Link
+              href={`/blog/${slug}`}
+              className="mb-3 inline-flex text-sm leading-5 text-[color:var(--link-primary)] transition-colors duration-150 hover:text-[color:var(--link-primary-hover)]"
+            >
+              Rendered post
+            </Link>
+            <h1 className="mb-2 break-words text-[30px] font-semibold leading-[42px] text-[color:var(--foreground-strong)]">
               {post.title}.md
             </h1>
-            <p className="text-sm text-[color:var(--text-muted)]">
+            <p className="text-sm leading-5 text-[color:var(--text-muted)]">
               Raw Markdown Source
             </p>
           </header>
 
-          <pre className="overflow-x-auto rounded-xl border border-[color:var(--border-subtle)] bg-[color:var(--background)] p-4 md:p-5 text-sm leading-7 whitespace-pre-wrap break-words">
+          <pre className="overflow-x-auto whitespace-pre-wrap break-words rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface-muted)] p-4 font-mono text-sm leading-6 text-[color:var(--foreground)] md:p-5">
             <code>{rawMarkdown}</code>
           </pre>
         </article>
@@ -56,16 +63,15 @@ export default async function BlogPostPage({
   }
 
   return (
-    <div className="blog-post-shell max-w-4xl mx-auto px-6 md:px-8 pt-6 pb-14 md:pb-20 animate-fade-in-up-slow">
-      <article className="bg-transparent">
+    <div className="mx-auto w-full max-w-[72rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-12">
+      <article className="max-w-3xl bg-transparent">
         <div className="px-0 py-0">
-          {/* Post Header */}
           <header className="mb-8 md:mb-12">
-            <h1 className="text-3xl font-medium font-display text-[color:var(--foreground-strong)] mb-4 leading-tight tracking-tight mt-0 break-words">
+            <h1 className="mb-4 break-words text-[30px] font-semibold leading-[42px] text-[color:var(--foreground-strong)]">
               {post.title}
             </h1>
 
-            <div className="flex flex-row items-center gap-2 text-[color:var(--text-muted)]">
+            <div className="flex flex-row items-center gap-2 text-sm leading-5 text-[color:var(--text-muted)]">
               <time>{format(new Date(post.date), "d MMM, yyyy")}</time>
               {post.readingTime !== undefined && post.readingTime > 0 && (
                 <>
@@ -76,11 +82,11 @@ export default async function BlogPostPage({
             </div>
 
             {post.tags && post.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2">
+              <div className="mt-5 flex flex-wrap gap-2">
                 {post.tags.map((tag: string, index: number) => (
                   <span
                     key={index}
-                    className="inline-block border border-[color:var(--border-subtle)] bg-[color:var(--background)] text-[color:var(--text-muted)] text-xs font-medium px-3 py-1 rounded-md"
+                    className="inline-flex rounded-md border border-[color:var(--border-default)] bg-[color:var(--surface-muted)] px-2.5 py-1 text-xs font-medium leading-[18px] text-[color:var(--text-muted)]"
                   >
                     {tag}
                   </span>
@@ -89,7 +95,6 @@ export default async function BlogPostPage({
             )}
           </header>
 
-          {/* Post Content */}
           <div className="mt-6 md:mt-8">
             <MarkdownRenderer content={post.content} />
           </div>
