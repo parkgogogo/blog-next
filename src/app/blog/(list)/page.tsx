@@ -77,54 +77,37 @@ export default async function BlogPage() {
   const categories = await PostService.getCategory();
 
   return (
-    <div className="mx-auto w-full max-w-[72rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-12">
-      <header className="mb-1 max-w-3xl">
-        <h1 className="h-[42px]" aria-label="Blog">
-          <Image
-            src="/blog-title-light.png"
-            alt=""
-            width={143}
-            height={84}
-            priority
-            className="blog-title-image blog-title-image--light"
-          />
-          <Image
-            src="/blog-title-dark.png"
-            alt=""
-            width={143}
-            height={84}
-            priority
-            className="blog-title-image blog-title-image--dark"
-          />
-        </h1>
-        <div className="mt-3 h-6" aria-label="随手记点东西">
+    <div className="mx-auto w-full max-w-[72rem] px-4 py-4 sm:px-6 md:py-10 lg:px-8 lg:py-12">
+      <header className="mx-auto mb-1 max-w-3xl">
+        <h1 className="sr-only">Blog</h1>
+        <div className="blog-subtitle-write mt-3" aria-label="随手记点东西">
           <Image
             src="/blog-subtitle-light.png"
             alt="随手记点东西"
-            width={223}
-            height={48}
+            width={1907}
+            height={580}
             priority
             className="blog-subtitle-image blog-subtitle-image--light"
           />
           <Image
             src="/blog-subtitle-dark.png"
             alt=""
-            width={223}
-            height={48}
+            width={1946}
+            height={652}
             priority
             className="blog-subtitle-image blog-subtitle-image--dark"
           />
         </div>
       </header>
 
-      <div className="max-w-3xl">
+      <div className="mx-auto max-w-3xl">
         <CategorySection category={categories} />
       </div>
 
       {categories.posts.length === 0 &&
         (!categories.subcategories ||
           categories.subcategories.length === 0) && (
-          <div className="py-16">
+          <div className="mx-auto max-w-3xl py-16">
             <div className="max-w-md rounded-[10px] border border-[color:var(--border-default)] bg-[color:var(--surface-muted)] p-5">
               <h3 className="text-sm font-semibold leading-5 text-[color:var(--foreground-strong)]">
                 No content found
