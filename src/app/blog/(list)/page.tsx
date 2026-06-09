@@ -1,41 +1,45 @@
 import Link from "next/link";
 import Image from "next/image";
+import type { Metadata } from "next";
 import { format } from "date-fns";
 import { BlogPost, Category } from "@/types/blog";
 import { PostService } from "@/lib/posts";
+import {
+  absoluteUrl,
+  blogPostPath,
+  collectCategoryPosts,
+  postDescription,
+  siteConfig,
+} from "@/lib/seo";
 
 export const revalidate = false;
 
-function getDisplayExcerpt(post: BlogPost): string {
-  const source = post.excerpt || post.content;
+export const metadata: Metadata = {
+  title: "Blog",
+  description: siteConfig.description,
+  alternates: {
+    canonical: "/blog",
+  },
+  openGraph: {
+    type: "website",
+    url: "/blog",
+    title: "Blog",
+    description: siteConfig.description,
+    siteName: siteConfig.name,
+  },
+  twitter: {
+    card: "summary",
+    title: "Blog",
+    description: siteConfig.description,
+  },
+};
 
-  return source
-    .replace(/```[\s\S]*?```/g, " ")
-    .replace(/`([^`]+)`/g, "$1")
-    .replace(/!\[[^\]]*]\([^)]*\)/g, " ")
-    .replace(/\[([^\]]+)]\([^)]*\)/g, "$1")
-    .replace(/^#{1,6}\s+/gm, "")
-    .replace(/[#*_>~-]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+function getDisplayExcerpt(post: BlogPost): string {
+  return postDescription(post);
 }
 
 function CategorySection({ category }: { category: Category }) {
-  const getAllPosts = (cat: Category): BlogPost[] => {
-    let posts = [...cat.posts];
-    if (cat.subcategories) {
-      cat.subcategories.forEach((subcat) => {
-        posts = [...posts, ...getAllPosts(subcat)];
-      });
-    }
-    return posts;
-  };
-
-  const allPosts = getAllPosts(category).sort((a, b) => {
-    const ta = new Date(a.date).getTime();
-    const tb = new Date(b.date).getTime();
-    return tb - ta;
-  });
+  const allPosts = collectCategoryPosts(category);
 
   if (allPosts.length === 0) {
     return null;
@@ -75,9 +79,35 @@ function CategorySection({ category }: { category: Category }) {
 
 export default async function BlogPage() {
   const categories = await PostService.getCategory();
+  const allPosts = collectCategoryPosts(categories);
+  const blogJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Blog",
+    name: siteConfig.name,
+    description: siteConfig.description,
+    url: absoluteUrl("/blog"),
+    inLanguage: "zh-CN",
+    publisher: {
+      "@type": "Person",
+      name: siteConfig.author.name,
+      url: siteConfig.author.url,
+    },
+    blogPost: allPosts.slice(0, 20).map((post) => ({
+      "@type": "BlogPosting",
+      headline: post.title,
+      description: postDescription(post),
+      url: absoluteUrl(blogPostPath(post.slug)),
+      datePublished: post.date,
+      dateModified: post.date,
+    })),
+  };
 
   return (
     <div className="mx-auto w-full max-w-[72rem] px-4 py-4 sm:px-6 md:py-10 lg:px-8 lg:py-12">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(blogJsonLd) }}
+      />
       <header className="mx-auto mb-1 max-w-3xl">
         <h1 className="sr-only">Blog</h1>
         <div className="blog-subtitle-write mt-3" aria-label="随手记点东西">

@@ -1,8 +1,15 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { format } from "date-fns";
 import Link from "next/link";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 import { PostService } from "@/lib/posts";
+import {
+  absoluteUrl,
+  blogPostPath,
+  postDescription,
+  siteConfig,
+} from "@/lib/seo";
 
 export const revalidate = false;
 
@@ -12,6 +19,62 @@ export async function generateStaticParams() {
   return slugs.map((slug) => ({
     slug,
   }));
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug: rawSlug } = await params;
+  const decodedSlug = decodeURIComponent(rawSlug);
+  const isRawMarkdownMode = decodedSlug.endsWith(".md");
+  const slug = isRawMarkdownMode ? decodedSlug.slice(0, -3) : decodedSlug;
+  const post = await PostService.getPostBySlug(slug);
+
+  if (!post) {
+    return {
+      title: "Post not found",
+      robots: {
+        index: false,
+        follow: false,
+      },
+    };
+  }
+
+  const canonicalPath = blogPostPath(post.slug);
+  const description = postDescription(post);
+  const title = isRawMarkdownMode ? `${post.title}.md` : post.title;
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: canonicalPath,
+    },
+    robots: isRawMarkdownMode
+      ? {
+          index: false,
+          follow: true,
+        }
+      : undefined,
+    openGraph: {
+      type: "article",
+      url: canonicalPath,
+      title: post.title,
+      description,
+      siteName: siteConfig.name,
+      publishedTime: post.date,
+      modifiedTime: post.date,
+      authors: [siteConfig.author.name],
+      tags: post.tags,
+    },
+    twitter: {
+      card: "summary",
+      title: post.title,
+      description,
+    },
+  };
 }
 
 export default async function BlogPostPage({
@@ -62,8 +125,37 @@ export default async function BlogPostPage({
     );
   }
 
+  const articleJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.title,
+    description: postDescription(post),
+    url: absoluteUrl(blogPostPath(post.slug)),
+    mainEntityOfPage: absoluteUrl(blogPostPath(post.slug)),
+    datePublished: post.date,
+    dateModified: post.date,
+    inLanguage: "zh-CN",
+    author: {
+      "@type": "Person",
+      name: siteConfig.author.name,
+      url: siteConfig.author.url,
+    },
+    publisher: {
+      "@type": "Person",
+      name: siteConfig.author.name,
+      url: siteConfig.author.url,
+    },
+    articleSection: post.category,
+    keywords: post.tags?.length ? post.tags.join(", ") : undefined,
+    timeRequired: post.readingTime ? `PT${post.readingTime}M` : undefined,
+  };
+
   return (
     <div className="mx-auto w-full max-w-[72rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-12">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
+      />
       <article className="max-w-3xl bg-transparent">
         <div className="px-0 py-0">
           <header className="mb-3 md:mb-12">
