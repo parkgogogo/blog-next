@@ -1,24 +1,20 @@
 import RSS from "rss";
 import { WordsService } from "@/lib/words";
+import { absoluteUrl, siteConfig } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
 /**
- * GET /rss/blog
+ * GET /rss/words.xml
  * Builds an RSS feed from markdown posts fetched via src/lib/posts.ts
  */
 export async function GET() {
-  const siteUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    process.env.SITE_URL ||
-    "http://localhost:3000";
-
   const feed = new RSS({
     title: "Park's Daily Words",
     description: "lulu words",
-    feed_url: siteUrl,
-    site_url: siteUrl,
-    image_url: `${siteUrl}/park_logo.svg`,
+    feed_url: absoluteUrl("/rss/words.xml"),
+    site_url: siteConfig.url,
+    image_url: absoluteUrl("/park_logo.svg"),
   });
 
   try {
@@ -31,7 +27,7 @@ export async function GET() {
         feed.item({
           title: `Daily Words ${key}`,
           description: "",
-          url: `${siteUrl}/words/${key}`,
+          url: absoluteUrl(`/words/${key}`),
           date: key,
           custom_elements: [
             {

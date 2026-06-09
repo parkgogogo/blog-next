@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import {
   Geist,
   Geist_Mono,
@@ -6,6 +6,7 @@ import {
   Noto_Serif_SC,
   Outfit,
 } from "next/font/google";
+import { siteConfig } from "@/lib/seo";
 import "yet-another-react-lightbox/styles.css";
 import "./globals.css";
 
@@ -39,16 +40,51 @@ const notoSerifSc = Noto_Serif_SC({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ||
-      process.env.SITE_URL ||
-      "https://www.parkgogogo.me"
-  ),
-  title: "Parkgogogo",
-  description: "Park's personal website",
+  metadataBase: new URL(siteConfig.url),
+  title: {
+    default: siteConfig.title,
+    template: `%s | ${siteConfig.name}`,
+  },
+  description: siteConfig.description,
+  applicationName: siteConfig.name,
+  authors: [{ name: siteConfig.author.name, url: siteConfig.author.url }],
+  creator: siteConfig.author.name,
+  publisher: siteConfig.author.name,
   alternates: {
     canonical: "/",
+    types: {
+      "application/rss+xml": "/rss/blog.xml",
+    },
   },
+  openGraph: {
+    type: "website",
+    locale: "zh_CN",
+    url: "/",
+    siteName: siteConfig.name,
+    title: siteConfig.title,
+    description: siteConfig.description,
+  },
+  twitter: {
+    card: "summary",
+    title: siteConfig.title,
+    description: siteConfig.description,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({
@@ -57,10 +93,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-      </head>
+    <html lang="zh-CN">
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${outfit.variable} ${notoSerifSc.variable} antialiased scrollbar-hide`}
       >

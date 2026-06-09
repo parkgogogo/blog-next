@@ -1,24 +1,25 @@
 import { PostService } from "@/lib/posts";
+import {
+  absoluteUrl,
+  blogPostPath,
+  postDescription,
+  siteConfig,
+} from "@/lib/seo";
 import RSS from "rss";
 
 export const dynamic = "force-static";
 
 /**
- * GET /rss/blog
+ * GET /rss/blog.xml
  * Builds an RSS feed from markdown posts fetched via src/lib/posts.ts
  */
 export async function GET() {
-  const siteUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    process.env.SITE_URL ||
-    "http://localhost:3000";
-
   const feed = new RSS({
     title: "Park's Blog",
-    description: "Latest posts",
-    feed_url: `${siteUrl}/rss/blog`,
-    site_url: siteUrl,
-    image_url: `${siteUrl}/park_logo.svg`,
+    description: siteConfig.description,
+    feed_url: absoluteUrl("/rss/blog.xml"),
+    site_url: siteConfig.url,
+    image_url: absoluteUrl("/park_logo.svg"),
   });
 
   try {
@@ -27,9 +28,9 @@ export async function GET() {
     for (const post of posts) {
       feed.item({
         title: post.title,
-        description: post.excerpt ?? "",
-        url: `${siteUrl}/blog/${encodeURIComponent(post.slug)}`,
-        guid: `${siteUrl}/blog/${post.slug}`,
+        description: postDescription(post),
+        url: absoluteUrl(blogPostPath(post.slug)),
+        guid: absoluteUrl(blogPostPath(post.slug)),
         date: post.date,
         // include full content as CDATA so HTML/markdown won't break the feed
         custom_elements: [{ "content:encoded": { _cdata: post.content } }],
