@@ -78,7 +78,7 @@ export default async function BlogPage() {
 
   return (
     <div className="mx-auto w-full max-w-[72rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-12">
-      <header className="mb-1 max-w-3xl">
+      <header className="mx-auto mb-1 max-w-3xl">
         <h1 className="h-[42px]" aria-label="Blog">
           <Image
             src="/blog-title-light.png"
@@ -117,14 +117,14 @@ export default async function BlogPage() {
         </div>
       </header>
 
-      <div className="max-w-3xl">
+      <div className="mx-auto max-w-3xl">
         <CategorySection category={categories} />
       </div>
 
       {categories.posts.length === 0 &&
         (!categories.subcategories ||
           categories.subcategories.length === 0) && (
-          <div className="py-16">
+          <div className="mx-auto max-w-3xl py-16">
             <div className="max-w-md rounded-[10px] border border-[color:var(--border-default)] bg-[color:var(--surface-muted)] p-5">
               <h3 className="text-sm font-semibold leading-5 text-[color:var(--foreground-strong)]">
                 No content found
