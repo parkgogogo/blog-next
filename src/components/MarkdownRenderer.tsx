@@ -122,7 +122,7 @@ export default async function MarkdownRenderer({
             </h1>
           ),
           h2: ({ children }) => (
-            <h2 className="mb-4 mt-10 text-2xl font-semibold leading-8 text-[color:var(--foreground-strong)]">
+            <h2 className="mb-4 mt-4 text-2xl font-semibold leading-8 text-[color:var(--foreground-strong)] md:mt-10">
               {processChildren(children)}
             </h2>
           ),

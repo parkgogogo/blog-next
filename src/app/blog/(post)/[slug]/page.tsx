@@ -66,8 +66,8 @@ export default async function BlogPostPage({
     <div className="mx-auto w-full max-w-[72rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-12">
       <article className="max-w-3xl bg-transparent">
         <div className="px-0 py-0">
-          <header className="mb-8 md:mb-12">
-            <h1 className="mb-4 break-words text-[30px] font-semibold leading-[42px] text-[color:var(--foreground-strong)]">
+          <header className="mb-3 md:mb-12">
+            <h1 className="mb-3 break-words text-[30px] font-semibold leading-[42px] text-[color:var(--foreground-strong)]">
               {post.title}
             </h1>
 
@@ -95,7 +95,7 @@ export default async function BlogPostPage({
             )}
           </header>
 
-          <div className="mt-6 md:mt-8">
+          <div className="mt-0 md:mt-8">
             <MarkdownRenderer content={post.content} />
           </div>
         </div>
