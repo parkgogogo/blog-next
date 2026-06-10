@@ -148,6 +148,7 @@ async function processMarkdownFile(
         title: normalizedFrontmatterTitle || normalizedSlugTitle,
         date: resolvePostDate(frontmatter),
         content,
+        rawMarkdown,
         excerpt,
         tags: Array.isArray(frontmatter.tags)
           ? frontmatter.tags.filter((tag): tag is string => typeof tag === "string")
@@ -202,7 +203,7 @@ function collectPostIndex(category: Category): PostIndex {
       posts.push(post);
       if (!postsBySlug[post.slug]) {
         postsBySlug[post.slug] = post;
-        rawMarkdownBySlug[post.slug] = post.content;
+        rawMarkdownBySlug[post.slug] = post.rawMarkdown || post.content;
       }
     }
 

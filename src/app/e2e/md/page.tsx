@@ -31,8 +31,8 @@ export default async function MarkdownTestPage() {
 
       <div className="mt-8 text-sm text-gray-600">
         <p>
-          This page demonstrates markdown rendering using content from{" "}
-          <code>/test.md</code>
+          This page demonstrates markdown rendering using an internal e2e
+          fixture file.
         </p>
       </div>
     </div>
