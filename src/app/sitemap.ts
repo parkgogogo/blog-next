@@ -1,22 +1,16 @@
 import type { MetadataRoute } from "next";
 import { PostService } from "@/lib/posts";
-import { absoluteUrl, blogPostPath, siteConfig } from "@/lib/seo";
+import { absoluteUrl, blogPostPath } from "@/lib/seo";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const posts = await PostService.getAllPosts();
 
   const staticRoutes: MetadataRoute.Sitemap = [
     {
-      url: siteConfig.url,
-      lastModified: posts[0]?.date ? new Date(posts[0].date) : new Date(),
-      changeFrequency: "weekly",
-      priority: 1,
-    },
-    {
       url: absoluteUrl("/blog"),
       lastModified: posts[0]?.date ? new Date(posts[0].date) : new Date(),
       changeFrequency: "daily",
-      priority: 0.8,
+      priority: 1,
     },
   ];
 

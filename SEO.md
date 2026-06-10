@@ -78,4 +78,5 @@ Cadence:
 
 ## Review Log
 
+- 2026-06-10: Fixed the root canonical signal by making `/` a permanent redirect to `/blog` and removing the redirecting root URL from `sitemap.xml`.
 - 2026-06-10: Created baseline plan and first technical SEO implementation branch from `origin/main`.
