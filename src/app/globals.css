@@ -75,11 +75,23 @@
   }
 
   .markdown-body hr {
-    display: none;
+    height: 1px;
+    margin-block: 2.25em 1.35em;
+    margin-inline: 0;
+    padding: 0;
+    border: 0;
+    background: var(
+      --border-subtle,
+      color-mix(in srgb, var(--foreground) 14%, transparent)
+    );
   }
 
   .markdown-body p {
     margin-block: 0;
+  }
+
+  .markdown-body > :first-child {
+    margin-top: 0 !important;
   }
 
   .markdown-body p + p,
@@ -103,6 +115,26 @@
 
   .markdown-body li + li {
     margin-top: 0.42em;
+  }
+
+  .markdown-body .markdown-tagline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .markdown-body .markdown-tagline .hashtag {
+    margin: 0;
+  }
+
+  .markdown-body .markdown-tagline + h1,
+  .markdown-body .markdown-tagline + h2,
+  .markdown-body .markdown-tagline + h3,
+  .markdown-body .markdown-tagline + h4,
+  .markdown-body .markdown-tagline + h5,
+  .markdown-body .markdown-tagline + h6 {
+    margin-top: 1.5rem !important;
   }
 
   .markdown-body blockquote {

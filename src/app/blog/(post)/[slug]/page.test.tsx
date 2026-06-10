@@ -51,6 +51,18 @@ describe("BlogPostPage", () => {
     expect(html).toContain("text-[color:var(--text-muted)]");
   });
 
+  it("keeps article tags close to the metadata and body", async () => {
+    const element = await BlogPostPage({
+      params: Promise.resolve({ slug: "hello-world" }),
+    });
+    const html = renderToStaticMarkup(element);
+
+    expect(html).toContain("mb-4");
+    expect(html).toContain("mt-3 flex flex-wrap gap-2");
+    expect(html).not.toContain("md:mb-12");
+    expect(html).not.toContain("md:mt-8");
+  });
+
   it("renders raw markdown mode with the redesigned source panel", async () => {
     const element = await BlogPostPage({
       params: Promise.resolve({ slug: "hello-world.md" }),

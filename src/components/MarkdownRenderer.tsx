@@ -58,6 +58,14 @@ function processChildren(children: ReactNode): ReactNode {
     : processHashtagsInText(children);
 }
 
+function isHashtagOnlyParagraph(children: ReactNode): boolean {
+  const text = extractText(children).trim();
+
+  return /^#[a-zA-Z0-9_\u4e00-\u9fff]+(?:\s+#[a-zA-Z0-9_\u4e00-\u9fff]+)*$/.test(
+    text
+  );
+}
+
 function extractText(value: unknown): string {
   if (typeof value === "string") return value;
   if (typeof value === "number") return String(value);
@@ -131,7 +139,15 @@ export default async function MarkdownRenderer({
               {processChildren(children)}
             </h3>
           ),
-          p: ({ children }) => <p>{processChildren(children)}</p>,
+          p: ({ children }) => (
+            <p
+              className={
+                isHashtagOnlyParagraph(children) ? "markdown-tagline" : undefined
+              }
+            >
+              {processChildren(children)}
+            </p>
+          ),
           li: ({ children }) => <li>{processChildren(children)}</li>,
           code: async ({ className, children, node, ...props }) => {
             const language = className?.replace("language-", "");

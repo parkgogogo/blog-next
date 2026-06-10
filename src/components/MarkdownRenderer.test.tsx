@@ -36,3 +36,13 @@ describe("MarkdownRenderer image rendering", () => {
     expect(html).toContain("data-nimg=");
   });
 });
+
+describe("MarkdownRenderer hashtag rendering", () => {
+  it("marks standalone hashtag paragraphs as a compact tagline", async () => {
+    const html = await renderMarkdown("#frontend #pitfall #ios\n\n## Title");
+
+    expect(html).toContain('class="markdown-tagline"');
+    expect(html).toContain('class="hashtag"');
+    expect(html).toContain('data-hashtag="frontend"');
+  });
+});
