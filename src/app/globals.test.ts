@@ -33,3 +33,29 @@ describe("global theme tokens", () => {
     expect(css).toContain('[data-theme="light"] .blog-doc-shell');
   });
 });
+
+describe("markdown article spacing", () => {
+  it("renders horizontal rules as visible section separators", () => {
+    const css = readFileSync(globalsCssPath, "utf8");
+    const hrRule = css.match(/\.markdown-body hr\s*\{([^}]*)\}/)?.[1] ?? "";
+
+    expect(hrRule).not.toContain("display: none");
+    expect(hrRule).toContain("height: 1px;");
+    expect(hrRule).toContain("margin-block: 2.25em 1.35em;");
+  });
+
+  it("removes leading margin from the first markdown block", () => {
+    const css = readFileSync(globalsCssPath, "utf8");
+    const firstChildRule =
+      css.match(/\.markdown-body > :first-child\s*\{([^}]*)\}/)?.[1] ?? "";
+
+    expect(firstChildRule).toContain("margin-top: 0 !important;");
+  });
+
+  it("keeps standalone markdown taglines close to following headings", () => {
+    const css = readFileSync(globalsCssPath, "utf8");
+
+    expect(css).toContain(".markdown-body .markdown-tagline + h2");
+    expect(css).toContain("margin-top: 1.5rem !important;");
+  });
+});

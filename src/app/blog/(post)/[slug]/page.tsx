@@ -158,7 +158,7 @@ export default async function BlogPostPage({
       />
       <article className="max-w-3xl bg-transparent">
         <div className="px-0 py-0">
-          <header className="mb-3 md:mb-12">
+          <header className="mb-4">
             <h1 className="mb-3 break-words text-[30px] font-semibold leading-[42px] text-[color:var(--foreground-strong)]">
               {post.title}
             </h1>
@@ -174,7 +174,7 @@ export default async function BlogPostPage({
             </div>
 
             {post.tags && post.tags.length > 0 && (
-              <div className="mt-5 flex flex-wrap gap-2">
+              <div className="mt-3 flex flex-wrap gap-2">
                 {post.tags.map((tag: string, index: number) => (
                   <span
                     key={index}
@@ -187,7 +187,7 @@ export default async function BlogPostPage({
             )}
           </header>
 
-          <div className="mt-0 md:mt-8">
+          <div className="mt-0">
             <MarkdownRenderer content={post.content} />
           </div>
         </div>
