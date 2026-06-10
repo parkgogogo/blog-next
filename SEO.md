@@ -78,5 +78,7 @@ Cadence:
 
 ## Review Log
 
+- 2026-06-11: Daily public technical review found `https://www.parkgogogo.me/test.md` returning `200 text/markdown` from `public/test.md`, which created an uncontrolled crawlable raw Markdown URL. Moved the e2e fixture out of `public/`, kept the `/e2e/md` page working from an internal fixture, and fixed raw article source pages to retain the real markdown content including frontmatter.
+- 2026-06-11: Public review checks passed for `robots.txt`, `sitemap.xml`, `/blog`, sampled article pages, canonical URLs, Open Graph, Twitter metadata, JSON-LD, RSS alternate link, and raw `.md` article routes staying `noindex`. Search Console data was not available in this repository, so no weekly KPI comparison was performed.
 - 2026-06-10: Fixed the root canonical signal by making `/` a permanent redirect to `/blog` and removing the redirecting root URL from `sitemap.xml`.
 - 2026-06-10: Created baseline plan and first technical SEO implementation branch from `origin/main`.

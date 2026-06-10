@@ -3,6 +3,7 @@ export interface BlogPost {
   title: string;
   date: string;
   content: string;
+  rawMarkdown?: string;
   excerpt?: string;
   tags?: string[];
   category: string;
