@@ -13,20 +13,41 @@ const siteUrl = trimTrailingSlash(
 export const siteConfig = {
   name: "Parkgogogo",
   title: "Parkgogogo",
-  description: "Park 的个人博客，记录前端工程、AI 编程、产品思考和日常写作。",
+  description:
+    "Parkgogogo 是 Park 在 parkgogogo.me 的个人博客，记录前端工程、AI 编程、产品思考和日常写作。",
   author: {
     name: "Park",
+    alternateName: "parkgogogo",
     url: siteUrl,
   },
   url: siteUrl,
 };
 
+export const siteKeywords = [
+  "Parkgogogo",
+  "parkgogogo",
+  "parkgogogo.me",
+  "Park",
+  "Park 的博客",
+  "前端工程",
+  "AI 编程",
+  "产品思考",
+  "技术博客",
+];
+
+export const siteSameAs = [
+  "https://github.com/parkgogogo",
+  "https://gist.github.com/parkgogogo",
+];
+
 export const blogIndexTitle = "Park 的博客";
 export const blogIndexDescription =
-  "Park 的前端工程、AI 编程、产品思考与日常写作博客。";
+  "Parkgogogo 收录 Park 关于前端工程、AI 编程、产品思考与日常写作的博客。";
 export const blogIndexKeywords = [
-  "Park",
   "Parkgogogo",
+  "parkgogogo",
+  "parkgogogo.me",
+  "Park",
   "前端工程",
   "AI 编程",
   "产品思考",
@@ -45,6 +66,28 @@ export function blogPostPath(slug: string): string {
 export function rssAlternateTypes(): Record<string, string> {
   return {
     "application/rss+xml": absoluteUrl("/rss/blog.xml"),
+  };
+}
+
+export function personJsonLd() {
+  return {
+    "@type": "Person",
+    name: siteConfig.author.name,
+    alternateName: siteConfig.author.alternateName,
+    url: siteConfig.author.url,
+    sameAs: siteSameAs,
+  };
+}
+
+export function websiteJsonLd() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: siteConfig.name,
+    alternateName: ["parkgogogo", "parkgogogo.me", "Park 的博客"],
+    url: siteConfig.url,
+    inLanguage: "zh-CN",
+    publisher: personJsonLd(),
   };
 }
 

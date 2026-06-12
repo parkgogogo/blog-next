@@ -6,7 +6,7 @@ import {
   Noto_Serif_SC,
   Outfit,
 } from "next/font/google";
-import { rssAlternateTypes, siteConfig } from "@/lib/seo";
+import { rssAlternateTypes, siteConfig, siteKeywords } from "@/lib/seo";
 import "yet-another-react-lightbox/styles.css";
 import "./globals.css";
 
@@ -46,6 +46,7 @@ export const metadata: Metadata = {
     template: `%s | ${siteConfig.name}`,
   },
   description: siteConfig.description,
+  keywords: siteKeywords,
   applicationName: siteConfig.name,
   authors: [{ name: siteConfig.author.name, url: siteConfig.author.url }],
   creator: siteConfig.author.name,

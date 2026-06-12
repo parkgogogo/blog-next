@@ -27,6 +27,7 @@ package-lock.json
 .DS_Store
 *.pem
 /docs/plans/
+HANDOFF.md
 
 # debug
 npm-debug.log*

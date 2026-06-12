@@ -8,6 +8,8 @@ Primary domain: https://www.parkgogogo.me
 
 Improve discoverability for Park's blog posts in search engines, then stop the recurring automation once the site has stable indexing and article pages expose healthy technical SEO signals.
 
+Active `/goal` extension: for Google search query `parkgogogo`, make `parkgogogo.me` rank in the top 3 results and keep running follow-up checks until that external ranking is verified.
+
 ## Measurement Model
 
 Google ranking is an outcome signal, but it is too noisy to use as the only success metric. Use Google Search Console as the primary measurement source whenever available. If Search Console is unavailable, use public technical checks plus `site:` search presence as a fallback and record the limitation in the review log.
@@ -15,6 +17,10 @@ Google ranking is an outcome signal, but it is too noisy to use as the only succ
 Primary KPI:
 
 - Rolling 28-day organic Google Search clicks for `/blog` and `/blog/*`.
+
+Brand-query KPI:
+
+- Google result position for query `parkgogogo`, with `https://www.parkgogogo.me/` or another canonical `parkgogogo.me` URL considered successful only when it is in positions 1-3.
 
 Supporting KPIs:
 
@@ -31,6 +37,7 @@ Ranking rule:
 - Track rankings by page/query pair, not by site-wide averages alone.
 - Exact-title queries should confirm indexability; topic queries should be used to judge real discovery.
 - Do not call an SEO change successful or failed from less than 7 days of ranking data.
+- Do not mark the active `/goal` complete until the current Google results for `parkgogogo` show `parkgogogo.me` in the top 3.
 
 Cadence:
 
@@ -75,6 +82,7 @@ Cadence:
 - All current blog posts are present in the sitemap and have indexable rendered article pages.
 - Raw markdown source pages are not competing with rendered article pages.
 - Search visibility is considered acceptable after 3 consecutive weekly outcome reviews show all sitemap article URLs indexed, zero critical indexing/canonical/structured-data errors, non-zero rolling 28-day impressions for `/blog/*`, and either non-zero rolling 28-day organic clicks or clearly improving page/query average position.
+- The active brand-ranking goal is complete only after a fresh Google search for `parkgogogo` verifies that a canonical `parkgogogo.me` result is ranked in the top 3.
 
 ## Review Log
 
@@ -85,3 +93,5 @@ Cadence:
 - 2026-06-12: Daily public review via browser found `https://www.parkgogogo.me/blog` serving the expected canonical, title, description, Open Graph, Twitter, and Blog JSON-LD signals. Environment TLS issues prevented direct `curl`/git fetches to the public domain, so `robots.txt`, `sitemap.xml`, and RSS were only partially validated this run and need a normal network retry next run.
 - 2026-06-12: Bare-domain `https://parkgogogo.me/blog` resolved to a `Vercel Security Checkpoint` page instead of the blog. Treat this as a site-level SEO risk outside the app codepath until the domain/edge configuration is fixed.
 - 2026-06-12: Restored RSS feed alternates on `/blog` and article pages after child-route metadata overwrote the root alternate links. Also made the `/blog` title and description more specific to improve snippet clarity and CTR.
+- 2026-06-12: Public checks found `https://www.parkgogogo.me/` still 308-redirecting to `/blog`, while `https://parkgogogo.me/blog` now 307-redirects to `https://www.parkgogogo.me/blog`. Web search for `parkgogogo` surfaced GitHub/Gist and social results, but not `parkgogogo.me`, so the brand query is not yet in the top 3.
+- 2026-06-12: Started `codex/seo-parkgogogo-top3-20260612` from `origin/main` to restore an indexable root brand page with `Parkgogogo`, `parkgogogo`, and `parkgogogo.me` text signals, WebSite/ProfilePage/Person JSON-LD, `rel=me` GitHub identity link, and root sitemap inclusion.

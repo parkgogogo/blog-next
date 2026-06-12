@@ -14,6 +14,7 @@ import {
   postDescription,
   rssAlternateTypes,
   siteConfig,
+  personJsonLd,
 } from "@/lib/seo";
 
 export const revalidate = false;
@@ -94,9 +95,7 @@ export default async function BlogPage() {
     url: absoluteUrl("/blog"),
     inLanguage: "zh-CN",
     publisher: {
-      "@type": "Person",
-      name: siteConfig.author.name,
-      url: siteConfig.author.url,
+      ...personJsonLd(),
     },
     blogPost: allPosts.slice(0, 20).map((post) => ({
       "@type": "BlogPosting",

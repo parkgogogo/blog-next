@@ -10,6 +10,7 @@ import {
   postDescription,
   rssAlternateTypes,
   siteConfig,
+  personJsonLd,
 } from "@/lib/seo";
 
 export const revalidate = false;
@@ -143,14 +144,10 @@ export default async function BlogPostPage({
     dateModified: post.date,
     inLanguage: "zh-CN",
     author: {
-      "@type": "Person",
-      name: siteConfig.author.name,
-      url: siteConfig.author.url,
+      ...personJsonLd(),
     },
     publisher: {
-      "@type": "Person",
-      name: siteConfig.author.name,
-      url: siteConfig.author.url,
+      ...personJsonLd(),
     },
     articleSection: post.category,
     keywords: post.tags?.length ? post.tags.join(", ") : undefined,
