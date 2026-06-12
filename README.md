@@ -1,4 +1,14 @@
-# Configuration
+# Parkgogogo
+
+Parkgogogo is Park's personal site and blog at https://www.parkgogogo.me.
+
+- Website: https://www.parkgogogo.me
+- Blog: https://www.parkgogogo.me/blog
+- GitHub profile: https://github.com/parkgogogo
+
+The site records frontend engineering, AI programming, product thinking, and daily notes.
+
+## Configuration
 
 ```
 # GitHub API Configuration
