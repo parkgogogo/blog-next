@@ -34,7 +34,7 @@ vi.mock("@/lib/posts", () => ({
   },
 }));
 
-import BlogPostPage from "./page";
+import BlogPostPage, { generateMetadata } from "./page";
 
 describe("BlogPostPage", () => {
   it("renders article metadata and markdown content", async () => {
@@ -76,5 +76,35 @@ describe("BlogPostPage", () => {
     expect(html).toContain(
       "border-[color:var(--border-default)] bg-[color:var(--surface-muted)]"
     );
+  });
+
+  it("includes canonical, rss, keywords, and category metadata for articles", async () => {
+    const metadata = await generateMetadata({
+      params: Promise.resolve({ slug: "hello-world" }),
+    });
+
+    expect(metadata.alternates?.canonical).toBe("/blog/hello-world");
+    expect(metadata.alternates?.types?.["application/rss+xml"]).toBe(
+      "https://www.parkgogogo.me/rss/blog.xml"
+    );
+    expect(metadata.category).toBe("notes");
+    expect(metadata.keywords).toEqual([
+      "design",
+      "notes",
+      "Park",
+      "博客",
+    ]);
+  });
+
+  it("marks raw markdown mode as noindex while keeping the rendered canonical", async () => {
+    const metadata = await generateMetadata({
+      params: Promise.resolve({ slug: "hello-world.md" }),
+    });
+
+    expect(metadata.alternates?.canonical).toBe("/blog/hello-world");
+    expect(metadata.robots).toEqual({
+      index: false,
+      follow: true,
+    });
   });
 });
