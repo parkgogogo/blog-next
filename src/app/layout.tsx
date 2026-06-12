@@ -6,7 +6,7 @@ import {
   Noto_Serif_SC,
   Outfit,
 } from "next/font/google";
-import { siteConfig } from "@/lib/seo";
+import { rssAlternateTypes, siteConfig } from "@/lib/seo";
 import "yet-another-react-lightbox/styles.css";
 import "./globals.css";
 
@@ -52,9 +52,7 @@ export const metadata: Metadata = {
   publisher: siteConfig.author.name,
   alternates: {
     canonical: "/",
-    types: {
-      "application/rss+xml": "/rss/blog.xml",
-    },
+    types: rssAlternateTypes(),
   },
   openGraph: {
     type: "website",

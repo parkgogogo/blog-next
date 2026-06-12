@@ -6,31 +6,37 @@ import { BlogPost, Category } from "@/types/blog";
 import { PostService } from "@/lib/posts";
 import {
   absoluteUrl,
+  blogIndexDescription,
+  blogIndexKeywords,
+  blogIndexTitle,
   blogPostPath,
   collectCategoryPosts,
   postDescription,
+  rssAlternateTypes,
   siteConfig,
 } from "@/lib/seo";
 
 export const revalidate = false;
 
 export const metadata: Metadata = {
-  title: "Blog",
-  description: siteConfig.description,
+  title: blogIndexTitle,
+  description: blogIndexDescription,
+  keywords: blogIndexKeywords,
   alternates: {
     canonical: "/blog",
+    types: rssAlternateTypes(),
   },
   openGraph: {
     type: "website",
     url: "/blog",
-    title: "Blog",
-    description: siteConfig.description,
+    title: blogIndexTitle,
+    description: blogIndexDescription,
     siteName: siteConfig.name,
   },
   twitter: {
     card: "summary",
-    title: "Blog",
-    description: siteConfig.description,
+    title: blogIndexTitle,
+    description: blogIndexDescription,
   },
 };
 
@@ -83,8 +89,8 @@ export default async function BlogPage() {
   const blogJsonLd = {
     "@context": "https://schema.org",
     "@type": "Blog",
-    name: siteConfig.name,
-    description: siteConfig.description,
+    name: blogIndexTitle,
+    description: blogIndexDescription,
     url: absoluteUrl("/blog"),
     inLanguage: "zh-CN",
     publisher: {

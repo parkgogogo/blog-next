@@ -80,3 +80,6 @@ Cadence:
 
 - 2026-06-10: Fixed the root canonical signal by making `/` a permanent redirect to `/blog` and removing the redirecting root URL from `sitemap.xml`.
 - 2026-06-10: Created baseline plan and first technical SEO implementation branch from `origin/main`.
+- 2026-06-12: Daily public review via browser found `https://www.parkgogogo.me/blog` serving the expected canonical, title, description, Open Graph, Twitter, and Blog JSON-LD signals. Environment TLS issues prevented direct `curl`/git fetches to the public domain, so `robots.txt`, `sitemap.xml`, and RSS were only partially validated this run and need a normal network retry next run.
+- 2026-06-12: Bare-domain `https://parkgogogo.me/blog` resolved to a `Vercel Security Checkpoint` page instead of the blog. Treat this as a site-level SEO risk outside the app codepath until the domain/edge configuration is fixed.
+- 2026-06-12: Restored RSS feed alternates on `/blog` and article pages after child-route metadata overwrote the root alternate links. Also made the `/blog` title and description more specific to improve snippet clarity and CTR.

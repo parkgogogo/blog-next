@@ -21,6 +21,18 @@ export const siteConfig = {
   url: siteUrl,
 };
 
+export const blogIndexTitle = "Park 的博客";
+export const blogIndexDescription =
+  "Park 的前端工程、AI 编程、产品思考与日常写作博客。";
+export const blogIndexKeywords = [
+  "Park",
+  "Parkgogogo",
+  "前端工程",
+  "AI 编程",
+  "产品思考",
+  "技术博客",
+];
+
 export function absoluteUrl(path = "/"): string {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
   return `${siteConfig.url}${normalizedPath}`;
@@ -28,6 +40,12 @@ export function absoluteUrl(path = "/"): string {
 
 export function blogPostPath(slug: string): string {
   return `/blog/${encodeURIComponent(slug)}`;
+}
+
+export function rssAlternateTypes(): Record<string, string> {
+  return {
+    "application/rss+xml": absoluteUrl("/rss/blog.xml"),
+  };
 }
 
 export function stripMarkdownToText(markdown: string): string {

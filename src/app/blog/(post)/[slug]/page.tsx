@@ -8,6 +8,7 @@ import {
   absoluteUrl,
   blogPostPath,
   postDescription,
+  rssAlternateTypes,
   siteConfig,
 } from "@/lib/seo";
 
@@ -49,8 +50,14 @@ export async function generateMetadata({
   return {
     title,
     description,
+    keywords: post.tags?.length
+      ? [...post.tags, post.category, siteConfig.author.name, "博客"]
+      : [post.category, siteConfig.author.name, "博客"],
+    category: post.category,
+    authors: [{ name: siteConfig.author.name, url: siteConfig.author.url }],
     alternates: {
       canonical: canonicalPath,
+      types: rssAlternateTypes(),
     },
     robots: isRawMarkdownMode
       ? {
