@@ -7,10 +7,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const staticRoutes: MetadataRoute.Sitemap = [
     {
+      url: absoluteUrl("/"),
+      lastModified: posts[0]?.date ? new Date(posts[0].date) : new Date(),
+      changeFrequency: "weekly",
+      priority: 1,
+    },
+    {
       url: absoluteUrl("/blog"),
       lastModified: posts[0]?.date ? new Date(posts[0].date) : new Date(),
       changeFrequency: "daily",
-      priority: 1,
+      priority: 0.9,
     },
   ];
 
