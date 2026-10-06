@@ -3768,6 +3768,118 @@
 }
 
 
+/* ---------- 主标题字标：Park 直立 + GoGoGo 斜体逐级进化 ---------- */
+
+.design-v2 .wordmark {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  width: fit-content;
+  font-family: var(--font-archivo), var(--font-noto-sans-sc), sans-serif;
+  font-size: clamp(3.1rem, 8.2cqw, 8rem) !important;
+  line-height: 0.9;
+  letter-spacing: -0.035em;
+  white-space: nowrap;
+}
+
+.design-v2 .wordmark__park {
+  font-weight: 800;
+  font-stretch: 125%;
+  font-variation-settings: "wdth" 125;
+}
+
+.design-v2 .wordmark__go {
+  font-style: italic;
+  font-stretch: 112%;
+  font-variation-settings: "wdth" 112;
+  transform-origin: left bottom;
+}
+
+/* 三个 Go：由小到大、由淡到实、由细到粗——暗合进化 */
+.design-v2 .wordmark__go--1 {
+  margin-left: 0.06em;
+  font-size: 0.62em;
+  font-weight: 500;
+  opacity: 0.55;
+}
+
+.design-v2 .wordmark__go--2 {
+  margin-left: 0.02em;
+  font-size: 0.8em;
+  font-weight: 700;
+  opacity: 0.8;
+}
+
+.design-v2 .wordmark__go--3 {
+  margin-left: 0.01em;
+  font-weight: 900;
+}
+
+.design-v2 .wordmark__gos {
+  position: relative;
+  display: inline-flex;
+  align-items: baseline;
+}
+
+/* 领巾红切线：只托住 GoGoGo，斜切收尾 */
+.design-v2 .wordmark__gos::after {
+  content: "";
+  position: absolute;
+  left: 0.08em;
+  right: 0.02em;
+  bottom: -0.1em;
+  height: 0.07em;
+  background: var(--accent);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 0.12em) 100%, 0 100%);
+  transform-origin: left;
+  animation: wordmark-cut 0.7s 0.9s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+.design-v2 .wordmark__go {
+  animation: wordmark-go 0.6s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+.design-v2 .wordmark__go--1 {
+  animation-delay: 0.45s;
+}
+
+.design-v2 .wordmark__go--2 {
+  animation-delay: 0.6s;
+}
+
+.design-v2 .wordmark__go--3 {
+  animation-delay: 0.75s;
+}
+
+@keyframes wordmark-go {
+  from {
+    opacity: 0;
+    transform: translateX(-0.3em) skewX(-8deg);
+  }
+}
+
+@keyframes wordmark-cut {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+/* Logo 文字与字标同源 */
+.design-v2 .digi-logo__word {
+  font-family: var(--font-archivo), sans-serif;
+  font-weight: 800;
+  font-stretch: 118%;
+  font-variation-settings: "wdth" 118;
+  letter-spacing: -0.02em;
+}
+
+@media (max-width: 767px) {
+  .design-v2 .wordmark {
+    font-size: clamp(2.3rem, 11.6cqw, 4.4rem) !important;
+  }
+}
+
+
 /* ---------- Card Slash 遮罩 ---------- */
 
 .slash-overlay {
@@ -4815,7 +4927,6 @@ a {
   --font-mono: var(--font-geist-mono);
   --font-display: var(--font-outfit), var(--font-inter), system-ui, sans-serif;
   --font-reading:
-    var(--font-noto-serif-sc),
     "Source Han Serif SC",
     "Noto Serif CJK SC",
     "Songti SC",

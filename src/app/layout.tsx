@@ -1,10 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import {
+  Archivo,
   Geist_Mono,
   Inter,
   Noto_Sans_SC,
-  Noto_Serif_SC,
   Orbitron,
   Outfit,
   Silkscreen,
@@ -40,6 +40,14 @@ const delaGothic = localFont({
   preload: false,
 });
 
+// 主标题字标：可变宽度 + 斜体，用来做「Park 直立 / GoGoGo 斜体逐级进化」
+const archivo = Archivo({
+  variable: "--font-archivo",
+  subsets: ["latin"],
+  style: ["normal", "italic"],
+  axes: ["wdth"],
+});
+
 const orbitron = Orbitron({
   variable: "--font-orbitron",
   subsets: ["latin"],
@@ -68,12 +76,6 @@ const notoSansSc = Noto_Sans_SC({
   preload: false,
 });
 
-const notoSerifSc = Noto_Serif_SC({
-  variable: "--font-noto-serif-sc",
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-  preload: false,
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
@@ -130,7 +132,7 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <body
-        className={`${geistMono.variable} ${inter.variable} ${outfit.variable} ${delaGothic.variable} ${orbitron.variable} ${silkscreen.variable} ${vt323.variable} ${notoSansSc.variable} ${notoSerifSc.variable} antialiased scrollbar-hide`}
+        className={`${geistMono.variable} ${inter.variable} ${outfit.variable} ${delaGothic.variable} ${archivo.variable} ${orbitron.variable} ${silkscreen.variable} ${vt323.variable} ${notoSansSc.variable} antialiased scrollbar-hide`}
       >
         {children}
       </body>
