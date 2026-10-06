@@ -1356,7 +1356,7 @@
 }
 
 .kv-title {
-  font-size: clamp(3.2rem, 8.6cqw, 8.4rem) !important;
+  font-size: clamp(3rem, 7.9cqw, 7.8rem) !important;
   color: var(--kv-ink) !important;
 }
 
@@ -1554,7 +1554,7 @@
   }
 
   .kv-title {
-    font-size: clamp(2.4rem, 12.5cqw, 4.4rem) !important;
+    font-size: clamp(2.2rem, 11.2cqw, 4.2rem) !important;
   }
 
   .kv-copy .digi-button {

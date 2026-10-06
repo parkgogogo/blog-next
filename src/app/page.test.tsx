@@ -56,6 +56,6 @@ describe("HomePage SEO", () => {
     const headings = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/g) ?? [];
 
     expect(headings).toHaveLength(1);
-    expect((headings[0] ?? "").replace(/<[^>]+>/g, "").trim()).toBe("Parkgogogo");
+    expect((headings[0] ?? "").replace(/<[^>]+>/g, "").trim()).toBe("ParkGoGoGo");
   });
 });

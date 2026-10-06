@@ -85,8 +85,8 @@ export default async function HomePage() {
               <span>デジモンテイマーズ</span>
             </p>
             <div className="digi-title digi-pop mt-4 font-display-anime [animation-delay:0.35s]">
-              <h1 className="digi-title__main kv-title" data-text="Parkgogogo">
-                Parkgogogo
+              <h1 className="digi-title__main kv-title" data-text="ParkGoGoGo">
+                ParkGoGoGo
               </h1>
               <p className="digi-title__sub">驯兽师的数码手账</p>
             </div>
