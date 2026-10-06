@@ -1288,6 +1288,22 @@
   z-index: 1;
 }
 
+/* 天台地面渐隐进页面背景，作为片头到正文的衔接 */
+.kv::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  z-index: 3;
+  height: 26%;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    color-mix(in srgb, var(--background) 55%, transparent) 55%,
+    var(--background)
+  );
+}
+
 .kv-rooftop {
   inset: auto -24px -18px;
   top: calc(100cqh - var(--scene-h));
@@ -1467,8 +1483,7 @@
 }
 
 .kv-device .tamer-darc__hint {
-  color: #fff;
-  text-shadow: 0 1px 4px rgb(0 0 0 / 70%);
+  color: var(--foreground-strong);
 }
 
 .darc-lcd__boot {
@@ -1493,6 +1508,8 @@
   left: 58%;
   bottom: 1.1rem;
   z-index: 6;
+  color: var(--foreground-strong) !important;
+  text-shadow: none !important;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1632,68 +1649,6 @@
   to {
     opacity: 1;
     transform: rotate(-14deg) scaleX(1);
-  }
-}
-
-/* ---------- 过场：数据隧道 ---------- */
-
-.home-tunnel {
-  position: relative;
-  height: 34vh;
-  min-height: 220px;
-  overflow: hidden;
-  background: #05061a;
-}
-
-.home-tunnel::before,
-.home-tunnel::after {
-  content: "";
-  position: absolute;
-  inset-inline: 0;
-  z-index: 1;
-  height: 30%;
-}
-
-.home-tunnel::before {
-  top: 0;
-  background: linear-gradient(#1a1035, transparent);
-}
-
-.home-tunnel::after {
-  bottom: 0;
-  background: linear-gradient(transparent, var(--background));
-}
-
-.home-tunnel__img {
-  position: absolute;
-  inset: -20%;
-  background: url(/digimon/slash/evo-tunnel.webp) center / cover no-repeat;
-}
-
-@supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-    .home-tunnel__img {
-      animation: home-tunnel linear both;
-      animation-timeline: view();
-    }
-  }
-}
-
-@keyframes home-tunnel {
-  from {
-    transform: scale(1.5) rotate(-8deg);
-    clip-path: circle(12% at 50% 50%);
-    filter: brightness(2.2);
-  }
-
-  60% {
-    clip-path: circle(80% at 50% 50%);
-    filter: brightness(1);
-  }
-
-  to {
-    transform: scale(1) rotate(4deg);
-    clip-path: circle(80% at 50% 50%);
   }
 }
 
@@ -2106,7 +2061,7 @@
 
 .card-hand__slot {
   --offset: calc(var(--i) - (var(--n) - 1) / 2);
-  --lift: 0rem;
+  --push: 0rem;
   --rot: calc(var(--offset) * 6deg);
   position: absolute;
   left: 50%;
@@ -2114,18 +2069,45 @@
   z-index: calc(var(--i) + 1);
   width: 16.5rem;
   transform:
-    translateX(calc(-50% + var(--offset) * var(--spread)))
-    translateY(calc(var(--offset) * var(--offset) * 0.7rem + var(--lift)))
+    translateX(calc(-50% + var(--offset) * var(--spread) + var(--push)))
+    translateY(calc(var(--offset) * var(--offset) * 0.7rem))
     rotate(var(--rot));
-  transform-origin: 50% 130%;
-  transition: transform 350ms cubic-bezier(0.2, 0.9, 0.3, 1.2);
+  transform-origin: 50% 100%;
+  transition: transform 320ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* 抬起的是槽位里的卡，槽位本身不动，悬停区域不会跟着跑 */
+.card-hand__slot .digi-card-wrap {
+  transition:
+    translate 280ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    rotate 280ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    scale 280ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* 手牌里不再叠加卡片自身的 3D 倾斜 */
+.card-hand__slot .digi-card {
+  transform: none !important;
 }
 
 .card-hand__slot:hover,
 .card-hand__slot:focus-within {
-  --lift: -2.4rem;
-  --rot: 0deg;
   z-index: 50;
+}
+
+.card-hand__slot:hover .digi-card-wrap,
+.card-hand__slot:focus-within .digi-card-wrap {
+  translate: 0 -1.8rem;
+  rotate: calc(var(--rot) * -0.75);
+  scale: 1.05;
+}
+
+/* 相邻的牌向两边让开 */
+.card-hand__slot:hover ~ .card-hand__slot {
+  --push: 2.2rem;
+}
+
+.card-hand__slot:has(~ .card-hand__slot:hover) {
+  --push: -2.2rem;
 }
 
 .card-hand__empty {
@@ -2181,9 +2163,11 @@
     scroll-snap-align: center;
   }
 
-  .card-hand__slot:hover,
-  .card-hand__slot:focus-within {
-    transform: none;
+  .card-hand__slot:hover .digi-card-wrap,
+  .card-hand__slot:focus-within .digi-card-wrap {
+    translate: none;
+    rotate: none;
+    scale: none;
   }
 }
 

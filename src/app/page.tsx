@@ -112,10 +112,6 @@ export default async function HomePage() {
           </a>
         </section>
 
-        <div className="home-tunnel" aria-hidden="true">
-          <span className="home-tunnel__img" />
-        </div>
-
         <section id="episode-tamer" className="home-section" aria-labelledby="tamer-heading">
           <EpisodeTitle no="第1话" title="驯兽师登场" en="ENTER THE TAMER" id="tamer-heading" />
           <TamerLicense stats={stats} />
