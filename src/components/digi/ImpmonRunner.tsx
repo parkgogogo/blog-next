@@ -609,8 +609,7 @@ export function ImpmonRunner() {
         ctx!.globalAlpha = 1;
       }
 
-      // 桌面端首页的 D-Ark 会伸进游戏区上方，横幅放在左侧避开它
-      const bannerX = width < 1024 ? width / 2 : width * 0.3;
+      const bannerX = width / 2;
       ctx!.textAlign = "center";
       if (mode === "over") {
         ctx!.font = `${fontSize + 8}px ${palette.font}`;
