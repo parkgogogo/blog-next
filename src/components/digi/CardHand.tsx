@@ -44,7 +44,7 @@ export function CardHand({ posts }: { posts: BlogPost[] }) {
   return (
     <div className="card-hand">
       <div className="card-hand__featured deal" style={{ "--deal": 0 } as CSSProperties}>
-        <span className="card-hand__badge font-hud">NEW CARD</span>
+        <span className="card-hand__badge font-mono">NEW CARD · 最新</span>
         <PostCard post={featured} index={0} />
       </div>
 
@@ -57,7 +57,7 @@ export function CardHand({ posts }: { posts: BlogPost[] }) {
               role="tab"
               aria-selected={filter === item}
               data-attribute={item}
-              className="card-hand__filter font-hud"
+              className="card-hand__filter font-mono"
               onClick={() => setFilter(item)}
             >
               {item === "all" ? "ALL" : attributeLabel(item)}

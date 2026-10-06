@@ -18,7 +18,7 @@ export function EpisodeTitle({
       <h2 id={id} className="episode-title__name">
         {title}
       </h2>
-      <span className="episode-title__en font-hud">{en}</span>
+      <span className="episode-title__en font-mono">{en}</span>
     </div>
   );
 }

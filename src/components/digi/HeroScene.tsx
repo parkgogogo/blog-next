@@ -52,15 +52,23 @@ export function HeroScene({ children }: { children: ReactNode }) {
   const [stageIndex, setStageIndex] = useState(0);
   const [phase, setPhase] = useState<Phase>("idle");
   const [evolvedOnce, setEvolvedOnce] = useState(false);
+  const [clock, setClock] = useState("--:--");
 
   const form = MY_PARTNER[stageIndex];
   const art = PARTNER_ART[stageIndex];
 
   useEffect(() => {
     setTod(timeOfDay(new Date().getHours()));
+    const tick = () =>
+      setClock(
+        new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })
+      );
+    tick();
+    const clockId = window.setInterval(tick, 30_000);
     reduceMotion.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const pending = timers.current;
     return () => {
+      window.clearInterval(clockId);
       pending.forEach((id) => window.clearTimeout(id));
       if (frame.current) window.cancelAnimationFrame(frame.current);
     };
@@ -140,7 +148,21 @@ export function HeroScene({ children }: { children: ReactNode }) {
         />
       </div>
 
+      {/* 左侧压暗（白天提亮），让文字直接写在画面上 */}
+      <div className="kv-scrim" aria-hidden="true" />
+
       <div className="kv-copy">{children}</div>
+
+      {/* 设定稿式的裁切对位标记与场记 */}
+      <div className="kv-frame" aria-hidden="true">
+        <i />
+        <i />
+        <i />
+        <i />
+      </div>
+      <p className="kv-slate font-mono" aria-hidden="true">
+        EP.01 · SHINJUKU ROOFTOP · {clock}
+      </p>
 
       <div className="kv-layer kv-partner-layer" style={depth(30)}>
         <div className="kv-partner" data-pose={art.pose}>
@@ -183,7 +205,7 @@ export function HeroScene({ children }: { children: ReactNode }) {
             </span>
           </button>
 
-          <span className="kv-partner__caption font-hud" aria-live="polite">
+          <span className="kv-partner__caption font-mono" aria-live="polite">
             PARTNER · {form.name} · {form.stage.en}
           </span>
         </div>

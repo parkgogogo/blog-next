@@ -58,7 +58,7 @@ export default async function HomePage() {
   const homeJsonLd = [websiteJsonLd(), profilePageJsonLd];
 
   return (
-    <main className="blog-doc-shell digi-screen min-h-screen bg-[color:var(--background)] text-[color:var(--foreground)]">
+    <main className="blog-doc-shell design-v2 digi-screen min-h-screen bg-[color:var(--background)] text-[color:var(--foreground)]">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(homeJsonLd) }}
@@ -79,29 +79,25 @@ export default async function HomePage() {
           </header>
 
           <HeroScene>
-            <p className="digi-pop digi-kicker font-hud [animation-delay:0.2s]">
-              <span>parkgogogo.me</span>
-              <span aria-hidden="true">/</span>
-              <span>デジモンテイマーズ</span>
+            <p className="kv-cut font-mono digi-pop [animation-delay:0.2s]">
+              C-001 <span aria-hidden="true">／</span> 新宿・屋上{" "}
+              <span aria-hidden="true">／</span> parkgogogo.me
             </p>
-            <div className="digi-title digi-pop mt-4 font-display-anime [animation-delay:0.35s]">
-              <h1 className="digi-title__main kv-title" data-text="ParkGoGoGo">
-                ParkGoGoGo
-              </h1>
-              <p className="digi-title__sub">驯兽师的数码手账</p>
-            </div>
-            <p className="kv-copy__desc digi-pop [animation-delay:0.55s]">
+            <h1 className="kv-title font-display-anime digi-pop [animation-delay:0.35s]">
+              ParkGoGoGo
+            </h1>
+            <p className="kv-tagline digi-pop [animation-delay:0.5s]">驯兽师的数码手账</p>
+            <p className="kv-copy__desc digi-pop [animation-delay:0.6s]">
               Parkgogogo 是 Park 的个人博客，记录前端工程、AI
-              编程、产品思考和日常写作。
-              <strong className="digi-highlight">今天也在进化中。</strong>
+              编程、产品思考和日常写作。<em>今天也在进化中。</em>
             </p>
-            <div className="digi-pop mt-8 flex flex-wrap items-center gap-5 [animation-delay:0.75s]">
-              <a href="#episode-cards" className="digi-button">
-                <span className="font-hud">CARD SLASH!</span>
+            <div className="kv-actions digi-pop [animation-delay:0.75s]">
+              <a href="#episode-cards" className="v2-btn">
                 <span>抽一张卡</span>
+                <span className="font-mono">CARD SLASH</span>
               </a>
-              <Link href="/blog" className="digi-button digi-button--ghost">
-                <span className="font-hud">ALL POSTS</span>
+              <Link href="/blog" className="v2-link">
+                全部文章 <span aria-hidden="true">→</span>
               </Link>
             </div>
           </HeroScene>
