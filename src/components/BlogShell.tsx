@@ -4,7 +4,10 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
-import { Logo } from "@/components/Logo";
+import { CardSlashProvider } from "@/components/digi/CardSlash";
+import { DigiLogo } from "@/components/digi/DigiLogo";
+import { EvolutionGauge } from "@/components/digi/EvolutionGauge";
+import { siteSameAs } from "@/lib/seo";
 import type { Category } from "@/types/blog";
 
 interface BlogShellProps {
@@ -43,19 +46,16 @@ function BlogNavigation({
         <Link
           href="/blog"
           onClick={onNavigate}
-          className={`block rounded-md px-3 py-2 text-sm leading-5 transition-colors duration-150 ${
-            isAllPosts
-              ? "bg-[color:var(--surface-active)] font-medium text-[color:var(--foreground-strong)]"
-              : "text-[color:var(--text-muted)] hover:bg-[color:var(--surface-tertiary)] hover:text-[color:var(--foreground-strong)]"
-          }`}
+          aria-current={isAllPosts ? "page" : undefined}
+          className="digi-nav-item"
         >
-          All posts
+          ALL CARDS
         </Link>
       </div>
 
       <div>
-        <p className="mb-2 px-3 text-sm font-semibold leading-5 text-[color:var(--foreground-strong)]">
-          Posts
+        <p className="mb-3 px-3 font-hud text-[0.7rem] font-bold tracking-[0.3em] text-[color:var(--accent-2)]">
+          DATA INDEX
         </p>
         <CategoryTree
           category={categories}
@@ -91,25 +91,22 @@ function CategoryTree({
     <div>
       {showCategoryHeader && (
         <div className="py-1.5" style={categoryIndentStyle}>
-          <h3 className="px-3 text-sm font-semibold leading-5 text-[color:var(--foreground-strong)]">
+          <h3 className="px-3 text-[0.8rem] font-bold text-[color:var(--text-tertiary)]">
             {category.name}
           </h3>
         </div>
       )}
 
       {hasPosts && (
-        <div className="space-y-1">
+        <div className="space-y-0.5">
           {category.posts.map((post) => (
             <Link
               key={post.slug}
               href={`/blog/${post.slug}`}
               onClick={onNavigate}
               style={postIndentStyle}
-              className={`block rounded-md px-3 py-2 text-sm leading-5 transition-colors duration-150 ${
-                currentSlug === post.slug
-                  ? "bg-[color:var(--surface-active)] font-medium text-[color:var(--foreground-strong)]"
-                  : "text-[color:var(--text-muted)] hover:bg-[color:var(--surface-tertiary)] hover:text-[color:var(--foreground-strong)]"
-              }`}
+              aria-current={currentSlug === post.slug ? "page" : undefined}
+              className="digi-nav-item"
             >
               {post.title}
             </Link>
@@ -141,44 +138,53 @@ export default function BlogShell({ categories, children }: BlogShellProps) {
   const showSidebar = pathname !== "/blog";
 
   return (
-    <div className="blog-doc-shell min-h-screen bg-[color:var(--background)] text-[color:var(--foreground)]">
-      <header className="fixed inset-x-0 top-0 z-40 h-16 border-b border-[color:var(--border-subtle)] bg-[color:var(--background)]/95 backdrop-blur">
+    <div className="blog-doc-shell digi-screen min-h-screen bg-[color:var(--background)] text-[color:var(--foreground)]">
+      <header className="digi-topbar fixed inset-x-0 top-0 z-40 h-16">
         <div className="flex h-full items-center px-4 md:px-6">
-          <Link
-            href="/"
-            className="flex h-9 w-40 items-center text-[color:var(--foreground-strong)] md:w-[100px]"
-          >
-            <Logo className="h-8 w-auto text-[color:var(--foreground-strong)]" />
-          </Link>
+          <DigiLogo />
 
           <nav
             aria-label="Primary"
-            className="hidden items-center gap-1 text-sm leading-5 md:flex"
+            className="ml-auto hidden items-center gap-3 md:flex"
           >
             <Link
               href="/blog"
-              className="rounded-full bg-[color:var(--surface-active)] px-3 py-2 font-medium text-[color:var(--foreground-strong)]"
+              className={`digi-chip ${pathname === "/blog" ? "is-active" : ""}`}
             >
               Blog
             </Link>
+            <a
+              href={siteSameAs[0]}
+              rel="me noreferrer"
+              className="digi-chip"
+            >
+              GitHub
+            </a>
+            <Link
+              href="/rss/blog.xml"
+              className="digi-chip"
+            >
+              RSS
+            </Link>
           </nav>
 
-          <div className="ml-auto flex items-center">
+          <div className="ml-auto flex items-center md:hidden">
             <button
               type="button"
               aria-label="Open navigation"
               onClick={() => setMenuOpen(true)}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full text-[color:var(--text-muted)] transition-colors duration-150 hover:bg-[color:var(--surface-tertiary)] hover:text-[color:var(--foreground-strong)] md:hidden"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full text-[color:var(--text-muted)] transition-colors duration-150 hover:text-[color:var(--foreground-strong)]"
             >
               <Menu size={20} aria-hidden="true" />
             </button>
           </div>
         </div>
       </header>
+      {currentSlug && <EvolutionGauge />}
 
       {showSidebar && (
-        <aside className="fixed bottom-0 left-0 top-16 hidden w-60 border-r border-[color:var(--border-subtle)] bg-[color:var(--background)] md:block">
-          <div className="h-full overflow-y-auto px-4 py-5">
+        <aside className="digi-sidebar fixed bottom-0 left-0 top-16 hidden w-60 md:block">
+          <div className="h-full overflow-y-auto px-4 py-8">
             <BlogNavigation
               categories={categories}
               currentSlug={currentSlug}
@@ -188,8 +194,8 @@ export default function BlogShell({ categories, children }: BlogShellProps) {
         </aside>
       )}
 
-      <main className={`min-h-screen pt-16 ${showSidebar ? "md:pl-60" : ""}`}>
-        {children}
+      <main className={`relative min-h-screen pt-16 ${showSidebar ? "md:pl-60" : ""}`}>
+        <CardSlashProvider>{children}</CardSlashProvider>
       </main>
 
       {menuOpen && (
@@ -200,20 +206,14 @@ export default function BlogShell({ categories, children }: BlogShellProps) {
             onClick={() => setMenuOpen(false)}
             className="absolute inset-0 bg-[color:var(--overlay-muted)]"
           />
-          <div className="absolute left-0 top-0 flex h-full w-[min(320px,86vw)] flex-col border-r border-[color:var(--border-subtle)] bg-[color:var(--background)]">
-            <div className="flex h-16 items-center justify-between border-b border-[color:var(--border-subtle)] px-4">
-              <Link
-                href="/"
-                onClick={() => setMenuOpen(false)}
-                className="flex h-9 items-center text-[color:var(--foreground-strong)]"
-              >
-                <Logo className="h-8 w-auto text-[color:var(--foreground-strong)]" />
-              </Link>
+          <div className="digi-drawer absolute left-0 top-0 flex h-full w-[min(320px,86vw)] flex-col border-r border-[color:var(--border-default)] bg-[color:var(--background)]">
+            <div className="flex h-16 items-center justify-between border-b border-[color:var(--border-default)] px-4">
+              <DigiLogo onNavigate={() => setMenuOpen(false)} />
               <button
                 type="button"
                 aria-label="Close navigation"
                 onClick={() => setMenuOpen(false)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full text-[color:var(--text-muted)] transition-colors duration-150 hover:bg-[color:var(--surface-tertiary)] hover:text-[color:var(--foreground-strong)]"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full text-[color:var(--text-muted)] transition-colors duration-150 hover:text-[color:var(--foreground-strong)]"
               >
                 <X size={20} aria-hidden="true" />
               </button>

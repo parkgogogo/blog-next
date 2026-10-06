@@ -26,6 +26,7 @@ package-lock.json
 # misc
 .DS_Store
 *.pem
+/tmp/
 /docs/plans/
 HANDOFF.md
 

@@ -44,23 +44,21 @@ describe("BlogPostPage", () => {
     const html = renderToStaticMarkup(element);
 
     expect(html).toContain("Hello World");
-    expect(html).toContain("1 Mar, 2026");
-    expect(html).toContain("6 min read");
+    expect(html).toContain("2026.03.01");
+    expect(html).toContain("6 MIN");
     expect(html).toContain("data-testid=\"markdown-renderer\"");
     expect(html).toContain("text-[color:var(--foreground-strong)]");
     expect(html).toContain("text-[color:var(--text-muted)]");
   });
 
-  it("keeps article tags close to the metadata and body", async () => {
+  it("renders tags as data chips and closes with a mission-complete panel", async () => {
     const element = await BlogPostPage({
       params: Promise.resolve({ slug: "hello-world" }),
     });
     const html = renderToStaticMarkup(element);
 
-    expect(html).toContain("mb-4");
-    expect(html).toContain("mt-3 flex flex-wrap gap-2");
-    expect(html).not.toContain("md:mb-12");
-    expect(html).not.toContain("md:mt-8");
+    expect(html).toContain('class="digi-tag">design</span>');
+    expect(html).toContain("Mission complete");
   });
 
   it("renders raw markdown mode with the redesigned source panel", async () => {

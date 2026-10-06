@@ -20,6 +20,24 @@ async function renderMarkdown(content: string): Promise<string> {
 }
 
 describe("MarkdownRenderer image rendering", () => {
+  it.each([
+    ["standalone native image", "![Caption](/next.svg)"],
+    ["standalone optimized image", "![Caption](/api/attachment/example.webp)"],
+    ["inline image with text", "Before ![Caption](/next.svg) after."],
+    ["linked image", "[![Caption](/next.svg)](/blog)"],
+  ])("keeps %s valid inside a paragraph", async (_, content) => {
+    const html = await renderMarkdown(content);
+    const paragraphs = html.match(/<p(?:\s[^>]*)?>[\s\S]*?<\/p>/g);
+
+    expect(paragraphs).not.toBeNull();
+    for (const paragraph of paragraphs || []) {
+      const innerHtml = paragraph.replace(/^<p(?:\s[^>]*)?>/, "");
+      expect(innerHtml).not.toMatch(/<(?:div|p|figure|figcaption)(?:\s|>)/);
+    }
+    expect(html).toContain('alt="Caption"');
+    expect(html).toContain(">Caption<");
+  });
+
   it("renders uncontrolled markdown image sources with plain img", async () => {
     const html = await renderMarkdown("![Test Image](/next.svg)");
 
