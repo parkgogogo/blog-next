@@ -329,7 +329,11 @@ export function ImpmonRunner() {
           particle.life -= dt;
         });
         particles = particles.filter((particle) => particle.life > 0);
-        if (now - overAt > 5000) reset("demo");
+        if (now - overAt > 5000) {
+          reset("demo");
+          // 减少动态效果时，演示模式只保留一帧静止画面
+          if (reduceMotion) stop();
+        }
         return;
       }
 
@@ -629,6 +633,7 @@ export function ImpmonRunner() {
       last = now;
       update(dt, now);
       render(now);
+      if (!frameId) return;
       frameId = visible ? window.requestAnimationFrame(loop) : 0;
     }
 
@@ -681,7 +686,11 @@ export function ImpmonRunner() {
       dark = darkQuery.matches;
     };
 
-    const resizeObserver = new ResizeObserver(resize);
+    // 改变画布尺寸会清空画面；没有动画循环时需要手动补画一帧
+    const resizeObserver = new ResizeObserver(() => {
+      resize();
+      if (!frameId) render(performance.now());
+    });
 
     resize();
     reset("demo");

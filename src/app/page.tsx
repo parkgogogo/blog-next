@@ -100,12 +100,12 @@ export default async function HomePage() {
               <span aria-hidden="true">/</span>
               <span>デジモンテイマーズ</span>
             </p>
-            <h1 className="digi-title digi-pop mt-4 font-display-anime [animation-delay:1.45s]">
-              <span className="digi-title__main" data-text="Parkgogogo">
+            <div className="digi-title digi-pop mt-4 font-display-anime [animation-delay:1.45s]">
+              <h1 className="digi-title__main" data-text="Parkgogogo">
                 Parkgogogo
-              </span>
-              <span className="digi-title__sub">驯兽师的数码手账</span>
-            </h1>
+              </h1>
+              <p className="digi-title__sub">驯兽师的数码手账</p>
+            </div>
             <p className="digi-pop mt-6 max-w-[30rem] text-[1.04rem] leading-[1.95] text-[color:var(--foreground)] [animation-delay:1.65s]">
               Parkgogogo 是 Park 的个人博客，记录前端工程、AI
               编程、产品思考和日常写作。

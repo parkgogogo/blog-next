@@ -183,7 +183,7 @@ export default function BlogShell({ categories, children }: BlogShellProps) {
       {currentSlug && <EvolutionGauge />}
 
       {showSidebar && (
-        <aside className="digi-sidebar fixed bottom-0 left-0 top-16 hidden w-60 md:block">
+        <aside className="digi-sidebar fixed bottom-0 left-0 top-16 z-30 hidden w-60 md:block">
           <div className="h-full overflow-y-auto px-4 py-8">
             <BlogNavigation
               categories={categories}
