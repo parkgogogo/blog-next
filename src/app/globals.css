@@ -1746,6 +1746,11 @@
   position: relative;
 }
 
+/* 网格子项默认 min-width:auto 会被横向滚动的牌列撑开，导致整页横向溢出 */
+.card-hand > * {
+  min-width: 0;
+}
+
 .card-hand__badge {
   position: absolute;
   top: -0.9rem;
@@ -3361,6 +3366,405 @@
 .design-v2 .digi-footer {
   border-top: 1px solid var(--line);
   background: none;
+}
+
+
+/* ---------- v2 全站：字体角色 ---------- */
+
+/* HUD 字体统一换成等宽，Orbitron 只剩刷卡演出里的大字 */
+.design-v2 .font-hud {
+  font-family: var(--font-mono-stack);
+  font-weight: 500;
+  letter-spacing: 0.1em;
+}
+
+.design-v2 .digi-kicker {
+  gap: 0.5em;
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+}
+
+.design-v2 .digi-kicker > span:nth-child(2) {
+  color: var(--text-tertiary);
+  opacity: 0.6;
+}
+
+.design-v2 .digi-section-title {
+  font-style: normal;
+  letter-spacing: 0.02em;
+}
+
+.design-v2 .digi-section-title::after {
+  display: none;
+}
+
+.design-v2 .digi-tag {
+  padding: 0;
+  font-family: var(--font-mono-stack);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: none;
+  border-radius: 0;
+}
+
+.design-v2 .digi-tag::before {
+  content: "#";
+  margin-right: 0.1em;
+  color: var(--text-tertiary);
+}
+
+/* ---------- v2 全站：顶栏 / 侧栏 / 抽屉 ---------- */
+
+.design-v2 .digi-topbar {
+  background: color-mix(in srgb, var(--background) 84%, transparent);
+  border-bottom: 1px solid var(--line);
+}
+
+.design-v2 .digi-sidebar {
+  border-right: 1px solid var(--line);
+}
+
+.design-v2 .digi-drawer {
+  border-right: 1px solid var(--line);
+}
+
+.design-v2 .digi-nav-item {
+  padding: 0.5rem 0.75rem 0.5rem 0.9rem;
+  border-radius: 8px;
+}
+
+.design-v2 .digi-nav-item:hover {
+  background: var(--surface-muted);
+  transform: none;
+}
+
+.design-v2 .digi-nav-item[aria-current="page"] {
+  color: var(--foreground-strong);
+  font-weight: 700;
+  background: var(--surface-muted);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+/* ---------- v2 全站：卡册页 ---------- */
+
+.design-v2 .digi-binder-head {
+  background: none;
+  border-bottom: 1px solid var(--line);
+}
+
+.design-v2 .digi-binder-stats {
+  gap: 0;
+  width: fit-content;
+  border-block: 1px solid var(--line);
+}
+
+.design-v2 .digi-binder-stats > div {
+  min-width: 0;
+  padding: 0.8rem 1.6rem 0.8rem 0;
+  background: none;
+  border: 0;
+  box-shadow: none;
+  transform: none;
+}
+
+.design-v2 .digi-binder-stats > div + div {
+  padding-left: 1.6rem;
+  border-left: 1px solid var(--line);
+}
+
+.design-v2 .digi-binder-stats dt {
+  display: flex;
+  align-items: center;
+  gap: 0.45em;
+  font-family: var(--font-mono-stack);
+  font-weight: 500;
+  letter-spacing: 0.14em;
+}
+
+.design-v2 .digi-binder-stats > div[data-attribute] dt::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--attr);
+}
+
+.design-v2 .digi-binder-stats dd {
+  color: var(--foreground-strong);
+}
+
+/* ---------- v2 全站：文章页 ---------- */
+
+.design-v2 .digi-article__head {
+  padding: 1.8rem;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--surface-card);
+  box-shadow: var(--shadow-1);
+}
+
+.design-v2 .digi-article__meta-top {
+  gap: 0.7rem;
+  color: var(--text-tertiary);
+}
+
+.design-v2 .digi-article__attr {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  padding: 0;
+  color: var(--text-muted);
+  background: none;
+  border: 0;
+  transform: none;
+}
+
+.design-v2 .digi-article__attr::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--attr);
+}
+
+.design-v2 .digi-article__stage {
+  padding: 0.1rem 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+
+.design-v2 .digi-article__art {
+  padding: 6px;
+  background: linear-gradient(165deg, color-mix(in srgb, var(--attr) 55%, #fff), var(--attr));
+  border: 0;
+  border-radius: 14px;
+  box-shadow: var(--shadow-1);
+  transform: rotate(2deg);
+}
+
+.design-v2 .digi-article__art img {
+  border: 0;
+  border-radius: 9px;
+}
+
+.design-v2 .digi-article__art figcaption {
+  font-family: var(--font-noto-sans-sc), sans-serif;
+  font-weight: 800;
+}
+
+.design-v2 .digi-article__end {
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.design-v2 .evo-gauge {
+  padding: 0.45rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface-card) 90%, transparent);
+  backdrop-filter: blur(8px);
+  box-shadow: var(--shadow-1);
+  font-weight: 600;
+}
+
+.design-v2 .evo-gauge__label {
+  font-family: var(--font-mono-stack);
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  color: var(--text-tertiary);
+}
+
+.design-v2 .evo-gauge__track i {
+  width: 3px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.design-v2 .evo-gauge__track i.is-on,
+.design-v2 .evo-gauge[data-stage] .is-on {
+  background: var(--accent);
+  box-shadow: none;
+}
+
+/* ---------- v2 全站：Markdown 正文 ---------- */
+
+.design-v2 .markdown-body h2 {
+  padding-left: 0;
+}
+
+.design-v2 .markdown-body h2::before {
+  content: "";
+  position: static;
+  display: block;
+  width: 1.6rem;
+  height: 2px;
+  margin-bottom: 0.7em;
+  background: var(--accent);
+  transform: none;
+}
+
+.design-v2 .markdown-body h3::before {
+  content: none;
+}
+
+.design-v2 .markdown-body a {
+  font-weight: 500;
+  color: var(--foreground-strong);
+  background: none;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.design-v2 .markdown-body a:hover {
+  color: var(--accent);
+  background: none;
+  text-decoration-color: var(--accent);
+}
+
+.design-v2 .markdown-body hr {
+  max-width: none;
+  height: 1px;
+  background: var(--line);
+}
+
+.design-v2 .markdown-body blockquote {
+  padding: 0.2rem 0 0.2rem 1.2rem;
+  color: var(--text-muted);
+  background: none;
+  border: 0;
+  border-left: 2px solid var(--accent);
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.design-v2 .markdown-body blockquote::after {
+  content: none;
+}
+
+.design-v2 .markdown-body pre {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+.design-v2 .markdown-body pre::before {
+  content: "CODE";
+  font-family: var(--font-mono-stack);
+  font-weight: 500;
+  color: rgb(255 255 255 / 45%);
+  background: rgb(255 255 255 / 4%);
+  border-bottom: 1px solid rgb(255 255 255 / 8%);
+  border-radius: 11px 11px 0 0;
+}
+
+.design-v2 .markdown-body code:not(pre code) {
+  color: var(--foreground-strong);
+  background: var(--surface-muted);
+  border-radius: 5px;
+}
+
+.design-v2 .markdown-body img {
+  border: 0;
+  border-radius: 12px;
+  box-shadow: var(--shadow-1);
+}
+
+.design-v2 .hashtag {
+  font-family: var(--font-mono-stack);
+  font-weight: 500;
+  color: var(--text-muted);
+  background: var(--surface-muted);
+}
+
+.design-v2 .hashtag:hover {
+  color: var(--foreground-strong);
+  background: var(--surface-active, var(--surface-muted));
+}
+
+/* ---------- v2 全站：页脚 ---------- */
+
+.design-v2 .digi-footer p.font-display-anime {
+  font-size: 1.3rem;
+}
+
+/* ---------- v2 手机端 ---------- */
+
+@media (max-width: 767px) {
+  .design-v2 .kv-device .tamer-darc__hint {
+    display: none;
+  }
+
+  .design-v2 .home-hero__cue {
+    left: 50%;
+  }
+
+  .design-v2 .digi-article__head {
+    padding: 1.2rem;
+  }
+
+  /* 手机端：进度胶囊改成顶栏下方的一条细线，不再压住正文 */
+  .design-v2 .evo-gauge {
+    top: 4rem;
+    right: 0;
+    bottom: auto;
+    left: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+
+  .design-v2 .evo-gauge__label,
+  .design-v2 .evo-gauge__stage {
+    display: none;
+  }
+
+  .design-v2 .evo-gauge__track {
+    flex: 1;
+    gap: 0;
+  }
+
+  .design-v2 .evo-gauge__track i {
+    flex: 1;
+    width: auto;
+    height: 2px;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .design-v2 .digi-binder-stats {
+    width: 100%;
+  }
+
+  .design-v2 .digi-binder-stats > div {
+    flex: 1;
+    padding-right: 0.6rem;
+  }
+
+  .design-v2 .digi-binder-stats > div + div {
+    padding-left: 0.8rem;
+  }
+
+  .design-v2 .digi-binder-stats dt {
+    font-size: 0.55rem;
+    letter-spacing: 0.06em;
+  }
+
+  .design-v2 .digi-binder-stats dd {
+    font-size: 1.3rem;
+  }
 }
 
 

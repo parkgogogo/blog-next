@@ -598,14 +598,17 @@ export function ImpmonRunner() {
       ctx!.font = `${fontSize}px ${palette.font}`;
       ctx!.textBaseline = "top";
       ctx!.textAlign = "right";
-      const hud = `◆${String(chips).padStart(2, "0")}   HI ${String(hiScore).padStart(5, "0")}  ${String(score).padStart(5, "0")}`;
+      const hud =
+        width < 560
+          ? `HI ${String(hiScore).padStart(5, "0")} ${String(score).padStart(5, "0")}`
+          : `◆${String(chips).padStart(2, "0")}   HI ${String(hiScore).padStart(5, "0")}  ${String(score).padStart(5, "0")}`;
       label(hud, width - 16, 12, palette.ink);
       if (fireCharges > 0) label(`FIRE ×${fireCharges}`, width - 16, 12 + fontSize + 8, "#ff7a1f");
 
       ctx!.textAlign = "left";
       if (mode === "demo") {
         ctx!.globalAlpha = 0.6 + Math.sin(now / 300) * 0.35;
-        label("DEMO · PRESS SPACE / TAP TO PLAY", 16, 12, palette.ink);
+        label(width < 560 ? "TAP TO PLAY" : "DEMO · PRESS SPACE / TAP TO PLAY", 16, 12, palette.ink);
         ctx!.globalAlpha = 1;
       }
 

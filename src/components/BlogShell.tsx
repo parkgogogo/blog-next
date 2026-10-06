@@ -54,7 +54,7 @@ function BlogNavigation({
       </div>
 
       <div>
-        <p className="mb-3 px-3 font-hud text-[0.7rem] font-bold tracking-[0.3em] text-[color:var(--accent-2)]">
+        <p className="mb-3 px-3 font-hud text-[0.7rem] tracking-[0.2em] text-[color:var(--text-tertiary)]">
           DATA INDEX
         </p>
         <CategoryTree
@@ -138,7 +138,7 @@ export default function BlogShell({ categories, children }: BlogShellProps) {
   const showSidebar = pathname !== "/blog";
 
   return (
-    <div className="blog-doc-shell digi-screen min-h-screen bg-[color:var(--background)] text-[color:var(--foreground)]">
+    <div className="blog-doc-shell design-v2 digi-screen min-h-screen bg-[color:var(--background)] text-[color:var(--foreground)]">
       <header className="digi-topbar fixed inset-x-0 top-0 z-40 h-16">
         <div className="flex h-full items-center px-4 md:px-6">
           <DigiLogo />
@@ -226,6 +226,20 @@ export default function BlogShell({ categories, children }: BlogShellProps) {
                 onNavigate={() => setMenuOpen(false)}
               />
             </div>
+            <nav
+              aria-label="Primary"
+              className="flex items-center gap-2 border-t border-[color:var(--border-default)] px-4 py-4"
+            >
+              <Link href="/" onClick={() => setMenuOpen(false)} className="digi-chip">
+                Home
+              </Link>
+              <a href={siteSameAs[0]} rel="me noreferrer" className="digi-chip">
+                GitHub
+              </a>
+              <Link href="/rss/blog.xml" className="digi-chip">
+                RSS
+              </Link>
+            </nav>
           </div>
         </div>
       )}
