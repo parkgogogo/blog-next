@@ -8,8 +8,6 @@ import { EpisodeTitle } from "@/components/digi/EpisodeTitle";
 import { HeroScene } from "@/components/digi/HeroScene";
 import { ImpmonRunner } from "@/components/digi/ImpmonRunner";
 import { NextEpisode } from "@/components/digi/NextEpisode";
-import { TamerLicense } from "@/components/digi/TamerLicense";
-import { tamerStats } from "@/lib/digi";
 import { PostService } from "@/lib/posts";
 import {
   absoluteUrl,
@@ -46,7 +44,6 @@ export const metadata: Metadata = {
 export default async function HomePage() {
   const allPosts = await PostService.getAllPosts();
   const posts = allPosts.slice(0, 7);
-  const stats = tamerStats(allPosts);
   const profilePageJsonLd = {
     "@context": "https://schema.org",
     "@type": "ProfilePage",
@@ -102,19 +99,14 @@ export default async function HomePage() {
             </div>
           </HeroScene>
 
-          <a href="#episode-tamer" className="home-hero__cue font-hud" aria-label="往下看">
+          <a href="#episode-cards" className="home-hero__cue font-hud" aria-label="往下看">
             <span>EPISODE 01</span>
             <span aria-hidden="true">▼</span>
           </a>
         </section>
 
-        <section id="episode-tamer" className="home-section" aria-labelledby="tamer-heading">
-          <EpisodeTitle no="第1话" title="驯兽师登场" en="ENTER THE TAMER" id="tamer-heading" />
-          <TamerLicense stats={stats} />
-        </section>
-
         <section id="episode-cards" className="home-section" aria-labelledby="cards-heading">
-          <EpisodeTitle no="第2话" title="抽一张卡吧" en="CARD SLASH" id="cards-heading" />
+          <EpisodeTitle no="第1话" title="抽一张卡吧" en="CARD SLASH" id="cards-heading" />
           <CardHand posts={posts} />
           <div className="mt-10 flex justify-center">
             <Link href="/blog" className="digi-chip">

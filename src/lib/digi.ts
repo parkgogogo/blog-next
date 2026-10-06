@@ -167,39 +167,6 @@ export function barcodeBars(seed: string, count = 28): number[] {
   return bars;
 }
 
-export interface TamerStats {
-  cards: number;
-  since: number;
-  totalMinutes: number;
-  attributes: Record<DigiAttribute, number>;
-  /** 出现最多的标签，最多 4 个 */
-  topTags: { tag: string; count: number }[];
-}
-
-/** 驯兽师档案：全部由真实文章数据计算 */
-export function tamerStats(posts: BlogPost[]): TamerStats {
-  const attributes: Record<DigiAttribute, number> = { vaccine: 0, data: 0, virus: 0 };
-  const tags = new Map<string, number>();
-  let since = new Date().getUTCFullYear();
-  let totalMinutes = 0;
-
-  for (const post of posts) {
-    attributes[postAttribute(post)] += 1;
-    since = Math.min(since, new Date(post.date).getUTCFullYear());
-    totalMinutes += post.readingTime ?? 0;
-    for (const tag of post.tags ?? []) {
-      tags.set(tag, (tags.get(tag) ?? 0) + 1);
-    }
-  }
-
-  const topTags = [...tags.entries()]
-    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-    .slice(0, 4)
-    .map(([tag, count]) => ({ tag, count }));
-
-  return { cards: posts.length, since, totalMinutes, attributes, topTags };
-}
-
 /**
  * 页尾的「次回予告」。写好下一篇的选题后改这里即可。
  */
