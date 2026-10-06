@@ -1,10 +1,15 @@
 import type { Metadata, Viewport } from "next";
+import localFont from "next/font/local";
 import {
   Geist,
   Geist_Mono,
   Inter,
+  Noto_Sans_SC,
   Noto_Serif_SC,
+  Orbitron,
   Outfit,
+  Silkscreen,
+  VT323,
 } from "next/font/google";
 import { rssAlternateTypes, siteConfig, siteKeywords } from "@/lib/seo";
 import "yet-another-react-lightbox/styles.css";
@@ -30,6 +35,39 @@ const outfit = Outfit({
   variable: "--font-outfit",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
+});
+
+// Dela Gothic One 只用于西文标题，本地托管 latin 子集，避免拉取上百个日文分片
+const delaGothic = localFont({
+  src: "./fonts/dela-gothic-one-latin.woff2",
+  variable: "--font-dela",
+  weight: "400",
+  display: "swap",
+});
+
+const orbitron = Orbitron({
+  variable: "--font-orbitron",
+  subsets: ["latin"],
+  weight: ["500", "700", "900"],
+});
+
+const silkscreen = Silkscreen({
+  variable: "--font-pixelify",
+  subsets: ["latin"],
+  weight: ["400", "700"],
+});
+
+const vt323 = VT323({
+  variable: "--font-vt323",
+  subsets: ["latin"],
+  weight: ["400"],
+});
+
+const notoSansSc = Noto_Sans_SC({
+  variable: "--font-noto-sans-sc",
+  weight: ["400", "700", "900"],
+  display: "swap",
+  preload: false,
 });
 
 const notoSerifSc = Noto_Serif_SC({
@@ -94,7 +132,7 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${outfit.variable} ${notoSerifSc.variable} antialiased scrollbar-hide`}
+        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${outfit.variable} ${delaGothic.variable} ${orbitron.variable} ${silkscreen.variable} ${vt323.variable} ${notoSansSc.variable} ${notoSerifSc.variable} antialiased scrollbar-hide`}
       >
         {children}
       </body>

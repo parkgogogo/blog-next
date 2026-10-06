@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { format } from "date-fns";
-import { Logo } from "@/components/Logo";
+import { CardSlashProvider } from "@/components/digi/CardSlash";
+import { DigiFooter } from "@/components/digi/DigiFooter";
+import { DigiLogo } from "@/components/digi/DigiLogo";
+import { DigitalField } from "@/components/digi/DigitalField";
+import { ImpmonRunner } from "@/components/digi/ImpmonRunner";
+import { HeroPartner } from "@/components/digi/HeroPartner";
+import { PostCard } from "@/components/digi/PostCard";
 import { PostService } from "@/lib/posts";
 import {
   absoluteUrl,
-  blogPostPath,
-  postDescription,
   siteConfig,
   siteKeywords,
   siteSameAs,
@@ -37,8 +40,14 @@ export const metadata: Metadata = {
   },
 };
 
+const BOOT_LINES = [
+  "> HYPNOS MONITOR ...... ONLINE",
+  "> SCANNING SHINJUKU ... OK",
+  "> DIGITAL FIELD DETECTED ▲",
+];
+
 export default async function HomePage() {
-  const posts = (await PostService.getAllPosts()).slice(0, 5);
+  const posts = (await PostService.getAllPosts()).slice(0, 6);
   const profilePageJsonLd = {
     "@context": "https://schema.org",
     "@type": "ProfilePage",
@@ -50,106 +59,116 @@ export default async function HomePage() {
   const homeJsonLd = [websiteJsonLd(), profilePageJsonLd];
 
   return (
-    <main className="min-h-screen bg-[color:var(--background)] text-[color:var(--foreground)]">
+    <main className="blog-doc-shell digi-screen min-h-screen bg-[color:var(--background)] text-[color:var(--foreground)]">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(homeJsonLd) }}
       />
 
-      <div className="mx-auto flex min-h-screen w-full max-w-[72rem] flex-col px-4 py-6 sm:px-6 lg:px-8">
-        <header className="flex items-center justify-between gap-4">
-          <Link
-            href="/"
-            aria-label="Parkgogogo home"
-            className="flex h-10 items-center text-[color:var(--foreground-strong)]"
-          >
-            <Logo className="h-8 w-auto text-[color:var(--foreground-strong)]" />
-          </Link>
+      <CardSlashProvider>
+      <section className="digi-hero relative isolate flex min-h-[100svh] flex-col overflow-hidden">
+        <DigitalField />
 
-          <nav
-            aria-label="Primary"
-            className="flex items-center gap-1 text-sm leading-5"
-          >
-            <Link
-              href="/blog"
-              className="rounded-full px-3 py-2 font-medium text-[color:var(--foreground-strong)] transition-colors duration-150 hover:bg-[color:var(--surface-tertiary)]"
-            >
+        <header className="relative z-20 mx-auto flex w-full max-w-[78rem] items-center justify-between px-5 pt-6 sm:px-8">
+          <DigiLogo />
+          <nav aria-label="Primary" className="flex items-center gap-2 sm:gap-3">
+            <Link href="/blog" className="digi-chip">
               Blog
             </Link>
-            <a
-              href={siteSameAs[0]}
-              rel="me noreferrer"
-              className="rounded-full px-3 py-2 text-[color:var(--text-muted)] transition-colors duration-150 hover:bg-[color:var(--surface-tertiary)] hover:text-[color:var(--foreground-strong)]"
-            >
+            <a href={siteSameAs[0]} rel="me noreferrer" className="digi-chip">
               GitHub
             </a>
           </nav>
         </header>
 
-        <div className="grid flex-1 content-center gap-12 py-14 md:grid-cols-[minmax(0,1fr)_minmax(18rem,28rem)] md:items-center md:py-20">
-          <section className="max-w-3xl">
-            <p className="mb-4 text-sm font-medium leading-5 text-[color:var(--text-muted)]">
-              parkgogogo.me
+        <div className="digi-hero-content relative z-10 mx-auto grid w-full max-w-[78rem] flex-1 items-center gap-6 px-5 pt-8 sm:px-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
+          <div className="relative z-10 max-w-[36rem]">
+            <div className="digi-boot font-pixel-term" aria-hidden="true">
+              {BOOT_LINES.map((line, index) => (
+                <p
+                  key={line}
+                  className="digi-boot__line"
+                  style={{ animationDelay: `${0.2 + index * 0.45}s` }}
+                >
+                  {line}
+                </p>
+              ))}
+            </div>
+
+            <p className="digi-pop digi-kicker font-hud mt-7 [animation-delay:1.3s]">
+              <span>parkgogogo.me</span>
+              <span aria-hidden="true">/</span>
+              <span>デジモンテイマーズ</span>
             </p>
-            <h1 className="text-[clamp(2.5rem,8vw,5.75rem)] font-semibold leading-[0.95] text-[color:var(--foreground-strong)]">
-              Parkgogogo
+            <h1 className="digi-title digi-pop mt-4 font-display-anime [animation-delay:1.45s]">
+              <span className="digi-title__main" data-text="Parkgogogo">
+                Parkgogogo
+              </span>
+              <span className="digi-title__sub">驯兽师的数码手账</span>
             </h1>
-            <p className="mt-6 max-w-2xl text-base leading-7 text-[color:var(--text-muted)] sm:text-lg sm:leading-8">
-              Parkgogogo 是 Park 的个人博客，记录前端工程、AI 编程、产品思考和日常写作。
+            <p className="digi-pop mt-6 max-w-[30rem] text-[1.04rem] leading-[1.95] text-[color:var(--foreground)] [animation-delay:1.65s]">
+              Parkgogogo 是 Park 的个人博客，记录前端工程、AI
+              编程、产品思考和日常写作。
+              <strong className="digi-highlight">今天也在进化中。</strong>
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link
-                href="/blog"
-                className="rounded-full bg-[color:var(--foreground-strong)] px-5 py-3 text-sm font-medium leading-5 text-[color:var(--background)] transition-opacity duration-150 hover:opacity-85"
-              >
-                Read the blog
+            <div className="digi-pop mt-9 flex flex-wrap items-center gap-5 [animation-delay:1.85s]">
+              <Link href="/blog" className="digi-button">
+                <span className="font-hud">CARD SLASH!</span>
+                <span>读文章</span>
               </Link>
               <a
                 href={siteSameAs[0]}
                 rel="me noreferrer"
-                className="rounded-full border border-[color:var(--border-default)] px-5 py-3 text-sm font-medium leading-5 text-[color:var(--foreground-strong)] transition-colors duration-150 hover:bg-[color:var(--surface-tertiary)]"
+                className="digi-button digi-button--ghost"
               >
-                GitHub profile
+                <span className="font-hud">GITHUB</span>
               </a>
             </div>
-          </section>
+          </div>
 
-          <section aria-labelledby="latest-posts-heading">
-            <h2
-              id="latest-posts-heading"
-              className="text-sm font-semibold leading-5 text-[color:var(--foreground-strong)]"
-            >
-              Latest posts
-            </h2>
-            <div className="mt-4 divide-y divide-[color:var(--border-default)] border-y border-[color:var(--border-default)]">
-              {posts.map((post) => (
-                <article key={post.slug}>
-                  <Link
-                    href={blogPostPath(post.slug)}
-                    className="block py-4 transition-colors duration-150 hover:text-[color:var(--link-primary)]"
-                  >
-                    <h3 className="text-sm font-semibold leading-5 text-[color:var(--foreground-strong)]">
-                      {post.title}
-                    </h3>
-                    <p className="mt-1 line-clamp-2 text-sm leading-5 text-[color:var(--text-muted)]">
-                      {postDescription(post)}
-                    </p>
-                    <time className="mt-2 block text-xs leading-5 text-[color:var(--text-tertiary)]">
-                      {format(new Date(post.date), "d MMM, yyyy")}
-                    </time>
-                  </Link>
-                </article>
-              ))}
-
-              {posts.length === 0 && (
-                <p className="py-4 text-sm leading-5 text-[color:var(--text-muted)]">
-                  Posts will appear here after the blog source is configured.
-                </p>
-              )}
-            </div>
-          </section>
+          <HeroPartner />
         </div>
-      </div>
+
+        <ImpmonRunner />
+
+      </section>
+
+      <section
+        id="cards"
+        aria-labelledby="cards-heading"
+        className="relative mx-auto w-full max-w-[78rem] scroll-mt-8 px-5 pb-16 pt-20 sm:px-8"
+      >
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="digi-kicker font-hud">
+              <span>CARD DECK</span>
+              <span aria-hidden="true">/</span>
+              <span>{String(posts.length).padStart(2, "0")} CARDS</span>
+            </p>
+            <h2 id="cards-heading" className="digi-section-title mt-3">
+              最新卡组
+            </h2>
+          </div>
+          <Link href="/blog" className="digi-chip">
+            All cards ▸
+          </Link>
+        </div>
+
+        <div className="digi-card-grid mt-10">
+          {posts.map((post, index) => (
+            <PostCard key={post.slug} post={post} index={index} />
+          ))}
+        </div>
+
+        {posts.length === 0 && (
+          <p className="mt-10 text-[color:var(--text-muted)]">
+            卡组还是空的——数码世界正在加载中……
+          </p>
+        )}
+      </section>
+
+      <DigiFooter />
+      </CardSlashProvider>
     </main>
   );
 }

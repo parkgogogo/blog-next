@@ -182,9 +182,11 @@ export default async function MarkdownRenderer({
           img: ({ src, alt }) => {
             const imageSrc = typeof src === "string" ? src : "";
 
+            // Markdown images can be inside paragraphs and links, so their
+            // wrappers must remain phrasing content even with a flex layout.
             if (!imageSrc || !isOptimizedMarkdownImage(imageSrc)) {
               return (
-                <div className="my-4 flex flex-col items-center">
+                <span className="my-4 flex flex-col items-center">
                   {/* Markdown image sources are uncontrolled; prefer native img for compatibility. */}
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
@@ -194,16 +196,16 @@ export default async function MarkdownRenderer({
                     alt={alt || "blog's image"}
                   />
                   {alt && (
-                    <div className="mt-2 text-sm leading-5 text-[color:var(--text-muted)]">
+                    <span className="mt-2 text-sm leading-5 text-[color:var(--text-muted)]">
                       {alt}
-                    </div>
+                    </span>
                   )}
-                </div>
+                </span>
               );
             }
 
             return (
-              <div className="my-4 flex flex-col items-center">
+              <span className="my-4 flex flex-col items-center">
                 <Image
                   className="h-auto max-w-full rounded-lg border border-[color:var(--border-default)] bg-[color:var(--surface-muted)]"
                   loading="lazy"
@@ -214,11 +216,11 @@ export default async function MarkdownRenderer({
                   quality={80}
                 />
                 {alt && (
-                  <div className="mt-2 text-sm leading-5 text-[color:var(--text-muted)]">
+                  <span className="mt-2 text-sm leading-5 text-[color:var(--text-muted)]">
                     {alt}
-                  </div>
+                  </span>
                 )}
-              </div>
+              </span>
             );
           },
         }}

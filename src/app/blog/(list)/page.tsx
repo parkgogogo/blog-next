@@ -1,8 +1,7 @@
-import Link from "next/link";
-import Image from "next/image";
 import type { Metadata } from "next";
-import { format } from "date-fns";
-import { BlogPost, Category } from "@/types/blog";
+import { DigiFooter } from "@/components/digi/DigiFooter";
+import { PostCard } from "@/components/digi/PostCard";
+import { postAttribute } from "@/lib/digi";
 import { PostService } from "@/lib/posts";
 import {
   absoluteUrl,
@@ -41,49 +40,6 @@ export const metadata: Metadata = {
   },
 };
 
-function getDisplayExcerpt(post: BlogPost): string {
-  return postDescription(post);
-}
-
-function CategorySection({ category }: { category: Category }) {
-  const allPosts = collectCategoryPosts(category);
-
-  if (allPosts.length === 0) {
-    return null;
-  }
-
-  return (
-    <div className="divide-y divide-[color:var(--border-default)]">
-      {allPosts.map((post) => (
-        <article key={post.slug} className="group">
-          <Link
-            href={`/blog/${post.slug}`}
-            className="block py-5 transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--link-primary)]"
-          >
-            <div className="flex flex-col gap-2">
-              <h3 className="text-base font-semibold leading-6 text-[color:var(--foreground-strong)] transition-colors duration-150 group-hover:text-[color:var(--link-primary)]">
-                {post.title}
-              </h3>
-              <p className="line-clamp-2 text-sm leading-5 text-[color:var(--text-muted)]">
-                {getDisplayExcerpt(post)}
-              </p>
-              <div className="flex items-center gap-2 text-sm leading-5 text-[color:var(--text-tertiary)]">
-                <time>{format(new Date(post.date), "d MMM, yyyy")}</time>
-                {post.readingTime !== undefined && post.readingTime > 0 && (
-                  <>
-                    <span>·</span>
-                    <span>{post.readingTime} min read</span>
-                  </>
-                )}
-              </div>
-            </div>
-          </Link>
-        </article>
-      ))}
-    </div>
-  );
-}
-
 export default async function BlogPage() {
   const categories = await PostService.getCategory();
   const allPosts = collectCategoryPosts(categories);
@@ -107,53 +63,72 @@ export default async function BlogPage() {
     })),
   };
 
+  const sortedPosts = [...allPosts].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
+  const counts = sortedPosts.reduce(
+    (total, post) => {
+      total[postAttribute(post)] += 1;
+      return total;
+    },
+    { vaccine: 0, data: 0, virus: 0 }
+  );
+
   return (
-    <div className="mx-auto w-full max-w-[72rem] px-4 py-4 sm:px-6 md:py-10 lg:px-8 lg:py-12">
+    <div className="relative">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(blogJsonLd) }}
       />
-      <header className="mx-auto mb-1 max-w-3xl">
-        <h1 className="sr-only">Blog</h1>
-        <div className="blog-subtitle-write mt-3" aria-label="随手记点东西">
-          <Image
-            src="/blog-subtitle-light.png"
-            alt="随手记点东西"
-            width={1907}
-            height={580}
-            priority
-            className="blog-subtitle-image blog-subtitle-image--light"
-          />
-          <Image
-            src="/blog-subtitle-dark.png"
-            alt=""
-            width={1946}
-            height={652}
-            priority
-            className="blog-subtitle-image blog-subtitle-image--dark"
-          />
+      <header className="digi-binder-head">
+        <div className="mx-auto max-w-[72rem] px-5 pb-10 pt-12 sm:px-8 sm:pt-16">
+          <p className="digi-pop digi-kicker font-hud">
+            <span>CARD BINDER</span>
+            <span aria-hidden="true">/</span>
+            <span>ALL POSTS</span>
+          </p>
+          <h1 className="digi-section-title digi-section-title--xl digi-pop mt-4 [animation-delay:0.12s]">
+            随手记点东西
+          </h1>
+          <p className="digi-pop mt-4 max-w-[36rem] leading-[1.9] text-[color:var(--text-muted)] [animation-delay:0.24s]">
+            每篇文章都是一张数码宝贝卡：属性决定是哪条进化线，阅读时间越长，进化阶段越高。
+          </p>
+          <dl className="digi-pop digi-binder-stats mt-8 [animation-delay:0.36s]">
+            <div>
+              <dt>TOTAL</dt>
+              <dd>{String(sortedPosts.length).padStart(3, "0")}</dd>
+            </div>
+            <div data-attribute="vaccine">
+              <dt>VACCINE</dt>
+              <dd>{String(counts.vaccine).padStart(3, "0")}</dd>
+            </div>
+            <div data-attribute="data">
+              <dt>DATA</dt>
+              <dd>{String(counts.data).padStart(3, "0")}</dd>
+            </div>
+            <div data-attribute="virus">
+              <dt>VIRUS</dt>
+              <dd>{String(counts.virus).padStart(3, "0")}</dd>
+            </div>
+          </dl>
         </div>
       </header>
 
-      <div className="mx-auto max-w-3xl">
-        <CategorySection category={categories} />
+      <div className="mx-auto max-w-[72rem] px-5 pb-10 pt-4 sm:px-8">
+        <div className="digi-card-grid">
+          {sortedPosts.map((post, index) => (
+            <PostCard key={post.slug} post={post} index={index} />
+          ))}
+        </div>
+
+        {sortedPosts.length === 0 && (
+          <p className="py-16 text-center text-[color:var(--text-muted)]">
+            卡组还是空的——数码世界正在加载中……
+          </p>
+        )}
       </div>
 
-      {categories.posts.length === 0 &&
-        (!categories.subcategories ||
-          categories.subcategories.length === 0) && (
-          <div className="mx-auto max-w-3xl py-16">
-            <div className="max-w-md rounded-[10px] border border-[color:var(--border-default)] bg-[color:var(--surface-muted)] p-5">
-              <h3 className="text-sm font-semibold leading-5 text-[color:var(--foreground-strong)]">
-                No content found
-              </h3>
-              <p className="mt-2 text-sm leading-5 text-[color:var(--text-muted)]">
-                Get started by creating your first markdown file in your
-                repository.
-              </p>
-            </div>
-          </div>
-        )}
+      <DigiFooter />
     </div>
   );
 }

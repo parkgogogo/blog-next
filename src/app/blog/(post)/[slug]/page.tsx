@@ -1,8 +1,16 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { format } from "date-fns";
+import Image from "next/image";
 import Link from "next/link";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
+import { DigiFooter } from "@/components/digi/DigiFooter";
+import {
+  attributeLabel,
+  digiDate,
+  postAttribute,
+  postDigimon,
+  postStage,
+} from "@/lib/digi";
 import { PostService } from "@/lib/posts";
 import {
   absoluteUrl,
@@ -154,48 +162,76 @@ export default async function BlogPostPage({
     timeRequired: post.readingTime ? `PT${post.readingTime}M` : undefined,
   };
 
+  const attribute = postAttribute(post);
+  const stage = postStage(post);
+  const digimon = postDigimon(post);
+
   return (
-    <div className="mx-auto w-full max-w-[72rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-12">
+    <div className="relative">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
       />
-      <article className="max-w-3xl bg-transparent">
-        <div className="px-0 py-0">
-          <header className="mb-4">
-            <h1 className="mb-3 break-words text-[30px] font-semibold leading-[42px] text-[color:var(--foreground-strong)]">
-              {post.title}
-            </h1>
-
-            <div className="flex flex-row items-center gap-2 text-sm leading-5 text-[color:var(--text-muted)]">
-              <time>{format(new Date(post.date), "d MMM, yyyy")}</time>
-              {post.readingTime !== undefined && post.readingTime > 0 && (
-                <>
-                  <span>·</span>
-                  <span>{post.readingTime} min read</span>
-                </>
-              )}
-            </div>
-
-            {post.tags && post.tags.length > 0 && (
-              <div className="mt-3 flex flex-wrap gap-2">
-                {post.tags.map((tag: string, index: number) => (
-                  <span
-                    key={index}
-                    className="inline-flex rounded-md border border-[color:var(--border-default)] bg-[color:var(--surface-muted)] px-2.5 py-1 text-xs font-medium leading-[18px] text-[color:var(--text-muted)]"
-                  >
-                    {tag}
-                  </span>
-                ))}
+      <div className="mx-auto w-full max-w-[54rem] px-5 pb-6 pt-10 sm:px-8 lg:pt-14">
+        <article className="digi-article relative mx-auto max-w-[46rem] bg-transparent">
+          <header className="digi-article__head" data-attribute={attribute}>
+            <div className="digi-article__info">
+              <div className="digi-article__meta-top font-hud">
+                <span className="digi-article__attr">{attributeLabel(attribute)}</span>
+                <span>{post.category}</span>
               </div>
-            )}
+              <h1 className="digi-article__title digi-pop">{post.title}</h1>
+
+              <div className="digi-pop mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-[color:var(--text-muted)] [animation-delay:0.12s]">
+                <time dateTime={post.date} className="font-hud">
+                  {digiDate(post.date)}
+                </time>
+                {post.readingTime !== undefined && post.readingTime > 0 && (
+                  <span className="font-hud">{post.readingTime} MIN</span>
+                )}
+                <span className="digi-article__stage">{stage.zh}</span>
+                {post.tags && post.tags.length > 0 && (
+                  <span className="flex flex-wrap gap-2">
+                    {post.tags.map((tag: string) => (
+                      <span key={tag} className="digi-tag">
+                        {tag}
+                      </span>
+                    ))}
+                  </span>
+                )}
+              </div>
+            </div>
+            <figure className="digi-article__art" aria-hidden="true">
+              <Image
+                src={`/digimon/cards/${digimon.id}.webp`}
+                alt=""
+                width={320}
+                height={320}
+                sizes="180px"
+                priority
+              />
+              <figcaption className="font-display-anime">{digimon.name}</figcaption>
+            </figure>
           </header>
 
-          <div className="mt-0">
+          <div className="digi-article__body">
             <MarkdownRenderer content={post.content} />
           </div>
-        </div>
-      </article>
+
+          <div className="digi-article__end">
+            <p className="font-display-anime text-2xl text-[color:var(--foreground-strong)]">
+              Mission complete
+            </p>
+            <p className="text-[color:var(--text-muted)]">
+              {digimon.name} 已完成本话的进化 ✦
+            </p>
+            <Link href="/blog" className="digi-chip">
+              ◂ Back to binder
+            </Link>
+          </div>
+        </article>
+      </div>
+      <DigiFooter />
     </div>
   );
 }

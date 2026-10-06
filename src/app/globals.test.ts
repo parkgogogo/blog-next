@@ -18,15 +18,16 @@ describe("global theme tokens", () => {
     expect(css).toContain("--text-muted: #8f8f95;");
   });
 
-  it("defines blog dark-mode tokens from the design guide", () => {
+  it("defines the digital-field day and night blog tokens", () => {
     const css = readFileSync(globalsCssPath, "utf8");
 
     expect(css).toContain("@media (prefers-color-scheme: dark)");
-    expect(css).toContain("--background: #0d0d0d;");
-    expect(css).toContain("--foreground: #b9b9b9;");
-    expect(css).toContain("--border-default: #303030;");
-    expect(css).toContain("--link-primary: #66b5ff;");
-    expect(css).toContain("--codeblock-background: #131313;");
+    expect(css).toContain("--background: #f4f6fc;");
+    expect(css).toContain("--accent-2: #4fe3ff;");
+    expect(css).toContain("--background: #0a0b1d;");
+    expect(css).toContain("--foreground: #d3d8fb;");
+    expect(css).toContain("--border-default: #262b58;");
+    expect(css).toContain("--codeblock-background: #07081a;");
     expect(css).toContain(".dark .blog-doc-shell");
     expect(css).toContain('[data-theme="dark"] .blog-doc-shell');
     expect(css).toContain(".light .blog-doc-shell");
