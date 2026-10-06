@@ -3799,13 +3799,15 @@
   text-shadow: none;
 }
 
-.design-v2 .wordmark__cursor {
+/* 光标用伪元素，不进入 h1 的文本 */
+.design-v2 .wordmark::after {
+  content: "_";
   margin-left: 0.04em;
   color: var(--phosphor);
   animation: digi-blink 1s steps(1) infinite;
 }
 
-.design-v2 .kv[data-tod="day"] .wordmark__cursor {
+.design-v2 .kv[data-tod="day"] .wordmark::after {
   color: var(--phosphor-ink);
 }
 

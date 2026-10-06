@@ -87,9 +87,6 @@ export default async function HomePage() {
             <h1 className="kv-title wordmark font-pixel-latin" aria-label="ParkGoGoGo">
               <span className="wordmark__park">Park</span>
               <span className="wordmark__go">GoGoGo</span>
-              <span className="wordmark__cursor" aria-hidden="true">
-                _
-              </span>
             </h1>
             <p className="kv-tagline digi-pop [animation-delay:0.5s]">驯兽师的数码手账</p>
             <p className="kv-copy__desc digi-pop [animation-delay:0.6s]">
