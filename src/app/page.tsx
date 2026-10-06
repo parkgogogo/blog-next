@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CardHand } from "@/components/digi/CardHand";
 import { CardSlashProvider } from "@/components/digi/CardSlash";
+import { COLD_OPEN_GUARD, ColdOpen } from "@/components/digi/ColdOpen";
 import { DigiFooter } from "@/components/digi/DigiFooter";
 import { DigiLogo } from "@/components/digi/DigiLogo";
 import { EpisodeTitle } from "@/components/digi/EpisodeTitle";
@@ -61,6 +62,9 @@ export default async function HomePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(homeJsonLd) }}
       />
 
+      <ColdOpen />
+      <script dangerouslySetInnerHTML={{ __html: COLD_OPEN_GUARD }} />
+
       <CardSlashProvider>
         <section className="home-hero" aria-label="Parkgogogo">
           <header className="home-hero__nav">
@@ -80,12 +84,11 @@ export default async function HomePage() {
               C-001 <span aria-hidden="true">／</span> 新宿・屋上{" "}
               <span aria-hidden="true">／</span> parkgogogo.me
             </p>
-            <h1 className="kv-title wordmark digi-pop [animation-delay:0.35s]" aria-label="ParkGoGoGo">
+            <h1 className="kv-title wordmark font-pixel-latin" aria-label="ParkGoGoGo">
               <span className="wordmark__park">Park</span>
-              <span className="wordmark__gos">
-                <span className="wordmark__go wordmark__go--1">Go</span>
-                <span className="wordmark__go wordmark__go--2">Go</span>
-                <span className="wordmark__go wordmark__go--3">Go</span>
+              <span className="wordmark__go">GoGoGo</span>
+              <span className="wordmark__cursor" aria-hidden="true">
+                _
               </span>
             </h1>
             <p className="kv-tagline digi-pop [animation-delay:0.5s]">驯兽师的数码手账</p>

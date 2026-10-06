@@ -2722,7 +2722,9 @@
   --surface-muted: #ece8e1;
   --surface-card: #fbfaf7;
   --accent: #d9473b;
-  --accent-2: #2f9fb1;
+  --accent-2: #12a15a;
+  --phosphor: #3dff8a;
+  --phosphor-ink: #0e8f4c;
   --accent-3: #c39a45;
   --vaccine: #5aa7b4;
   --data: #c9a04e;
@@ -2748,7 +2750,7 @@
     --surface-muted: #1b1622;
     --surface-card: #1c1724;
     --accent: #e5604f;
-    --accent-2: #5fc6d6;
+    --accent-2: #4be38a;
     --accent-3: #d8b35c;
     --vaccine: #63b3c1;
     --data: #d2ae5e;
@@ -3768,114 +3770,469 @@
 }
 
 
-/* ---------- 主标题字标：Park 直立 + GoGoGo 斜体逐级进化 ---------- */
+/* ---------- 主标题字标：点阵荧光字（与冷开场同一套字） ---------- */
 
 .design-v2 .wordmark {
-  position: relative;
   display: flex;
   align-items: baseline;
   width: fit-content;
-  font-family: var(--font-archivo), var(--font-noto-sans-sc), sans-serif;
-  font-size: clamp(3.1rem, 8.2cqw, 8rem) !important;
-  line-height: 0.9;
-  letter-spacing: -0.035em;
+  font-family: var(--font-pixelify), monospace;
+  font-size: clamp(2.6rem, 5.9cqw, 6rem) !important;
+  font-weight: 700;
+  line-height: 0.95;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
   white-space: nowrap;
+  -webkit-font-smoothing: none;
+  text-shadow: none;
+}
+
+.design-v2 .wordmark__go {
+  color: var(--phosphor);
+  text-shadow:
+    0 0 0.12em color-mix(in srgb, var(--phosphor) 70%, transparent),
+    0 0 0.4em color-mix(in srgb, var(--phosphor) 35%, transparent);
+}
+
+.design-v2 .kv[data-tod="day"] .wordmark__go {
+  color: var(--phosphor-ink);
+  text-shadow: none;
+}
+
+.design-v2 .wordmark__cursor {
+  margin-left: 0.04em;
+  color: var(--phosphor);
+  animation: digi-blink 1s steps(1) infinite;
+}
+
+.design-v2 .kv[data-tod="day"] .wordmark__cursor {
+  color: var(--phosphor-ink);
+}
+
+/* 字标逐字打出：和冷开场的 EVOLUTION 同一种节奏 */
+.design-v2 .wordmark__park,
+.design-v2 .wordmark__go {
+  display: inline-block;
+  clip-path: inset(0 100% 0 0);
+  animation: pixel-type 0.5s steps(4, end) forwards;
 }
 
 .design-v2 .wordmark__park {
-  font-weight: 800;
-  font-stretch: 125%;
-  font-variation-settings: "wdth" 125;
+  animation-delay: 0.25s;
 }
 
 .design-v2 .wordmark__go {
-  font-style: italic;
-  font-stretch: 112%;
-  font-variation-settings: "wdth" 112;
-  transform-origin: left bottom;
+  animation-duration: 0.6s;
+  animation-timing-function: steps(6, end);
+  animation-delay: 0.7s;
 }
 
-/* 三个 Go：由小到大、由淡到实、由细到粗——暗合进化 */
-.design-v2 .wordmark__go--1 {
-  margin-left: 0.06em;
-  font-size: 0.62em;
-  font-weight: 500;
-  opacity: 0.55;
-}
-
-.design-v2 .wordmark__go--2 {
-  margin-left: 0.02em;
-  font-size: 0.8em;
-  font-weight: 700;
-  opacity: 0.8;
-}
-
-.design-v2 .wordmark__go--3 {
-  margin-left: 0.01em;
-  font-weight: 900;
-}
-
-.design-v2 .wordmark__gos {
-  position: relative;
-  display: inline-flex;
-  align-items: baseline;
-}
-
-/* 领巾红切线：只托住 GoGoGo，斜切收尾 */
-.design-v2 .wordmark__gos::after {
-  content: "";
-  position: absolute;
-  left: 0.08em;
-  right: 0.02em;
-  bottom: -0.1em;
-  height: 0.07em;
-  background: var(--accent);
-  clip-path: polygon(0 0, 100% 0, calc(100% - 0.12em) 100%, 0 100%);
-  transform-origin: left;
-  animation: wordmark-cut 0.7s 0.9s cubic-bezier(0.22, 0.61, 0.36, 1) both;
-}
-
-.design-v2 .wordmark__go {
-  animation: wordmark-go 0.6s cubic-bezier(0.22, 0.61, 0.36, 1) both;
-}
-
-.design-v2 .wordmark__go--1 {
-  animation-delay: 0.45s;
-}
-
-.design-v2 .wordmark__go--2 {
-  animation-delay: 0.6s;
-}
-
-.design-v2 .wordmark__go--3 {
-  animation-delay: 0.75s;
-}
-
-@keyframes wordmark-go {
-  from {
-    opacity: 0;
-    transform: translateX(-0.3em) skewX(-8deg);
-  }
-}
-
-@keyframes wordmark-cut {
-  from {
-    transform: scaleX(0);
+@keyframes pixel-type {
+  to {
+    clip-path: inset(0 -0.2em 0 0);
   }
 }
 
 /* Logo 文字与字标同源 */
 .design-v2 .digi-logo__word {
-  font-family: var(--font-archivo), sans-serif;
-  font-weight: 800;
-  font-stretch: 118%;
-  font-variation-settings: "wdth" 118;
-  letter-spacing: -0.02em;
+  font-family: var(--font-pixelify), monospace;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  -webkit-font-smoothing: none;
 }
 
 @media (max-width: 767px) {
   .design-v2 .wordmark {
-    font-size: clamp(2.3rem, 11.6cqw, 4.4rem) !important;
+    font-size: clamp(1.9rem, 9.4cqw, 3.4rem) !important;
+  }
+}
+
+/* ---------- 冷开场：EVOLUTION ---------- */
+
+.cold-open {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  overflow: hidden;
+  cursor: pointer;
+  background: #0d0a14;
+}
+
+.cold-open[data-play="false"] {
+  display: none;
+}
+
+.cold-open::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+  background: repeating-linear-gradient(to bottom, rgb(0 0 0 / 22%) 0 1px, transparent 1px 3px);
+  animation: co-fade-out 0.15s 1.05s forwards;
+}
+
+.cold-open__screen,
+.cold-open__rain,
+.cold-open__tint,
+.cold-open__columns,
+.cold-open__streak,
+.cold-open__flash {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.cold-open__screen {
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.4rem;
+  background: #0d0a14;
+  animation: co-fade-out 0.01s 1.15s forwards;
+}
+
+.cold-open__type {
+  margin: 0;
+  font-size: clamp(2.6rem, 9vw, 8rem);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #3dff8a;
+  text-shadow:
+    0 0 0.1em rgb(61 255 138 / 75%),
+    0 0 0.45em rgb(61 255 138 / 40%);
+  -webkit-font-smoothing: none;
+}
+
+.cold-open__word {
+  display: inline-block;
+  clip-path: inset(0 100% 0 0);
+  animation: pixel-type 0.75s 0.15s steps(9, end) forwards;
+}
+
+.cold-open__cursor {
+  animation: digi-blink 0.5s steps(1) infinite;
+}
+
+.cold-open__slate {
+  margin: 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.28em;
+  color: rgb(255 255 255 / 45%);
+  opacity: 0;
+  animation: co-fade-in 0.3s 0.55s forwards;
+}
+
+/* 横向光带：从中线展开 */
+.cold-open__streak {
+  z-index: 4;
+  top: 50%;
+  bottom: auto;
+  height: 3px;
+  transform: translateY(-50%) scaleX(0);
+  background: linear-gradient(90deg, transparent, #b8ffd6 30%, #fff 50%, #b8ffd6 70%, transparent);
+  box-shadow:
+    0 0 24px 6px rgb(61 255 138 / 70%),
+    0 0 80px 20px rgb(61 255 138 / 35%);
+  animation: co-streak 0.4s 0.95s cubic-bezier(0.7, 0, 0.2, 1) forwards;
+}
+
+.cold-open__flash {
+  z-index: 5;
+  background: radial-gradient(ellipse at center, #fff 0%, #fff 35%, #d9ffe8 70%, #8affba 100%);
+  opacity: 0;
+  animation: co-flash 0.6s 1s ease-out forwards;
+}
+
+/* 绿色显影：首屏透过一层荧光绿慢慢还原 */
+.cold-open__tint {
+  z-index: 1;
+  background:
+    repeating-conic-gradient(from 0deg at 50% 50%, rgb(255 255 255 / 30%) 0deg 1.2deg, transparent 1.2deg 9deg),
+    #3dff8a;
+  mix-blend-mode: color;
+  opacity: 0;
+  animation: co-tint 1s 1.15s ease-out forwards;
+}
+
+.cold-open__rain {
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  mix-blend-mode: screen;
+  opacity: 0;
+  animation: co-rain 1.15s 1.1s ease-out forwards;
+}
+
+/* 两侧数据柱：显影后收拢成首屏的裁切对位线 */
+.cold-open__columns {
+  z-index: 2;
+  opacity: 0;
+  animation: co-columns 1.1s 1.15s ease-out forwards;
+}
+
+.cold-open__column {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1.2em;
+  overflow: hidden;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: clamp(1rem, 2.4vw, 1.8rem);
+  line-height: 1;
+  word-break: break-all;
+  color: #3dff8a;
+  text-shadow: 0 0 8px rgb(61 255 138 / 70%);
+}
+
+.cold-open__column--0 {
+  left: 1.5%;
+}
+
+.cold-open__column--1 {
+  left: 4.5%;
+  opacity: 0.6;
+}
+
+.cold-open__column--2 {
+  right: 4.5%;
+  opacity: 0.6;
+}
+
+.cold-open__column--3 {
+  right: 1.5%;
+}
+
+.cold-open__skip {
+  position: absolute;
+  right: 1.4rem;
+  bottom: 1.2rem;
+  z-index: 7;
+  margin: 0;
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  color: rgb(255 255 255 / 40%);
+}
+
+/* 冷开场播放时，首屏的入场整体后移到显影之后 */
+.design-v2:has(.cold-open[data-play="true"]) .wordmark__park {
+  animation-delay: 1.75s;
+}
+
+.design-v2:has(.cold-open[data-play="true"]) .wordmark__go {
+  animation-delay: 2.15s;
+}
+
+.design-v2:has(.cold-open[data-play="true"]) .kv-frame i {
+  animation: co-crop 0.5s 1.95s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+@keyframes co-out {
+  to {
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
+
+@keyframes co-fade-in {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes co-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes co-streak {
+  0% {
+    transform: translateY(-50%) scaleX(0);
+  }
+
+  60% {
+    transform: translateY(-50%) scaleX(1);
+    height: 3px;
+  }
+
+  85% {
+    transform: translateY(-50%) scaleX(1.2);
+    height: 30vh;
+    opacity: 0.5;
+  }
+
+  100% {
+    transform: translateY(-50%) scaleX(1.2);
+    height: 30vh;
+    opacity: 0;
+  }
+}
+
+@keyframes co-flash {
+  0% {
+    opacity: 0;
+  }
+
+  25% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes co-tint {
+  0% {
+    opacity: 0.95;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes co-rain {
+  0% {
+    opacity: 0.9;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes co-columns {
+  0% {
+    opacity: 1;
+    transform: none;
+  }
+
+  60% {
+    opacity: 0.8;
+  }
+
+  100% {
+    opacity: 0;
+    transform: scaleY(0.2);
+  }
+}
+
+@keyframes co-crop {
+  from {
+    opacity: 0;
+    transform: scale(4);
+  }
+}
+
+/* 白闪后底色变透明、露出真实首屏；2.3s 整体隐藏（没有 JS 也会按时消失） */
+.cold-open {
+  animation:
+    co-reveal 0.01s 1.15s forwards,
+    co-out 0.01s 2.3s forwards;
+}
+
+@keyframes co-reveal {
+  to {
+    background-color: transparent;
+  }
+}
+
+/* ---------- 进化演出：EVOLUTION（小丑兽催化） ---------- */
+
+.kv-evo {
+  position: absolute;
+  left: 50%;
+  top: -4%;
+  z-index: 5;
+  font-size: calc(var(--h) * 0.1);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  color: var(--phosphor, #3dff8a);
+  text-shadow:
+    0 0 0.1em rgb(61 255 138 / 80%),
+    0 0 0.4em rgb(61 255 138 / 45%);
+  transform: translate(-50%, -50%);
+  clip-path: inset(0 100% 0 0);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.kv-evo i {
+  font-style: normal;
+  animation: digi-blink 0.4s steps(1) infinite;
+}
+
+.kv[data-phase="catalyst"] .kv-evo {
+  opacity: 1;
+  animation: pixel-type 0.5s 0.1s steps(9, end) forwards;
+}
+
+.kv[data-phase="burst"] .kv-evo {
+  opacity: 1;
+  clip-path: inset(0 -0.2em 0 0);
+  animation: co-fade-out 0.3s forwards;
+}
+
+.kv-evo-streak {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.kv[data-phase="burst"] .kv-evo-streak {
+  opacity: 1;
+  background:
+    linear-gradient(transparent 49.6%, #fff 49.8%, #fff 50.2%, transparent 50.4%),
+    radial-gradient(ellipse at 70% 50%, rgb(232 255 240 / 95%), rgb(61 255 138 / 55%) 45%, transparent 75%);
+  animation: co-flash 0.5s ease-out forwards;
+}
+
+/* 新形态在绿色过曝里显现 */
+.kv[data-phase="burst"] .kv-partner__art {
+  filter: brightness(0) invert(1) drop-shadow(0 0 22px #3dff8a) drop-shadow(0 0 48px #3dff8a);
+}
+
+.kv-partner__art.is-arrived {
+  animation: kv-evolve-green 0.8s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+@keyframes kv-evolve-green {
+  0% {
+    opacity: 0;
+    transform: scale(0.85);
+    filter: brightness(2.2) sepia(1) hue-rotate(70deg) saturate(5);
+  }
+
+  45% {
+    opacity: 1;
+    filter: brightness(1.6) sepia(0.8) hue-rotate(70deg) saturate(3);
+  }
+
+  100% {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cold-open {
+    display: none;
+  }
+
+  .design-v2 .wordmark__park,
+  .design-v2 .wordmark__go {
+    clip-path: none;
+    animation: none;
   }
 }
 
