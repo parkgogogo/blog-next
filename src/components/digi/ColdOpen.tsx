@@ -2,10 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 
-export const SESSION_KEY = "parkgogogo-cold-open";
-
-/** 在 HTML 解析阶段同步执行：本会话看过或减少动态效果时，首帧前就隐藏开场 */
-export const COLD_OPEN_GUARD = `(function(){try{var e=document.querySelector('.cold-open');if(!e)return;if(sessionStorage.getItem('${"parkgogogo-cold-open"}')==='1'||matchMedia('(prefers-reduced-motion: reduce)').matches){e.setAttribute('data-play','false')}}catch(_){}})();`;
+/** 在 HTML 解析阶段同步执行：减少动态效果时，首帧前就隐藏开场 */
+export const COLD_OPEN_GUARD = `(function(){try{var e=document.querySelector('.cold-open');if(!e)return;if(matchMedia('(prefers-reduced-motion: reduce)').matches){e.setAttribute('data-play','false')}}catch(_){}})();`;
 /** 开场总时长（毫秒），与 CSS 时间线一致 */
 const DURATION = 2300;
 
@@ -26,7 +24,7 @@ const SIDE_COLUMNS = Array.from({ length: 4 }, (_, index) => binaryColumn(index 
  * 深紫墨底上打出 EVOLUTION_ → 横向光带炸开 → 白闪 → 绿色数据流中显影首屏 →
  * 两侧数据柱收拢成首屏的裁切对位线。
  *
- * 每个浏览器会话只播放一次；点击 / 按键跳过；减少动态效果时不播放。
+ * 每次打开首页都播放；点击 / 按键跳过；减少动态效果时不播放。
  * 时间线完全由 CSS 驱动，没有 JS 时也会按时自动消失。
  */
 export function ColdOpen() {
@@ -38,16 +36,8 @@ export function ColdOpen() {
     const root = rootRef.current;
     if (!root) return;
 
-    let seen = false;
-    try {
-      seen = window.sessionStorage.getItem(SESSION_KEY) === "1";
-      window.sessionStorage.setItem(SESSION_KEY, "1");
-    } catch {
-      // 隐私模式下照常播放
-    }
-
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (seen || reduceMotion) {
+    if (reduceMotion) {
       setDone(true);
       return;
     }
@@ -105,7 +95,7 @@ export function ColdOpen() {
       className="cold-open"
       data-play="true"
       aria-hidden="true"
-      // 回访时由紧随其后的内联脚本在首帧前改成 false，避免黑屏闪一下
+      // 减少动态效果时由紧随其后的内联脚本在首帧前改成 false，避免黑屏闪一下
       suppressHydrationWarning
       onClick={() => setDone(true)}
     >

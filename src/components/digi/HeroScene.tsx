@@ -177,9 +177,6 @@ export function HeroScene({ children }: { children: ReactNode }) {
             className={`kv-partner__art ${evolvedOnce ? "is-arrived" : ""}`}
           />
           <span className="kv-partner__burst" aria-hidden="true" />
-          <span className="kv-evo font-pixel-latin" aria-hidden="true">
-            EVOLUTION<i>_</i>
-          </span>
 
           <button
             type="button"

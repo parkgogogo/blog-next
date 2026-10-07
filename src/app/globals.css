@@ -3772,14 +3772,17 @@
 
 /* ---------- 主标题字标：点阵荧光字（与冷开场同一套字） ---------- */
 
+/* 双行堆叠：PARK / GOGOGO_，光标跟在第二行末尾 */
 .design-v2 .wordmark {
-  display: flex;
-  align-items: baseline;
+  display: grid;
+  grid-template-columns: auto auto;
+  justify-content: start;
+  align-items: end;
   width: fit-content;
   font-family: var(--font-pixelify), monospace;
-  font-size: clamp(2.6rem, 5.9cqw, 6rem) !important;
+  font-size: clamp(3rem, 6.8cqw, 7rem) !important;
   font-weight: 700;
-  line-height: 0.95;
+  line-height: 0.86;
   letter-spacing: 0.02em;
   text-transform: uppercase;
   white-space: nowrap;
@@ -3800,8 +3803,18 @@
 }
 
 /* 光标用伪元素，不进入 h1 的文本 */
+.design-v2 .wordmark__park {
+  grid-column: 1;
+}
+
+.design-v2 .wordmark__go {
+  grid-column: 1;
+}
+
 .design-v2 .wordmark::after {
   content: "_";
+  grid-row: 2;
+  grid-column: 2;
   margin-left: 0.04em;
   color: var(--phosphor);
   animation: digi-blink 1s steps(1) infinite;
@@ -3829,9 +3842,10 @@
   animation-delay: 0.7s;
 }
 
+/* 打完后四边都放开，荧光不会被裁成矩形 */
 @keyframes pixel-type {
   to {
-    clip-path: inset(0 -0.2em 0 0);
+    clip-path: inset(-0.6em);
   }
 }
 
@@ -3847,7 +3861,7 @@
 
 @media (max-width: 767px) {
   .design-v2 .wordmark {
-    font-size: clamp(1.9rem, 9.4cqw, 3.4rem) !important;
+    font-size: clamp(2.4rem, 12.5cqw, 4.2rem) !important;
   }
 }
 
@@ -4145,42 +4159,7 @@
   }
 }
 
-/* ---------- 进化演出：EVOLUTION（小丑兽催化） ---------- */
-
-.kv-evo {
-  position: absolute;
-  left: 50%;
-  top: -4%;
-  z-index: 5;
-  font-size: calc(var(--h) * 0.1);
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  white-space: nowrap;
-  color: var(--phosphor, #3dff8a);
-  text-shadow:
-    0 0 0.1em rgb(61 255 138 / 80%),
-    0 0 0.4em rgb(61 255 138 / 45%);
-  transform: translate(-50%, -50%);
-  clip-path: inset(0 100% 0 0);
-  opacity: 0;
-  pointer-events: none;
-}
-
-.kv-evo i {
-  font-style: normal;
-  animation: digi-blink 0.4s steps(1) infinite;
-}
-
-.kv[data-phase="catalyst"] .kv-evo {
-  opacity: 1;
-  animation: pixel-type 0.5s 0.1s steps(9, end) forwards;
-}
-
-.kv[data-phase="burst"] .kv-evo {
-  opacity: 1;
-  clip-path: inset(0 -0.2em 0 0);
-  animation: co-fade-out 0.3s forwards;
-}
+/* ---------- 进化演出：光带 + 绿色过曝（小丑兽催化） ---------- */
 
 .kv-evo-streak {
   position: absolute;
