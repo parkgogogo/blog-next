@@ -166,3 +166,11 @@ export function barcodeBars(seed: string, count = 28): number[] {
 
   return bars;
 }
+
+/**
+ * 页尾的「次回予告」。写好下一篇的选题后改这里即可。
+ */
+export const NEXT_EPISODE = {
+  title: "次回、未定！",
+  teaser: "驯兽师正在新宿的某处冒险中——下一张卡，敬请期待。",
+};

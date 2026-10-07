@@ -49,4 +49,13 @@ describe("HomePage SEO", () => {
     expect(html).toContain("ProfilePage");
     expect(html).toContain("alternateName");
   });
+
+  it("keeps the homepage h1 limited to the brand name", async () => {
+    const element = await HomePage();
+    const html = renderToStaticMarkup(element);
+    const headings = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/g) ?? [];
+
+    expect(headings).toHaveLength(1);
+    expect((headings[0] ?? "").replace(/<[^>]+>/g, "").trim()).toBe("ParkGoGoGo");
+  });
 });

@@ -9,6 +9,7 @@ const SEGMENTS = 24;
  * 阅读进度 = 进化进度：读到底即为究极体。
  */
 export function EvolutionGauge() {
+  /** -1 表示页面一屏就能读完（比如 404），不显示进度 */
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
@@ -16,13 +17,13 @@ export function EvolutionGauge() {
 
     function update() {
       frame = 0;
-      const scrollable =
+      const distance =
         document.documentElement.scrollHeight - window.innerHeight;
       // Safari's top-edge bounce can report a negative scrollY.
       setProgress(
-        scrollable > 0
-          ? Math.max(0, Math.min(1, window.scrollY / scrollable))
-          : 0
+        distance > 80
+          ? Math.max(0, Math.min(1, window.scrollY / distance))
+          : -1
       );
     }
 
@@ -46,6 +47,8 @@ export function EvolutionGauge() {
   );
   const stage = DIGI_STAGES[stageIndex];
   const filled = Math.round(progress * SEGMENTS);
+
+  if (progress < 0) return null;
 
   return (
     <div

@@ -1,11 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import {
-  Geist,
   Geist_Mono,
   Inter,
   Noto_Sans_SC,
-  Noto_Serif_SC,
   Orbitron,
   Outfit,
   Silkscreen,
@@ -14,11 +12,6 @@ import {
 import { rssAlternateTypes, siteConfig, siteKeywords } from "@/lib/seo";
 import "yet-another-react-lightbox/styles.css";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
@@ -43,12 +36,15 @@ const delaGothic = localFont({
   variable: "--font-dela",
   weight: "400",
   display: "swap",
+  preload: false,
 });
+
 
 const orbitron = Orbitron({
   variable: "--font-orbitron",
   subsets: ["latin"],
   weight: ["500", "700", "900"],
+  preload: false,
 });
 
 const silkscreen = Silkscreen({
@@ -61,6 +57,7 @@ const vt323 = VT323({
   variable: "--font-vt323",
   subsets: ["latin"],
   weight: ["400"],
+  preload: false,
 });
 
 const notoSansSc = Noto_Sans_SC({
@@ -70,12 +67,6 @@ const notoSansSc = Noto_Sans_SC({
   preload: false,
 });
 
-const notoSerifSc = Noto_Serif_SC({
-  variable: "--font-noto-serif-sc",
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-  preload: false,
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
@@ -132,7 +123,7 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${outfit.variable} ${delaGothic.variable} ${orbitron.variable} ${silkscreen.variable} ${vt323.variable} ${notoSansSc.variable} ${notoSerifSc.variable} antialiased scrollbar-hide`}
+        className={`${geistMono.variable} ${inter.variable} ${outfit.variable} ${delaGothic.variable} ${orbitron.variable} ${silkscreen.variable} ${vt323.variable} ${notoSansSc.variable} antialiased scrollbar-hide`}
       >
         {children}
       </body>

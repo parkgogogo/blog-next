@@ -41,8 +41,6 @@ describe("EvolutionGauge scroll boundaries", () => {
     [750, 1800, 75, "mega"],
     [1000, 1800, 100, "mega"],
     [1100, 1800, 100, "mega"],
-    [-80, 800, 0, "rookie"],
-    [0, 600, 0, "rookie"],
   ])(
     "renders safely at scrollY=%s and scrollHeight=%s",
     (scrollY, scrollHeight, percent, stage) => {
@@ -76,6 +74,40 @@ describe("EvolutionGauge scroll boundaries", () => {
       expect(html.match(/class="is-on"/g) ?? []).toHaveLength(
         Math.round((percent / 100) * 24),
       );
+      if (typeof cleanup === "function") cleanup();
+    },
+  );
+
+  it.each([
+    [-80, 800],
+    [0, 600],
+  ])(
+    "hides the gauge when the page cannot scroll (scrollY=%s, scrollHeight=%s)",
+    (scrollY, scrollHeight) => {
+      const listeners = new Map<string, () => void>();
+      let frame: (() => void) | undefined;
+      vi.stubGlobal("document", { documentElement: { scrollHeight } });
+      vi.stubGlobal("window", {
+        scrollY: 0,
+        innerHeight: 800,
+        addEventListener: (event: string, listener: () => void) => {
+          listeners.set(event, listener);
+        },
+        removeEventListener: vi.fn(),
+        requestAnimationFrame: (callback: () => void) => {
+          frame = callback;
+          return 1;
+        },
+        cancelAnimationFrame: vi.fn(),
+      });
+
+      renderToStaticMarkup(<EvolutionGauge />);
+      const cleanup = hooks.effect?.();
+      window.scrollY = scrollY;
+      listeners.get("scroll")?.();
+      frame?.();
+
+      expect(renderToStaticMarkup(<EvolutionGauge />)).toBe("");
       if (typeof cleanup === "function") cleanup();
     },
   );
