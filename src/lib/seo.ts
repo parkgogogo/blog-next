@@ -1,4 +1,4 @@
-import type { BlogPost, Category } from "@/types/blog";
+import type { BlogPost } from "@/types/blog";
 
 const DEFAULT_SITE_URL = "https://www.parkgogogo.me";
 
@@ -17,11 +17,20 @@ export const siteConfig = {
     "Parkgogogo 是 Park 在 parkgogogo.me 的个人博客，记录前端工程、AI 编程、产品思考和日常写作。",
   author: {
     name: "Park",
+    displayName: "Gerard Parker",
+    // 页头品牌与页脚署名用的短名；SEO 与结构化数据仍用 name
+    shortName: "Parker",
     alternateName: "parkgogogo",
     url: siteUrl,
   },
   url: siteUrl,
+  bio: ["在比特世界留下我的踪迹", "Life finds a way."],
 };
+
+export const siteLinks = [
+  { label: "GitHub", href: "https://github.com/parkgogogo", rel: "me noreferrer" },
+  { label: "RSS", href: "/rss/blog.xml" },
+];
 
 export const siteKeywords = [
   "Parkgogogo",
@@ -38,20 +47,6 @@ export const siteKeywords = [
 export const siteSameAs = [
   "https://github.com/parkgogogo",
   "https://gist.github.com/parkgogogo",
-];
-
-export const blogIndexTitle = "Park 的博客";
-export const blogIndexDescription =
-  "Parkgogogo 收录 Park 关于前端工程、AI 编程、产品思考与日常写作的博客。";
-export const blogIndexKeywords = [
-  "Parkgogogo",
-  "parkgogogo",
-  "parkgogogo.me",
-  "Park",
-  "前端工程",
-  "AI 编程",
-  "产品思考",
-  "技术博客",
 ];
 
 export function absoluteUrl(path = "/"): string {
@@ -117,16 +112,4 @@ export function postDescription(post: BlogPost): string {
   const description = truncateText(stripMarkdownToText(source), 160);
 
   return description || siteConfig.description;
-}
-
-export function collectCategoryPosts(category: Category): BlogPost[] {
-  const posts = [...category.posts];
-
-  for (const subcategory of category.subcategories || []) {
-    posts.push(...collectCategoryPosts(subcategory));
-  }
-
-  return posts.sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
-  );
 }

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520" font-family="Inter, sans-serif">
+  <rect width="1200" height="520" fill="#f4f4f4"/>
+  <g fill="#fff" stroke="#000" stroke-width="1.5">
+    <rect x="80" y="200" width="220" height="120" rx="8"/>
+    <rect x="490" y="200" width="220" height="120" rx="8"/>
+    <rect x="900" y="200" width="220" height="120" rx="8"/>
+  </g>
+  <g stroke="#000" stroke-width="1.5" fill="none" marker-end="url(#m)">
+    <path d="M300 260 H482"/><path d="M710 260 H892"/>
+  </g>
+  <defs><marker id="m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10z" fill="#000"/></marker></defs>
+  <g font-size="22" text-anchor="middle" fill="#000">
+    <text x="190" y="268">Task set</text><text x="600" y="268">Agent + Harness</text><text x="1010" y="268">Grader</text>
+  </g>
+</svg>
