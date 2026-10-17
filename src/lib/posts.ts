@@ -1,7 +1,8 @@
 import { unstable_cache } from "next/cache";
 import { Octokit } from "@octokit/rest";
 import matter from "gray-matter";
-import { BlogPost, Category } from "@/types/blog";
+import { BlogPost, Category, PostLink } from "@/types/blog";
+import { stripMarkdownToText, truncateText } from "@/lib/seo";
 
 interface GitHubContentItem {
   type: "file" | "dir" | "submodule" | "symlink";
@@ -26,16 +27,14 @@ const POSTS_PATH = process.env.POSTS_PATH || "posts";
 const POSTS_REVALIDATE_SECONDS = false;
 
 /**
- * 计算阅读时间
- * @param content
- * @returns
+ * 估算阅读时间：中文按 400 字/分钟，西文按 220 词/分钟，忽略代码块
  */
 function calculateReadingTime(content: string): number {
-  const wordsPerMinute = 200; // 假设每分钟阅读200个字
-  const text = content.replace(/[#*`~\[\]()]/g, ""); // 移除markdown标记
-  const wordCount = text.length; // 中文字符数
-  const readingTime = Math.ceil(wordCount / wordsPerMinute);
-  return readingTime || 1; // 最少1分钟
+  const prose = content.replace(/```[\s\S]*?```/g, " ");
+  const cjk = prose.match(/[\u3400-\u9fff]/g)?.length ?? 0;
+  const words =
+    prose.replace(/[\u3400-\u9fff]/g, " ").match(/[A-Za-z0-9]+/g)?.length ?? 0;
+  return Math.max(1, Math.round(cjk / 400 + words / 220));
 }
 
 function isGitHubConfigured(): boolean {
@@ -64,7 +63,7 @@ function createEmptyIndex(): PostIndex {
   };
 }
 
-function resolvePostDate(frontmatter: Record<string, unknown>): string {
+function resolvePostDate(frontmatter: Record<string, unknown>): string | null {
   const candidate =
     frontmatter.date ?? frontmatter.createdAt ?? frontmatter.updatedAt;
 
@@ -79,7 +78,42 @@ function resolvePostDate(frontmatter: Record<string, unknown>): string {
     }
   }
 
-  return new Date().toISOString();
+  return null;
+}
+
+/**
+ * 没写 frontmatter 日期的旧文章，用文件最近一次提交的时间
+ */
+async function getLastCommitDate(filePath: string): Promise<string | null> {
+  try {
+    const { data } = await octokit.rest.repos.listCommits({
+      owner: GITHUB_OWNER,
+      repo: GITHUB_REPO,
+      path: filePath,
+      per_page: 1,
+    });
+    return data[0]?.commit.committer?.date ?? data[0]?.commit.author?.date ?? null;
+  } catch (error) {
+    console.error(`Error fetching commit date for ${filePath}:`, error);
+    return null;
+  }
+}
+
+/**
+ * 摘要取第一段正文，跳过标题、图片、代码、表格、列表等
+ */
+export function firstParagraph(content: string): string {
+  const block = content
+    .replace(/```[\s\S]*?```/g, "")
+    .split(/\n\s*\n/)
+    .map((item) => item.trim())
+    .find(
+      (item) =>
+        item !== "" &&
+        !/^(#{1,6}\s|!\[|\||>|[-*+]\s|\d+[.)]\s|<|\$\$|---|\[\^)/.test(item)
+    );
+
+  return block ? truncateText(stripMarkdownToText(block), 120) : "";
 }
 
 async function getDirectoryContents(
@@ -121,6 +155,85 @@ async function getMarkdownContent(filePath: string): Promise<string | null> {
   return null;
 }
 
+const HASHTAG_LINE = /^#[\p{L}\p{N}_-]+(?:\s+#[\p{L}\p{N}_-]+)*$/u;
+
+/**
+ * 旧文章习惯在正文第一行写 `#tag #tag`，把它提取为标签并从正文移除
+ */
+export function extractLeadingHashtags(content: string): {
+  content: string;
+  tags: string[];
+} {
+  const lines = content.split("\n");
+  const index = lines.findIndex((line) => line.trim() !== "");
+
+  if (index === -1 || !HASHTAG_LINE.test(lines[index].trim())) {
+    return { content, tags: [] };
+  }
+
+  const tags = lines[index]
+    .trim()
+    .split(/\s+/)
+    .map((tag) => tag.slice(1));
+
+  return {
+    content: lines.slice(index + 1).join("\n").replace(/^\s+/, ""),
+    tags,
+  };
+}
+
+function stringField(value: unknown): string | undefined {
+  return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
+
+function stringList(value: unknown): string[] {
+  if (typeof value === "string") return [value];
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is string => typeof item === "string");
+}
+
+function linkList(value: unknown): PostLink[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item) => {
+    if (!item || typeof item !== "object") return [];
+    const { label, href } = item as Record<string, unknown>;
+    return typeof label === "string" && typeof href === "string"
+      ? [{ label, href }]
+      : [];
+  });
+}
+
+export function parsePost(
+  rawMarkdown: string,
+  slug: string,
+  categoryPath: string,
+  fallbackDate: string = new Date().toISOString()
+): BlogPost {
+  const { data, content: body } = matter(rawMarkdown);
+  const frontmatter = data as Record<string, unknown>;
+  const { content, tags: hashtags } = extractLeadingHashtags(body);
+  const folder = categoryPath.split("/").pop() || "";
+  const isRoot = categoryPath === POSTS_PATH;
+  const title = stringField(frontmatter.title)?.replace(/_/g, " ");
+
+  return {
+    slug,
+    title: title || slug.replace(/_/g, " "),
+    date: resolvePostDate(frontmatter) ?? fallbackDate,
+    content,
+    rawMarkdown,
+    excerpt: stringField(frontmatter.excerpt) ?? firstParagraph(content),
+    subtitle: stringField(frontmatter.subtitle),
+    cover: stringField(frontmatter.cover),
+    authors: stringList(frontmatter.authors ?? frontmatter.author),
+    links: linkList(frontmatter.links),
+    tags: [...new Set([...stringList(frontmatter.tags), ...hashtags])],
+    readingTime: calculateReadingTime(content),
+    category: stringField(frontmatter.category) ?? (isRoot ? "" : folder),
+    categoryPath,
+  };
+}
+
 async function processMarkdownFile(
   file: GitHubContentItem,
   categoryPath: string
@@ -129,34 +242,14 @@ async function processMarkdownFile(
     const rawMarkdown = await getMarkdownContent(file.path);
 
     if (rawMarkdown) {
-      const { data, content } = matter(rawMarkdown);
-      const frontmatter = data as Record<string, unknown>;
-      const slug = file.name.replace(/\.md$/, "");
-      const category = categoryPath.split("/").pop() || "uncategorized";
-      const normalizedSlugTitle = slug.replace(/_/g, " ");
-      const normalizedFrontmatterTitle =
-        typeof frontmatter.title === "string"
-          ? frontmatter.title.replace(/_/g, " ")
-          : undefined;
-      const excerpt =
-        typeof frontmatter.excerpt === "string"
-          ? frontmatter.excerpt
-          : `${content.slice(0, 200)}...`;
-
-      return {
-        slug,
-        title: normalizedFrontmatterTitle || normalizedSlugTitle,
-        date: resolvePostDate(frontmatter),
-        content,
+      const hasDate = resolvePostDate(matter(rawMarkdown).data) !== null;
+      const fallbackDate = hasDate ? undefined : await getLastCommitDate(file.path);
+      return parsePost(
         rawMarkdown,
-        excerpt,
-        tags: Array.isArray(frontmatter.tags)
-          ? frontmatter.tags.filter((tag): tag is string => typeof tag === "string")
-          : [],
-        readingTime: calculateReadingTime(content),
-        category,
+        file.name.replace(/\.md$/, ""),
         categoryPath,
-      };
+        fallbackDate ?? undefined
+      );
     }
   } catch (error) {
     console.error(`Error processing file ${file.name}:`, error);

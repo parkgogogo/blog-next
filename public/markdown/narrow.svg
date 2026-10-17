@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="320" viewBox="0 0 480 320" font-family="Inter, sans-serif">
+  <rect width="480" height="320" fill="#eef1fb"/>
+  <circle cx="240" cy="160" r="90" fill="none" stroke="#2f4fb5" stroke-width="2"/>
+  <text x="240" y="168" font-size="22" text-anchor="middle" fill="#2f4fb5">480 × 320</text>
+</svg>
