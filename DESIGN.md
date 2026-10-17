@@ -74,7 +74,7 @@
 ## Markdown 扩展
 
 - `> [!NOTE]` 等 GitHub 提示块：浅灰底 + 彩色圆点标签。
-- `` ```chart ``：JSON 描述的柱状图 / 折线图，服务端渲染 SVG，规格见 `src/components/markdown/Chart.tsx`。
+- `` ```chart ``：JSON 描述的柱状图 / 折线图，服务端渲染 SVG，规格见 `src/components/markdown/Chart.tsx`。柱顶数值只在放得下时显示，否则隐藏并把单位挪到纵轴刻度；货币单位写在数字前，小数位随量级变化（<1 最多 3 位，<10 最多 2 位）。
 - `` ```mermaid ``：服务端渲染为中性灰 SVG。
 - 公式：`$$...$$`（行内与块级），单个 `$` 不解析，避免价格被误判。
 - 独占一段的图片转为 `<figure>`，title 优先作为图注，其次 alt（文件名类 alt 忽略）。

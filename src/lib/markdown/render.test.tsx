@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { prerenderToNodeStream } from "react-dom/static";
 import { describe, expect, it } from "vitest";
+import { formatValue, withUnit } from "@/components/markdown/Chart";
 import { normalizeMermaid } from "@/components/markdown/Mermaid";
 import { renderMarkdown } from "@/lib/markdown/render";
 import { MARKDOWN_TEST_FILE } from "@/lib/markdown/test-content";
@@ -129,6 +130,34 @@ describe("renderMarkdown blocks", () => {
 
     const invalid = await toHtml('```chart\n{"type":"pie"}\n```');
     expect(invalid).toContain("Chart spec invalid");
+  });
+
+  it("keeps value precision and puts currency symbols before the number", () => {
+    expect([0.035, 0.2667, 1.034, 74.94, 3].map(formatValue)).toEqual(["0.035", "0.267", "1.03", "74.9", "3"]);
+    expect(withUnit(0.035, "$")).toBe("$0.035");
+    expect(withUnit(-1.5, "¥")).toBe("-¥1.5");
+    expect(withUnit(74.9, "%")).toBe("74.9%");
+  });
+
+  it("hides bar value labels that cannot fit and moves the unit onto the axis", async () => {
+    const crowded = JSON.stringify({
+      unit: "$",
+      labels: ["Calculator", "TextEdit", "Settings", "Finder", "VS Code", "Obsidian", "draw.io", "AFFiNE"],
+      series: ["A", "B", "C", "D"].map((name, i) => ({
+        name,
+        values: [0.035, 0.06, 0.04, 0.07, 0.28, 0.23, 0.33, 0.72].map((v) => v + i / 100),
+      })),
+    });
+    const crowdedHtml = await toHtml(`\`\`\`chart\n${crowded}\n\`\`\``);
+    expect(crowdedHtml).not.toContain("md-chart__value");
+    expect(crowdedHtml).toMatch(/class="md-chart__tick"[^>]*>\$0\.2</);
+
+    const roomy = JSON.stringify({ unit: "%", labels: ["A", "B"], series: [{ name: "s", values: [74.9, 52.8] }] });
+    const roomyHtml = await toHtml(`\`\`\`chart\n${roomy}\n\`\`\``);
+    expect(roomyHtml).toContain(">74.9%</text>");
+
+    const forced = JSON.stringify({ ...JSON.parse(crowded), showValues: true });
+    expect(await toHtml(`\`\`\`chart\n${forced}\n\`\`\``)).toContain(">$0.035</text>");
   });
 
   it("highlights code blocks", async () => {
