@@ -542,8 +542,7 @@ a.pill--primary:hover {
 @media (min-width: 1200px) {
   .post-toc {
     position: absolute;
-    /* 贴在正文栏左侧 40px，屏幕再宽也跟着正文走；空间不够时退回页边距 */
-    inset: 0 auto 0 max(var(--gutter), calc(50% - var(--content) / 2 - 240px));
+    inset: 0 auto 0 var(--gutter);
     display: block;
     width: 200px;
   }
