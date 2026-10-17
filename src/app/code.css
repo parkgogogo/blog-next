@@ -1,4 +1,4 @@
-/* starry-night 的类名映射，配色改为低饱和、只有浅色 */
+/* starry-night 的类名映射，浅色为低饱和配色，暗色取 developers.openai.com 的五个语法色 */
 :root {
     --color-prettylights-syntax-brackethighlighter-angle: #6b6b6b;
     --color-prettylights-syntax-brackethighlighter-unmatched: #a1260d;
@@ -30,6 +30,74 @@
     --color-prettylights-syntax-markup-bold: #000000;
     --color-prettylights-syntax-markup-italic: #000000;
     --color-prettylights-syntax-storage-modifier-import: #000000;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+      --color-prettylights-syntax-brackethighlighter-angle: #8f8f8f;
+      --color-prettylights-syntax-brackethighlighter-unmatched: #f22c3d;
+      --color-prettylights-syntax-carriage-return-bg: #f22c3d;
+      --color-prettylights-syntax-carriage-return-text: #ffffff;
+      --color-prettylights-syntax-comment: #8f8f8f;
+      --color-prettylights-syntax-constant: #e9950c;
+      --color-prettylights-syntax-constant-other-reference-link: #2e95d3;
+      --color-prettylights-syntax-entity: #2e95d3;
+      --color-prettylights-syntax-entity-tag: #df3079;
+      --color-prettylights-syntax-invalid-illegal-bg: #f22c3d;
+      --color-prettylights-syntax-invalid-illegal-text: #ffffff;
+      --color-prettylights-syntax-keyword: #df3079;
+      --color-prettylights-syntax-markup-changed-bg: #3a2c0e;
+      --color-prettylights-syntax-markup-changed-text: #e9b03a;
+      --color-prettylights-syntax-markup-deleted-bg: #3a1414;
+      --color-prettylights-syntax-markup-deleted-text: #ff7b72;
+      --color-prettylights-syntax-markup-heading: #2e95d3;
+      --color-prettylights-syntax-markup-ignored-bg: #2e95d3;
+      --color-prettylights-syntax-markup-ignored-text: #000000;
+      --color-prettylights-syntax-markup-inserted-bg: #0f2e22;
+      --color-prettylights-syntax-markup-inserted-text: #3fd29b;
+      --color-prettylights-syntax-markup-list: #e9950c;
+      --color-prettylights-syntax-meta-diff-range: #c58af9;
+      --color-prettylights-syntax-string: #00a67d;
+      --color-prettylights-syntax-string-regexp: #00a67d;
+      --color-prettylights-syntax-sublimelinter-gutter-mark: #5d5d5d;
+      --color-prettylights-syntax-variable: #e9950c;
+      --color-prettylights-syntax-markup-bold: #dcdcdc;
+      --color-prettylights-syntax-markup-italic: #dcdcdc;
+      --color-prettylights-syntax-storage-modifier-import: #dcdcdc;
+  }
+}
+
+:root[data-theme="dark"] {
+    --color-prettylights-syntax-brackethighlighter-angle: #8f8f8f;
+    --color-prettylights-syntax-brackethighlighter-unmatched: #f22c3d;
+    --color-prettylights-syntax-carriage-return-bg: #f22c3d;
+    --color-prettylights-syntax-carriage-return-text: #ffffff;
+    --color-prettylights-syntax-comment: #8f8f8f;
+    --color-prettylights-syntax-constant: #e9950c;
+    --color-prettylights-syntax-constant-other-reference-link: #2e95d3;
+    --color-prettylights-syntax-entity: #2e95d3;
+    --color-prettylights-syntax-entity-tag: #df3079;
+    --color-prettylights-syntax-invalid-illegal-bg: #f22c3d;
+    --color-prettylights-syntax-invalid-illegal-text: #ffffff;
+    --color-prettylights-syntax-keyword: #df3079;
+    --color-prettylights-syntax-markup-changed-bg: #3a2c0e;
+    --color-prettylights-syntax-markup-changed-text: #e9b03a;
+    --color-prettylights-syntax-markup-deleted-bg: #3a1414;
+    --color-prettylights-syntax-markup-deleted-text: #ff7b72;
+    --color-prettylights-syntax-markup-heading: #2e95d3;
+    --color-prettylights-syntax-markup-ignored-bg: #2e95d3;
+    --color-prettylights-syntax-markup-ignored-text: #000000;
+    --color-prettylights-syntax-markup-inserted-bg: #0f2e22;
+    --color-prettylights-syntax-markup-inserted-text: #3fd29b;
+    --color-prettylights-syntax-markup-list: #e9950c;
+    --color-prettylights-syntax-meta-diff-range: #c58af9;
+    --color-prettylights-syntax-string: #00a67d;
+    --color-prettylights-syntax-string-regexp: #00a67d;
+    --color-prettylights-syntax-sublimelinter-gutter-mark: #5d5d5d;
+    --color-prettylights-syntax-variable: #e9950c;
+    --color-prettylights-syntax-markup-bold: #dcdcdc;
+    --color-prettylights-syntax-markup-italic: #dcdcdc;
+    --color-prettylights-syntax-storage-modifier-import: #dcdcdc;
 }
 
 

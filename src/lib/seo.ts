@@ -1,3 +1,4 @@
+import { LANGUAGE_INFO, sortLanguages, type PostLanguage } from "@/lib/i18n";
 import type { BlogPost } from "@/types/blog";
 
 const DEFAULT_SITE_URL = "https://www.parkgogogo.me";
@@ -54,8 +55,43 @@ export function absoluteUrl(path = "/"): string {
   return `${siteConfig.url}${normalizedPath}`;
 }
 
-export function blogPostPath(slug: string): string {
-  return `/blog/${encodeURIComponent(slug)}`;
+/** 原文是 /blog/<slug>，译文是 /blog/<slug>/<lang> */
+export function blogPostPath(slug: string, lang?: PostLanguage): string {
+  const path = `/blog/${encodeURIComponent(slug)}`;
+  return lang ? `${path}/${lang}` : path;
+}
+
+export interface PostVersion {
+  lang: PostLanguage;
+  path: string;
+  post: BlogPost;
+}
+
+/** 一篇文章的全部语言版本（含原文），按中、英、日排序 */
+export function postVersions(original: BlogPost): PostVersion[] {
+  const byLang = new Map<PostLanguage, BlogPost>([[original.lang, original]]);
+  for (const [lang, post] of Object.entries(original.translations ?? {})) {
+    if (post) byLang.set(lang as PostLanguage, post);
+  }
+
+  return sortLanguages([...byLang.keys()]).map((lang) => ({
+    lang,
+    path: blogPostPath(original.slug, lang === original.lang ? undefined : lang),
+    post: byLang.get(lang)!,
+  }));
+}
+
+/** hreflang → 绝对地址，x-default 指向原文；只有一种语言时返回 undefined */
+export function postLanguageAlternates(original: BlogPost): Record<string, string> | undefined {
+  const versions = postVersions(original);
+  if (versions.length < 2) return undefined;
+
+  return {
+    ...Object.fromEntries(
+      versions.map((version) => [LANGUAGE_INFO[version.lang].hreflang, absoluteUrl(version.path)])
+    ),
+    "x-default": absoluteUrl(blogPostPath(original.slug)),
+  };
 }
 
 export function rssAlternateTypes(): Record<string, string> {

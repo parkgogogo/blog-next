@@ -2,6 +2,7 @@ import { unstable_cache } from "next/cache";
 import { Octokit } from "@octokit/rest";
 import matter from "gray-matter";
 import { BlogPost, Category, PostLink } from "@/types/blog";
+import { DEFAULT_POST_LANGUAGE, isPostLanguage, type PostLanguage } from "@/lib/i18n";
 import { stripMarkdownToText, truncateText } from "@/lib/seo";
 
 interface GitHubContentItem {
@@ -26,14 +27,17 @@ const GITHUB_REPO = process.env.GITHUB_REPO || "your-blog-repo";
 const POSTS_PATH = process.env.POSTS_PATH || "posts";
 const POSTS_REVALIDATE_SECONDS = false;
 
+/** 译文文件：`<slug>.<lang>.md`，与原文放在同一目录 */
+export const TRANSLATION_FILE = /^(.+)\.(zh|en|ja)\.md$/;
+
 /**
- * 估算阅读时间：中文按 400 字/分钟，西文按 220 词/分钟，忽略代码块
+ * 估算阅读时间：中文、日文按 400 字/分钟，西文按 220 词/分钟，忽略代码块
  */
 function calculateReadingTime(content: string): number {
   const prose = content.replace(/```[\s\S]*?```/g, " ");
-  const cjk = prose.match(/[\u3400-\u9fff]/g)?.length ?? 0;
+  const cjk = prose.match(/[\u3040-\u30ff\u3400-\u9fff]/g)?.length ?? 0;
   const words =
-    prose.replace(/[\u3400-\u9fff]/g, " ").match(/[A-Za-z0-9]+/g)?.length ?? 0;
+    prose.replace(/[\u3040-\u30ff\u3400-\u9fff]/g, " ").match(/[A-Za-z0-9]+/g)?.length ?? 0;
   return Math.max(1, Math.round(cjk / 400 + words / 220));
 }
 
@@ -231,6 +235,30 @@ export function parsePost(
     readingTime: calculateReadingTime(content),
     category: stringField(frontmatter.category) ?? (isRoot ? "" : folder),
     categoryPath,
+    lang: isPostLanguage(frontmatter.lang) ? frontmatter.lang : DEFAULT_POST_LANGUAGE,
+  };
+}
+
+/**
+ * 解析译文：标题、摘要、正文用译文自己的；日期、标签、分类、封面、链接没写就沿用原文
+ */
+export function parseTranslation(
+  rawMarkdown: string,
+  original: BlogPost,
+  lang: PostLanguage
+): BlogPost {
+  const frontmatter = matter(rawMarkdown).data as Record<string, unknown>;
+  const post = parsePost(rawMarkdown, original.slug, original.categoryPath, original.date);
+
+  return {
+    ...post,
+    lang,
+    title: stringField(frontmatter.title) ? post.title : original.title,
+    category: stringField(frontmatter.category) ?? original.category,
+    tags: post.tags?.length ? post.tags : original.tags,
+    cover: post.cover ?? original.cover,
+    links: post.links?.length ? post.links : original.links,
+    authors: post.authors?.length ? post.authors : original.authors,
   };
 }
 
@@ -258,6 +286,28 @@ async function processMarkdownFile(
   return null;
 }
 
+async function attachTranslation(file: GitHubContentItem, originals: BlogPost[]) {
+  const [, slug, lang] = file.name.match(TRANSLATION_FILE) ?? [];
+  const original = originals.find((post) => post.slug === slug);
+
+  if (!original || !isPostLanguage(lang)) {
+    console.warn(`Translation ${file.path} has no original ${slug}.md next to it`);
+    return;
+  }
+  if (lang === original.lang) {
+    console.warn(`Translation ${file.path} has the same language as its original`);
+    return;
+  }
+
+  const rawMarkdown = await getMarkdownContent(file.path);
+  if (!rawMarkdown) return;
+
+  original.translations = {
+    ...original.translations,
+    [lang]: parseTranslation(rawMarkdown, original, lang),
+  };
+}
+
 async function processCategory(categoryPath: string): Promise<Category> {
   const categoryName = categoryPath.split("/").pop() || "root";
   const contents = await getDirectoryContents(categoryPath);
@@ -265,16 +315,20 @@ async function processCategory(categoryPath: string): Promise<Category> {
   const markdownFiles = contents.filter(
     (item) => item.type === "file" && item.name.endsWith(".md")
   );
+  const originalFiles = markdownFiles.filter((item) => !TRANSLATION_FILE.test(item.name));
+  const translationFiles = markdownFiles.filter((item) => TRANSLATION_FILE.test(item.name));
 
   const [subcategories, posts] = await Promise.all([
     Promise.all(directories.map((item) => processCategory(item.path))),
-    Promise.all(markdownFiles.map((item) => processMarkdownFile(item, categoryPath))),
+    Promise.all(originalFiles.map((item) => processMarkdownFile(item, categoryPath))),
   ]);
+  const originals = posts.filter((post): post is BlogPost => post !== null);
+  await Promise.all(translationFiles.map((file) => attachTranslation(file, originals)));
 
   const category: Category = {
     name: categoryName,
     path: categoryPath,
-    posts: posts.filter((post): post is BlogPost => post !== null),
+    posts: originals,
     subcategories,
   };
 
@@ -362,11 +416,33 @@ export const PostService = (() => {
     return (await getCachedPostIndex()).rawMarkdownBySlug[slug] || null;
   };
 
+  /** 某篇文章的某个语言版本；原文语言返回原文本身 */
+  const getPostVersion = async (
+    slug: string,
+    lang: PostLanguage
+  ): Promise<BlogPost | null> => {
+    const original = await getPostBySlug(slug);
+    if (!original) return null;
+    return lang === original.lang ? original : (original.translations?.[lang] ?? null);
+  };
+
+  /** 所有译文的 { slug, lang }，用于静态生成译文页 */
+  const getTranslationParams = async (): Promise<{ slug: string; lang: PostLanguage }[]> => {
+    return (await getAllPosts()).flatMap((post) =>
+      (Object.keys(post.translations ?? {}) as PostLanguage[]).map((lang) => ({
+        slug: post.slug,
+        lang,
+      }))
+    );
+  };
+
   return {
     getCategory: getRootCategory,
     getSlugs,
     getAllPosts,
     getPostBySlug,
     getRawMarkdownBySlug,
+    getPostVersion,
+    getTranslationParams,
   };
 })();

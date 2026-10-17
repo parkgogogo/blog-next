@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { PostService } from "@/lib/posts";
-import { absoluteUrl, blogPostPath } from "@/lib/seo";
+import { absoluteUrl, postLanguageAlternates, postVersions } from "@/lib/seo";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const posts = await PostService.getAllPosts();
@@ -14,12 +14,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  const postRoutes: MetadataRoute.Sitemap = posts.map((post) => ({
-    url: absoluteUrl(blogPostPath(post.slug)),
-    lastModified: post.date ? new Date(post.date) : new Date(),
-    changeFrequency: "monthly",
-    priority: 0.6,
-  }));
+  // 每个语言版本一条，多语言文章互相声明 hreflang
+  const postRoutes: MetadataRoute.Sitemap = posts.flatMap((post) => {
+    const languages = postLanguageAlternates(post);
+    return postVersions(post).map((version) => ({
+      url: absoluteUrl(version.path),
+      lastModified: version.post.date ? new Date(version.post.date) : new Date(),
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
+      ...(languages && { alternates: { languages } }),
+    }));
+  });
 
   return [...staticRoutes, ...postRoutes];
 }

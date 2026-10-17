@@ -32,8 +32,9 @@ export const chartSpecSchema = z.object({
 
 export type ChartSpec = z.infer<typeof chartSpecSchema>;
 
-const PALETTE = ["#2f4fb5", "#7b93e8", "#c3cff5", "#1d2c66"];
-const STROKE = "#16244f";
+// 颜色只引用 globals.css 里的变量，SVG 随亮暗主题切换；用 style 而不是属性，属性里的 var() 不可靠
+const PALETTE = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)"];
+const STROKE = "var(--chart-stroke)";
 
 const WIDTH = 676;
 const HEIGHT = 340;
@@ -150,8 +151,10 @@ function BarChart({ spec }: { spec: ChartSpec }) {
                     y={barTop}
                     width={barWidth - 2}
                     height={Math.max(y(lo) - barTop, 0)}
-                    fill={filled ? PALETTE[s % PALETTE.length] : "#ffffff"}
-                    stroke={STROKE}
+                    style={{
+                      fill: filled ? PALETTE[s % PALETTE.length] : "var(--bg)",
+                      stroke: STROKE,
+                    }}
                     strokeWidth={1}
                   />
                   <text
@@ -267,12 +270,18 @@ function LineChart({ spec }: { spec: ChartSpec }) {
             <polyline
               points={seriesPoints.map((p) => `${x(p[0])},${y(p[1])}`).join(" ")}
               fill="none"
-              stroke={color}
+              style={{ stroke: color }}
               strokeWidth={1.5}
             />
             {seriesPoints.map((p) => (
               <g key={`${p[0]}-${p[1]}`}>
-                <circle cx={x(p[0])} cy={y(p[1])} r={4} fill="#ffffff" stroke={color} strokeWidth={1.5} />
+                <circle
+                  cx={x(p[0])}
+                  cy={y(p[1])}
+                  r={4}
+                  style={{ fill: "var(--bg)", stroke: color }}
+                  strokeWidth={1.5}
+                />
                 {p[2] && (
                   <text x={x(p[0]) - 8} y={y(p[1]) - 8} textAnchor="end" className="md-chart__value">
                     {p[2]}

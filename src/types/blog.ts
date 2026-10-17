@@ -1,3 +1,5 @@
+import type { PostLanguage } from "@/lib/i18n";
+
 export interface PostLink {
   label: string;
   href: string;
@@ -18,6 +20,9 @@ export interface BlogPost {
   category: string;
   categoryPath: string;
   readingTime?: number;
+  lang: PostLanguage;
+  /** 只挂在原文上：其他语言的版本 */
+  translations?: Partial<Record<PostLanguage, BlogPost>>;
 }
 
 export interface Category {

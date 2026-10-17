@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import PostList from "@/components/PostList";
 import { formatShortDate } from "@/lib/format";
+import { LANGUAGE_INFO } from "@/lib/i18n";
 import { PostService } from "@/lib/posts";
 import {
   absoluteUrl,
   blogPostPath,
   postDescription,
+  postVersions,
   siteConfig,
   siteKeywords,
   websiteJsonLd,
@@ -83,6 +85,9 @@ export default async function HomePage() {
           category: post.category,
           date: post.date,
           dateLabel: formatShortDate(post.date),
+          languages: post.translations
+            ? postVersions(post).map((version) => LANGUAGE_INFO[version.lang].short)
+            : undefined,
         }))}
       />
     </div>
