@@ -23,6 +23,7 @@ import {
   rehypeCollectToc,
   rehypeFigures,
   rehypeSpecialBlocks,
+  rehypeTableCaptions,
   remarkAlerts,
   type AlertType,
 } from "./plugins";
@@ -65,6 +66,7 @@ const processor = unified()
   .use(rehypeRaw)
   .use(rehypeSpecialBlocks)
   .use(rehypeFigures)
+  .use(rehypeTableCaptions)
   .use(rehypeSlug)
   .use(rehypeCollectToc)
   .use(rehypeKatex, { strict: "ignore" })

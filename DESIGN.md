@@ -50,4 +50,5 @@
 - `` ```mermaid ``：服务端渲染为中性灰 SVG。
 - 公式：`$$...$$`（行内与块级），单个 `$` 不解析，避免价格被误判。
 - 独占一段的图片转为 `<figure>`，title 优先作为图注，其次 alt（文件名类 alt 忽略）。
+- 紧挨表格、以 `表 N ｜`（或 `Table N:`）开头的段落作为表注，与表格合成 `<figure>`，表注统一显示在表格下方，样式同图注。
 - frontmatter：`title` `date` `excerpt` `subtitle` `category` `tags` `authors` `cover` `links[{label, href}]`。

@@ -686,8 +686,20 @@ a.pill--primary:hover {
   overflow-x: auto;
 }
 
-.prose > .md-table {
+.prose > .md-table,
+.prose > .md-table-figure {
   margin-top: 40px;
+}
+
+.prose > .md-table-figure + * {
+  margin-top: 40px;
+}
+
+.md-table-figure figcaption {
+  margin-top: 16px;
+  font-size: 14px;
+  line-height: 1.64;
+  color: var(--muted);
 }
 
 .md-table table {

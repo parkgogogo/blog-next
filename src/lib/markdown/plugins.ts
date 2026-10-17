@@ -139,6 +139,69 @@ export function rehypeFigures() {
   };
 }
 
+const TABLE_CAPTION = /^\s*(?:表|Table)\s*\d+(?:\.\d+)?\s*[｜|:：]/i;
+
+function isTable(node: ElementContent | undefined): node is Element {
+  return node?.type === "element" && node.tagName === "table";
+}
+
+function isTableCaption(node: ElementContent | undefined): node is Element {
+  return node?.type === "element" && node.tagName === "p" && TABLE_CAPTION.test(toString(node));
+}
+
+/** 跳过空白文本，找相邻的元素节点 */
+function siblingIndex(children: ElementContent[], from: number, step: 1 | -1): number {
+  for (let i = from + step; i >= 0 && i < children.length; i += step) {
+    if (!isWhitespace(children[i])) return i;
+  }
+  return -1;
+}
+
+/**
+ * 紧挨表格、以「表 N ｜」开头的段落作为表注，和表格合成 <figure>，表注统一放在表格下方。
+ * 优先认表格上方的段落；下方的段落如果后面紧跟另一张表，留给那张表。
+ */
+export function rehypeTableCaptions() {
+  return (tree: HastRoot) => {
+    visit(tree, (node) => {
+      if (!("children" in node)) return;
+      const children = node.children as ElementContent[];
+
+      for (let i = 0; i < children.length; i++) {
+        const table = children[i];
+        if (!isTable(table)) continue;
+
+        const prev = siblingIndex(children, i, -1);
+        const next = siblingIndex(children, i, 1);
+        let captionIndex = -1;
+        if (prev !== -1 && isTableCaption(children[prev])) {
+          captionIndex = prev;
+        } else if (
+          next !== -1 &&
+          isTableCaption(children[next]) &&
+          !isTable(children[siblingIndex(children, next, 1)])
+        ) {
+          captionIndex = next;
+        }
+        if (captionIndex === -1) continue;
+
+        const caption = children[captionIndex] as Element;
+        const start = Math.min(i, captionIndex);
+        children.splice(start, Math.abs(i - captionIndex) + 1, {
+          type: "element",
+          tagName: "figure",
+          properties: { className: ["md-table-figure"] },
+          children: [
+            table,
+            { type: "element", tagName: "figcaption", properties: {}, children: caption.children },
+          ],
+        });
+        i = start;
+      }
+    });
+  };
+}
+
 /**
  * 收集 h2/h3 作为目录，需在 rehype-slug 之后运行
  */

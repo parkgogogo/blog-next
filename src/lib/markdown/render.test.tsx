@@ -82,6 +82,32 @@ describe("renderMarkdown blocks", () => {
     expect(await toHtml("> quoted")).toContain("<blockquote>");
   });
 
+  it("turns a 表 N ｜ paragraph next to a table into a caption below it", async () => {
+    const table = "| a | b |\n| --- | --- |\n| 1 | 2 |";
+    const above = await toHtml(`表 1 ｜ 被测配置。说明 **重点**。\n\n${table}\n\nAfter.`);
+
+    expect(above).toMatch(
+      /<figure class="md-table-figure"><div class="md-table"><table>[\s\S]*<\/table><\/div><figcaption>表 1 ｜ 被测配置。说明 <strong>重点<\/strong>。<\/figcaption><\/figure>/
+    );
+    expect(above).not.toMatch(/<p>表 1/);
+    expect(above).toContain("<p>After.</p>");
+
+    const below = await toHtml(`${table}\n\nTable 2: below.`);
+    expect(below).toContain("<figcaption>Table 2: below.</figcaption>");
+
+    const plain = await toHtml(`表格如下：\n\n${table}`);
+    expect(plain).toContain("<p>表格如下：</p>");
+    expect(plain).not.toContain("md-table-figure");
+  });
+
+  it("gives a caption between two tables to the table after it", async () => {
+    const table = "| a |\n| --- |\n| 1 |";
+    const html = await toHtml(`${table}\n\n表 2 ｜ second\n\n${table}`);
+
+    expect(html.match(/md-table-figure/g)).toHaveLength(1);
+    expect(html).toMatch(/<\/table><\/div>\s*<figure class="md-table-figure">/);
+  });
+
   it("wraps tables in a scroll container and keeps column alignment", async () => {
     const html = await toHtml("| Model | Score |\n| :-- | --: |\n| A | 1.0 |");
 
