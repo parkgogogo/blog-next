@@ -750,6 +750,14 @@ a.pill--primary:hover {
   margin-top: 48px;
 }
 
+.md-figure video {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 6px;
+  background: var(--surface);
+}
+
 .md-figure img {
   display: block;
   max-width: 100%;
