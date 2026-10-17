@@ -27,6 +27,8 @@ export const chartSpecSchema = z.object({
   yMax: z.number().optional(),
   labels: z.array(z.string()).default([]),
   highlight: z.array(z.string()).optional(),
+  /** 柱状图是否在柱顶标数值；缺省时放得下才标 */
+  showValues: z.boolean().optional(),
   series: z.array(seriesSchema).min(1),
 });
 
@@ -60,8 +62,32 @@ function scaleDomain(values: number[], min?: number, max?: number) {
   return { lo, hi: hi === lo ? lo + 1 : hi, ticks };
 }
 
-function formatValue(value: number): string {
-  return Number.isInteger(value) ? String(value) : value.toFixed(1);
+/** 小数位随量级变化：<1 最多 3 位，<10 最多 2 位，其余 1 位，去掉末尾的 0 */
+export function formatValue(value: number): string {
+  if (Number.isInteger(value)) return String(value);
+  const abs = Math.abs(value);
+  const digits = abs < 1 ? 3 : abs < 10 ? 2 : 1;
+  return String(Number(value.toFixed(digits)));
+}
+
+const PREFIX_UNITS = new Set(["$", "¥", "￥", "€", "£"]);
+
+/** 货币符号放在数字前（$0.5），其他单位放在后面（74.9%） */
+export function withUnit(value: number, unit: string): string {
+  const text = formatValue(value);
+  if (!unit) return text;
+  return PREFIX_UNITS.has(unit) ? `${value < 0 ? "-" : ""}${unit}${formatValue(Math.abs(value))}` : `${text}${unit}`;
+}
+
+/** 12px Inter 下数值标签的估算宽度 */
+function labelWidth(text: string): number {
+  return text.length * 7;
+}
+
+/** 左边距放得下最长的刻度（等宽 12px，按带单位的写法算），有 yLabel 时再留出竖排标题 */
+function leftMargin(ticks: number[], unit: string, yLabel?: string): number {
+  const longest = Math.max(...ticks.map((tick) => withUnit(tick, unit).length), 0);
+  return Math.max(44, longest * 7.4 + 12) + (yLabel ? 20 : 0);
 }
 
 function Legend({ spec }: { spec: ChartSpec }) {
@@ -89,7 +115,7 @@ function BarChart({ spec }: { spec: ChartSpec }) {
   const { lo, hi, ticks } = scaleDomain(values, spec.yMin, spec.yMax);
 
   const groupCount = Math.max(labels.length, 1);
-  const left = spec.yLabel ? 64 : 44;
+  const left = leftMargin(ticks, spec.unit, spec.yLabel);
   const right = 8;
   const plotWidth = WIDTH - left - right;
   const groupWidth = plotWidth / groupCount;
@@ -101,6 +127,15 @@ function BarChart({ spec }: { spec: ChartSpec }) {
   const barWidth = Math.min(56, (groupWidth * 0.72) / seriesCount);
   const y = (v: number) => top + plotHeight - ((v - lo) / (hi - lo)) * plotHeight;
   const highlight = spec.highlight ? new Set(spec.highlight) : null;
+
+  // 相邻标签的间距：同组相邻柱子是 barWidth，单系列时是整组宽度；放不下就整张图都不标，
+  // 改由刻度带上单位
+  const labelSpacing = seriesCount > 1 ? barWidth : groupWidth;
+  const valueLabels = spec.series.flatMap((series) =>
+    (series.values ?? []).map((value) => withUnit(value, spec.unit))
+  );
+  const showValues =
+    spec.showValues ?? valueLabels.every((text) => labelWidth(text) <= labelSpacing - 4);
 
   return (
     <svg
@@ -119,7 +154,7 @@ function BarChart({ spec }: { spec: ChartSpec }) {
             className={tick === lo ? "md-chart__axis" : "md-chart__grid"}
           />
           <text x={left - 8} y={y(tick)} dy="0.32em" textAnchor="end" className="md-chart__tick">
-            {formatValue(tick)}
+            {showValues ? formatValue(tick) : withUnit(tick, spec.unit)}
           </text>
         </g>
       ))}
@@ -157,15 +192,16 @@ function BarChart({ spec }: { spec: ChartSpec }) {
                     }}
                     strokeWidth={1}
                   />
-                  <text
-                    x={x + barWidth / 2}
-                    y={barTop - 6}
-                    textAnchor="middle"
-                    className="md-chart__value"
-                  >
-                    {formatValue(value)}
-                    {spec.unit}
-                  </text>
+                  {showValues && (
+                    <text
+                      x={x + barWidth / 2}
+                      y={barTop - 6}
+                      textAnchor="middle"
+                      className="md-chart__value"
+                    >
+                      {withUnit(value, spec.unit)}
+                    </text>
+                  )}
                 </g>
               );
             })}
@@ -199,7 +235,7 @@ function LineChart({ spec }: { spec: ChartSpec }) {
   const xValues = points.map((point) => point[0]);
   const xDomain = scaleDomain(xValues, Math.min(...xValues, 0));
 
-  const left = spec.yLabel ? 64 : 44;
+  const left = leftMargin(yDomain.ticks, spec.unit, spec.yLabel);
   const right = 24;
   const top = 20;
   const bottom = spec.xLabel ? 52 : 32;
@@ -227,8 +263,7 @@ function LineChart({ spec }: { spec: ChartSpec }) {
             className={tick === yDomain.lo ? "md-chart__axis" : "md-chart__grid"}
           />
           <text x={left - 8} y={y(tick)} dy="0.32em" textAnchor="end" className="md-chart__tick">
-            {formatValue(tick)}
-            {spec.unit}
+            {withUnit(tick, spec.unit)}
           </text>
         </g>
       ))}
