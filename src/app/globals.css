@@ -361,7 +361,8 @@ a.pill--primary:hover {
 @media (min-width: 1200px) {
   .post-toc {
     position: absolute;
-    inset: 0 auto 0 var(--gutter);
+    /* 贴在宽内容（图片、Mermaid）左侧 40px，屏幕再宽也跟着正文走；空间不够时退回页边距 */
+    inset: 0 auto 0 max(var(--gutter), calc(50% - var(--wide) / 2 - 240px));
     display: block;
     width: 200px;
   }
