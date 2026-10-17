@@ -210,8 +210,7 @@ body {
   box-shadow: 0 0 0 1px var(--line);
 }
 
-.site-header__nav,
-.site-footer__nav {
+.site-header__nav {
   display: flex;
   align-items: center;
   gap: 24px;
@@ -278,9 +277,7 @@ body {
 
 .site-footer {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 16px;
+  justify-content: center;
   margin-top: 128px;
   padding: 32px var(--gutter) 48px;
   font-size: 14px;
