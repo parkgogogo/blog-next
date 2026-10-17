@@ -466,6 +466,32 @@ a.pill--primary:hover {
   color: var(--fg);
 }
 
+.post-langs {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.post-langs a:hover,
+.post-langs [aria-current] {
+  color: var(--fg);
+}
+
+.post-langs [aria-current] {
+  font-weight: 500;
+}
+
+/* 日文页面优先用日文字体，避免汉字按简体字形渲染；代码等等宽元素各自声明了字体，不受影响 */
+.post:lang(ja) {
+  --font-sans:
+    var(--font-inter), "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP",
+    "Yu Gothic", Meiryo, system-ui, sans-serif;
+  font-family: var(--font-sans);
+}
+
 .post-title {
   margin-top: 28px;
   font-size: 36px;

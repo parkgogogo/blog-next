@@ -11,6 +11,8 @@ export interface PostListItem {
   category: string;
   date: string;
   dateLabel: string;
+  /** 有多个语言版本时的语言简写，如 ["ZH", "EN"] */
+  languages?: string[];
 }
 
 const ALL = "All";
@@ -58,6 +60,7 @@ export default function PostList({ posts }: { posts: PostListItem[] }) {
                 <span className="post-row__meta">
                   <time dateTime={post.date}>{post.dateLabel}</time>
                   {post.category && <span>{post.category}</span>}
+                  {post.languages && <span>{post.languages.join(" / ")}</span>}
                 </span>
               </Link>
             </li>

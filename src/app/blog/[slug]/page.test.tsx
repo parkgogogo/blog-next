@@ -24,6 +24,7 @@ const { helloWorld } = vi.hoisted(() => ({
     readingTime: 6,
     category: "notes",
     categoryPath: "notes",
+    lang: "zh",
   } satisfies BlogPost,
 }));
 
