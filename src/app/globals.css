@@ -970,6 +970,11 @@ a.pill--primary:hover {
   color: var(--muted);
 }
 
+/* 图片、视频居中显示，图注跟着居中 */
+.md-figure figcaption {
+  text-align: center;
+}
+
 .md-chart figcaption {
   font-style: italic;
   color: var(--fg);
