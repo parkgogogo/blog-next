@@ -51,7 +51,6 @@
   --gutter: 24px;
   --header-height: 64px;
   --content: min(676px, 100vw - 2 * var(--gutter));
-  --wide: min(940px, 100vw - 2 * var(--gutter));
 
   color-scheme: light;
 }
@@ -134,13 +133,6 @@
 @media (min-width: 768px) {
   :root {
     --gutter: 32px;
-  }
-}
-
-@media (min-width: 1200px) {
-  :root {
-    /* 给左侧目录留出位置，宽内容不压到目录上 */
-    --wide: min(940px, 100vw - 512px);
   }
 }
 
@@ -520,9 +512,8 @@ a.pill--primary:hover {
 }
 
 .post-cover {
-  max-width: calc(1144px + 2 * var(--gutter));
+  width: var(--content);
   margin: 64px auto 0;
-  padding: 0 var(--gutter);
 }
 
 .post-cover img {
@@ -551,8 +542,8 @@ a.pill--primary:hover {
 @media (min-width: 1200px) {
   .post-toc {
     position: absolute;
-    /* 贴在宽内容（图片、Mermaid）左侧 40px，屏幕再宽也跟着正文走；空间不够时退回页边距 */
-    inset: 0 auto 0 max(var(--gutter), calc(50% - var(--wide) / 2 - 240px));
+    /* 贴在正文栏左侧 40px，屏幕再宽也跟着正文走；空间不够时退回页边距 */
+    inset: 0 auto 0 max(var(--gutter), calc(50% - var(--content) / 2 - 240px));
     display: block;
     width: 200px;
   }
@@ -933,12 +924,15 @@ a.pill--primary:hover {
   min-width: 9em;
 }
 
-/* 图片 */
+/* 图片、视频、图示：最宽与正文栏一致，不突破；小图保持原尺寸居中 */
 
-.md-figure,
-.md-mermaid {
-  width: var(--wide);
-  margin-inline: calc((var(--content) - var(--wide)) / 2);
+/* svg 不在此列：KaTeX 用定宽 svg 画部分符号，图表与 Mermaid 各自限制了宽度 */
+.prose :is(img, video, iframe, embed, object, canvas) {
+  max-width: 100%;
+}
+
+.prose :is(img, video, canvas) {
+  height: auto;
 }
 
 .prose > .md-figure,
@@ -971,15 +965,13 @@ a.pill--primary:hover {
 
 .md-figure figcaption,
 .md-chart figcaption {
-  width: var(--content);
-  margin: 16px auto 0;
+  margin-top: 16px;
   font-size: 14px;
   line-height: 1.64;
   color: var(--muted);
 }
 
 .md-chart figcaption {
-  width: auto;
   font-style: italic;
   color: var(--fg);
 }
