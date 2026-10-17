@@ -14,7 +14,7 @@
     "@octokit/rest": "^21.1.1",
     "@types/rss": "^0.0.32",
     "@wooorm/starry-night": "^3.9.0",
-    "beautiful-mermaid": "^0.1.3",
+    "beautiful-mermaid": "^1.1.3",
     "github-slugger": "^2.0.0",
     "gray-matter": "^4.0.3",
     "hast-util-to-jsx-runtime": "^2.3.6",
