@@ -42,6 +42,25 @@ describe("renderMarkdown images", () => {
     expect(html).not.toContain("<figure");
   });
 
+  it("passes a raw <figure class=\"md-figure\"> video through as a block", async () => {
+    const html = await toHtml(
+      [
+        "Before.",
+        "",
+        '<figure class="md-figure">',
+        '<video src="https://example.com/a.mp4" controls playsinline preload="metadata"></video>',
+        "<figcaption>Demo</figcaption>",
+        "</figure>",
+        "",
+        "After.",
+      ].join("\n")
+    );
+
+    expect(html).toMatch(/<figure class="md-figure">\s*<video src="https:\/\/example.com\/a.mp4"/);
+    expect(html).toContain("<figcaption>Demo</figcaption>");
+    expect(html).not.toMatch(/<p>\s*<figure/);
+  });
+
   it("keeps controlled attachment raster images on next/image", async () => {
     const html = await toHtml("![Attachment](/api/attachment/example.webp)");
 
