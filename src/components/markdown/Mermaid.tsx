@@ -1,13 +1,15 @@
 import { renderMermaid } from "beautiful-mermaid";
 
+// 传入页面的 CSS 变量而不是色值，SVG 随亮暗主题切换。
+// 名字不能和库自己写在 <svg style> 上的 --fg 等相同，否则自引用失效，所以用 --mm-*
 const THEME = {
-  bg: "#ffffff",
-  fg: "#000000",
-  line: "#a3a3a3",
-  accent: "#000000",
-  muted: "#6b6b6b",
-  surface: "#f4f4f4",
-  border: "#d4d4d4",
+  bg: "var(--mm-bg)",
+  fg: "var(--mm-fg)",
+  line: "var(--mm-line)",
+  accent: "var(--mm-fg)",
+  muted: "var(--mm-muted)",
+  surface: "var(--mm-surface)",
+  border: "var(--mm-border)",
 };
 
 /**

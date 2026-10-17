@@ -5,6 +5,7 @@
 /*
  * 设计参照 openai.com 的文章页：白底黑字、字重 500 的标题、676px 正文栏、
  * 只有横线的表格。数值取自线上页面的计算样式。
+ * 暗色取自 developers.openai.com 的暗色主题：纯黑底、#dcdcdc 文字、#181818 / #303030 面。
  */
 :root {
   --bg: #ffffff;
@@ -15,6 +16,31 @@
   --surface: #f4f4f4;
   --surface-strong: #e9e9e9;
   --accent: #2f4fb5;
+  --selection: #c3cff5;
+  --primary-hover: #333333;
+  --mark: #f3e7b0;
+  --error-bg: #fdf1ef;
+  --error-fg: #a1260d;
+
+  /* 图表与 Mermaid（服务端渲染的 SVG 只引用变量，随主题切换） */
+  --chart-1: #2f4fb5;
+  --chart-2: #7b93e8;
+  --chart-3: #c3cff5;
+  --chart-4: #1d2c66;
+  --chart-stroke: #16244f;
+  --chart-grid: rgba(0, 0, 0, 0.08);
+  --mm-bg: var(--bg);
+  --mm-fg: #000000;
+  --mm-muted: #6b6b6b;
+  --mm-line: #a3a3a3;
+  --mm-surface: #f4f4f4;
+  --mm-border: #d4d4d4;
+
+  --alert-note: #2f4fb5;
+  --alert-tip: #1a7f4b;
+  --alert-important: #7a3fbf;
+  --alert-warning: #b07800;
+  --alert-caution: #c03a2b;
 
   --font-sans:
     var(--font-inter), "PingFang SC", "Hiragino Sans GB", "Noto Sans SC",
@@ -28,6 +54,81 @@
   --wide: min(940px, 100vw - 2 * var(--gutter));
 
   color-scheme: light;
+}
+
+/* 默认跟随系统；data-theme 是用户在页头手动选的主题 */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #000000;
+    --fg: #dcdcdc;
+    --muted: #8f8f8f;
+    --faint: #5d5d5d;
+    --line: rgba(255, 255, 255, 0.12);
+    --surface: #181818;
+    --surface-strong: #303030;
+    --accent: #7b93e8;
+    --selection: #2f3f73;
+    --primary-hover: #ffffff;
+    --mark: #5a4a12;
+    --error-bg: #2a1210;
+    --error-fg: #f0907f;
+
+    --chart-1: #8ea2ec;
+    --chart-2: #4f68c9;
+    --chart-3: #c3cff5;
+    --chart-4: #2a3f8f;
+    --chart-stroke: #8ea2ec;
+    --chart-grid: rgba(255, 255, 255, 0.1);
+    --mm-fg: #dcdcdc;
+    --mm-muted: #8f8f8f;
+    --mm-line: #5d5d5d;
+    --mm-surface: #181818;
+    --mm-border: #414141;
+
+    --alert-note: #7b93e8;
+    --alert-tip: #3fbf7f;
+    --alert-important: #b38bea;
+    --alert-warning: #e0a63a;
+    --alert-caution: #f0705f;
+
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #000000;
+  --fg: #dcdcdc;
+  --muted: #8f8f8f;
+  --faint: #5d5d5d;
+  --line: rgba(255, 255, 255, 0.12);
+  --surface: #181818;
+  --surface-strong: #303030;
+  --accent: #7b93e8;
+  --selection: #2f3f73;
+  --primary-hover: #ffffff;
+  --mark: #5a4a12;
+  --error-bg: #2a1210;
+  --error-fg: #f0907f;
+
+  --chart-1: #8ea2ec;
+  --chart-2: #4f68c9;
+  --chart-3: #c3cff5;
+  --chart-4: #2a3f8f;
+  --chart-stroke: #8ea2ec;
+  --chart-grid: rgba(255, 255, 255, 0.1);
+  --mm-fg: #dcdcdc;
+  --mm-muted: #8f8f8f;
+  --mm-line: #5d5d5d;
+  --mm-surface: #181818;
+  --mm-border: #414141;
+
+  --alert-note: #7b93e8;
+  --alert-tip: #3fbf7f;
+  --alert-important: #b38bea;
+  --alert-warning: #e0a63a;
+  --alert-caution: #f0705f;
+
+  color-scheme: dark;
 }
 
 @media (min-width: 768px) {
@@ -64,7 +165,7 @@ body {
 }
 
 ::selection {
-  background: #c3cff5;
+  background: var(--selection);
 }
 
 :focus-visible {
@@ -92,16 +193,82 @@ body {
 }
 
 .site-header__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-size: 18px;
   font-weight: 600;
   letter-spacing: -0.03em;
 }
 
+.site-header__avatar {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 0 0 1px var(--line);
+}
+
 .site-header__nav,
 .site-footer__nav {
   display: flex;
+  align-items: center;
   gap: 24px;
   font-size: 14px;
+}
+
+.theme-toggle {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin: 0 -6px 0 -4px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--fg);
+  cursor: pointer;
+}
+
+.theme-toggle:hover {
+  color: var(--muted);
+}
+
+.theme-toggle svg {
+  width: 16px;
+  height: 16px;
+}
+
+.theme-toggle__moon {
+  fill: currentColor;
+}
+
+.theme-toggle__sun {
+  display: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .theme-toggle__moon {
+    display: none;
+  }
+
+  :root:not([data-theme="light"]) .theme-toggle__sun {
+    display: block;
+  }
+}
+
+:root[data-theme="dark"] .theme-toggle__moon {
+  display: none;
+}
+
+:root[data-theme="dark"] .theme-toggle__sun {
+  display: block;
 }
 
 .site-header__nav a:hover,
@@ -146,7 +313,7 @@ a.pill:hover {
 }
 
 a.pill--primary:hover {
-  background: #333333;
+  background: var(--primary-hover);
 }
 
 /* ---------- Home ---------- */
@@ -526,7 +693,7 @@ a.pill--primary:hover {
 
 .prose mark {
   padding: 0 0.15em;
-  background: #f3e7b0;
+  background: var(--mark);
   color: inherit;
 }
 
@@ -656,23 +823,23 @@ a.pill--primary:hover {
 }
 
 .md-alert[data-alert="note"] {
-  --alert-color: #2f4fb5;
+  --alert-color: var(--alert-note);
 }
 
 .md-alert[data-alert="tip"] {
-  --alert-color: #1a7f4b;
+  --alert-color: var(--alert-tip);
 }
 
 .md-alert[data-alert="important"] {
-  --alert-color: #7a3fbf;
+  --alert-color: var(--alert-important);
 }
 
 .md-alert[data-alert="warning"] {
-  --alert-color: #b07800;
+  --alert-color: var(--alert-warning);
 }
 
 .md-alert[data-alert="caution"] {
-  --alert-color: #c03a2b;
+  --alert-color: var(--alert-caution);
 }
 
 .prose hr {
@@ -839,7 +1006,7 @@ a.pill--primary:hover {
 .md-chart__swatch {
   width: 12px;
   height: 12px;
-  border: 1px solid #16244f;
+  border: 1px solid var(--chart-stroke);
   border-radius: 999px;
 }
 
@@ -863,7 +1030,7 @@ a.pill--primary:hover {
 }
 
 .md-chart__grid {
-  stroke: rgba(0, 0, 0, 0.08);
+  stroke: var(--chart-grid);
 }
 
 .md-chart__axis {
@@ -883,8 +1050,8 @@ a.pill--primary:hover {
 .md-block-error {
   padding: 16px 20px;
   border-radius: 6px;
-  background: #fdf1ef;
-  color: #a1260d;
+  background: var(--error-bg);
+  color: var(--error-fg);
   font-family: var(--font-mono);
   font-size: 13px;
   white-space: pre-wrap;
