@@ -1,37 +1,25 @@
-import { renderMermaid } from "beautiful-mermaid";
+import { render } from "pele";
 
-// 传入页面的 CSS 变量而不是色值，SVG 随亮暗主题切换。
-// 名字不能和库自己写在 <svg style> 上的 --fg 等相同，否则自引用失效，所以用 --mm-*
-const THEME = {
-  bg: "var(--mm-bg)",
-  fg: "var(--mm-fg)",
-  line: "var(--mm-line)",
-  accent: "var(--mm-fg)",
-  muted: "var(--mm-muted)",
-  surface: "var(--mm-surface)",
-  border: "var(--mm-border)",
-};
+// 和 globals.css 的 --font-sans 一致，服务端按它估算文字宽度
+const FONT_FAMILY =
+  '"Inter", "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif';
 
-/**
- * beautiful-mermaid 只认 `A -->|label| B`，把同样合法的 `A -- label --> B`
- * 和 `A == label ==> B` 转成这种写法
- */
-export function normalizeMermaid(source: string): string {
-  return source
-    .trim()
-    .replace(/\s--\s+([^\n]+?)\s+-->/g, " -->|$1|")
-    .replace(/\s==\s+([^\n]+?)\s+==>/g, " ==>|$1|");
+// 同一页多张图时，SVG 内部 id 不能重复
+function idPrefix(source: string): string {
+  let hash = 5381;
+  for (let i = 0; i < source.length; i++) hash = ((hash << 5) + hash + source.charCodeAt(i)) | 0;
+  return `mm${(hash >>> 0).toString(36)}-`;
 }
 
-export default async function Mermaid({ source }: { source: string }) {
-  const text = normalizeMermaid(source);
+/**
+ * 服务端用 Pele 渲染成 SVG。颜色和字体走 --pele-* 变量（见 globals.css 的 .md-mermaid），
+ * 随亮暗主题切换
+ */
+export default function Mermaid({ source }: { source: string }) {
+  const text = source.trim();
 
   try {
-    const svg = await renderMermaid(text, {
-      ...THEME,
-      font: "Inter",
-      transparent: true,
-    });
+    const { svg } = render(text, { fontFamily: FONT_FAMILY, idPrefix: idPrefix(text) });
 
     return (
       <figure className="md-mermaid" dangerouslySetInnerHTML={{ __html: svg }} />

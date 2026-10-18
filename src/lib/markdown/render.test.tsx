@@ -2,7 +2,6 @@ import { readFileSync } from "node:fs";
 import { prerenderToNodeStream } from "react-dom/static";
 import { describe, expect, it } from "vitest";
 import { formatValue, withUnit } from "@/components/markdown/Chart";
-import { normalizeMermaid } from "@/components/markdown/Mermaid";
 import { renderMarkdown } from "@/lib/markdown/render";
 import { MARKDOWN_TEST_FILE } from "@/lib/markdown/test-content";
 import { parsePost } from "@/lib/posts";
@@ -193,11 +192,20 @@ describe("renderMarkdown math, footnotes and headings", () => {
   });
 });
 
-describe("normalizeMermaid", () => {
-  it("rewrites `-- label -->` edges into the pipe form", () => {
-    expect(normalizeMermaid("flowchart LR\n  C -- yes --> D\n  A == hot ==> B")).toBe(
-      "flowchart LR\n  C -->|yes| D\n  A ==>|hot| B"
+describe("mermaid", () => {
+  it("renders Chinese labels and `-- label -->` edges", async () => {
+    const html = await toHtml(
+      [
+        "```mermaid\nflowchart TB\n  A[重置应用状态] -- 工具调用 --> B[目标应用]\n```",
+        "```mermaid\nflowchart LR\n  C --> D\n```",
+      ].join("\n\n")
     );
+
+    expect(html).not.toContain("Mermaid render failed");
+    expect(html).toContain("重置应用状态");
+    expect(html).toContain(">工具调用<");
+    expect(html).toContain("--_bg:var(--pele-bg");
+    expect(html.match(/<figure class="md-mermaid"/g)).toHaveLength(2);
   });
 });
 
