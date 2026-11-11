@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
+import WaterMatrix from "@/components/site/WaterMatrix";
 import SiteFooter from "@/components/site/SiteFooter";
 import SiteHeader from "@/components/site/SiteHeader";
 import { rssAlternateTypes, siteConfig, siteKeywords } from "@/lib/seo";
@@ -78,6 +79,7 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body>
+        <WaterMatrix />
         <SiteHeader />
         <main className="site-main">{children}</main>
         <SiteFooter />

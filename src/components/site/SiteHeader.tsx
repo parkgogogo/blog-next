@@ -6,6 +6,8 @@ import { siteConfig, siteLinks } from "@/lib/seo";
 export default function SiteHeader() {
   return (
     <header className="site-header">
+      {/* 水面背景在页头里的那一条，由 WaterMatrix 每帧画进来 */}
+      <canvas className="site-header__water" aria-hidden="true" />
       <Link href="/" className="site-header__brand">
         <Image
           src="/avatar.jpg"
